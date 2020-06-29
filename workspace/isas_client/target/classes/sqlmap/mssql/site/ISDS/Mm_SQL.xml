@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MmDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+	<typeAlias alias="loginVO" type="egovframework.cmmn.vo.LoginVO" />
+	<typeAlias alias="hashMap" type="java.util.HashMap"/>
+
+	<!-- 로그인 처리를 위한 resultMap -->
+	<resultMap id="login" class="egovframework.cmmn.vo.LoginVO">
+		<result property="custCd" column="cust_cd" />
+		<result property="drvNo" column="drv_no" />
+		<result property="drvNm" column="drv_nm" />
+		<result property="custNm" column="cust_nm" />
+		<result property="hp" column="hp" />
+		<result property="tel" column="tel" />
+		<result property="addr" column="addr" />
+	</resultMap>
+
+	<select id="MmDAO.searchId" parameterClass="map" resultClass="camelMap">
+		SELECT A.MBR_ID,
+		       A.MBR_LOGIN_STATUS_YHN,
+		       A.MBR_TP_BTE,
+		       A.MBR_DI,
+		       B.e_mail as MBR_EMAIL,
+		       B.hp as MBR_MOBILE
+		  FROM
+		       (SELECT MBR_ID,
+		              MBR_LOGIN_STATUS_YHN,
+		              MBR_TP_BTE,
+		              MBR_DI
+		         FROM ASW_M_MBR_LOGIN
+		        <dynamic prepend="WHERE">
+					<isNotEmpty prepend="AND" property="MBR_ID">
+						MBR_ID = #MBR_ID#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="DI">
+						MBR_DI LIKE #DI# + '%'
+						AND MBR_LOGIN_STATUS_YHN != 'N'
+					</isNotEmpty>
+				</dynamic>
+		       ) A LEFT OUTER JOIN ASA010 B ON A.MBR_DI = B.MBR_DI
+	</select>
+
+	<select id="MmDAO.actionLogin" parameterClass="loginVO" resultMap="login">
+
+		SELECT a.cust_cd,
+		       a.drv_no,
+		       (select a.cust_nm from  bcv100 a where a.cust_cd = #custCd#) as cust_nm,
+		       a.drv_nm,
+		       a.hp,
+		       a.tel,
+		       a.addr,
+		       a.use_yn,
+		       a.rmks,
+		       a.cid,
+		       a.cdt,
+		       a.mid,
+		       a.mdt
+		FROM   ASZ130 a
+		WHERE cust_cd = #custCd#
+		  and A.drv_no = #drvNo#
+		  and use_yn = 1
+	</select>
+
+	<select id="MmDAO.loginChk" parameterClass="map" resultClass="String">
+		SELECT cust_cd
+			FROM SCU100
+			WHERE id = #AS_ID#
+			AND PWDCOMPARE(#AS_PW#, pwd) = '1'
+			AND use_yn = 1
+	</select>
+
+
+	<!-- 고객번호 생성 -->
+	<select id="MmDAO.selectMaxMbrSeq" parameterClass="map" resultClass="String">
+		SELECT dbo.fnCodeNo2 ('ASA010', getdate(), '') as MBR_SEQ
+	</select>
+
+	<!-- 회원번호 조회 -->
+	<select id="MmDAO.selectMbrSeq" parameterClass="map" resultClass="int">
+	SELECT	MBR_SEQ
+	FROM	ASW_M_MBR_LOGIN
+	WHERE	MBR_ID = #MBR_ID#
+	</select>
+
+	<!-- 당일 로그인 횟수 -->
+	<select id="MmDAO.getLoginCnt" parameterClass="map" resultClass="int">
+	SELECT COUNT(MBR_ID)
+	FROM ASW_M_MBR_LOGIN_HIS
+	WHERE MBR_ID = #MBR_ID#
+	AND CONVERT(VARCHAR(10), MBR_LOGIN_DT, 120) = CONVERT(VARCHAR(10), GETDATE(), 120)
+	</select>
+
+	<select id="MmDAO.guestCheck" parameterClass="map" resultClass="int">
+	SELECT COUNT(*)
+		FROM O_NON_MBR_PW
+	WHERE ORDER_NO = #ORDER_NO#
+	AND	NON_MBR_PW = #NON_MBR_PW#
+	</select>
+
+	<select id="MmDAO.custNm" parameterClass="map" resultClass="String">
+		select a.cust_nm
+		  from  bcv100 a
+		 where  1=1
+		   and  ( a.cust_cd = 'y' or a.cust_bc = 'BC500500'  )
+		   and a.cust_cd = #CUST_CD#
+	</select>
+
+	<select id="MmDAO.aSZ130List" parameterClass="map" resultClass="camelMap">
+		SELECT a.cust_cd,
+		       a.drv_no,
+		       a.drv_nm,
+		       a.hp,
+		       a.tel,
+		       a.addr,
+		       a.use_yn,
+		       a.rmks,
+		       a.cid,
+		       a.cdt,
+		       a.mid,
+		       a.mdt
+		FROM   ASZ130 a
+		where cust_cd = #CUST_CD#
+			and use_yn = 1
+	</select>
+
+	<select id="MmDAO.csNoSearch" parameterClass="map" resultClass="String">
+		select a.cs_no
+		  from  asa010 a
+		 where  a.mbr_di = #MBR_DI#
+	</select>
+
+
+</sqlMap>

@@ -1,0 +1,277 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="java.util.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript">
+var layout, toolbar, subLayout
+var gridMain,gridSub;
+var PscrnParm = parent.scrnParm;
+var mainTabbar = parent.mainTabbar;
+var ActTabId = parent.ActTabId;    
+$(document).ready(function(){
+	Ubi.setContainer(1,[1,3],"3E"); //구매품의서 결재
+	
+	layout = Ubi.getLayout();
+    toolbar = Ubi.getToolbar();
+    subLayout = Ubi.getSubLayout(); 
+    
+    layout.cells("b").attachObject("bootContainer");
+	
+    subLayout.cells("b").attachObject("bootContainer2");
+    subLayout.cells("b").setHeight(180);
+    
+    gridMain = new dxGrid(subLayout.cells("a"),false);
+    gridMain.addHeader({name:"No",      colId:"no",            width:"50",   align:"center", type:"cntr"});
+    gridMain.addHeader({name:"등록일자",   colId:"setDate",       width:"80",   align:"center", type:"ro"});
+    gridMain.addHeader({name:"순번",      colId:"setSeq",        width:"60",   align:"left",   type:"ro"});
+    gridMain.addHeader({name:"품의구분",   colId:"consultKindNm",  width:"70",  align:"left",   type:"ro"});
+    gridMain.addHeader({name:"대분류(관)", colId:"classGuanNm",    width:"80",  align:"left",   type:"ro"});
+    gridMain.addHeader({name:"분류(항)",  colId:"classHangNm",    width:"80",  align:"left",    type:"ro"});
+    gridMain.addHeader({name:"분류(목)",  colId:"classMokNm",     width:"80",  align:"left",    type:"ro"});
+    gridMain.addHeader({name:"예산과목",   colId:"subjectName",    width:"80",  align:"left",    type:"ro"});
+    gridMain.addHeader({name:"예상금액",   colId:"estimateAmt",    width:"100", align:"right",   type:"ron"});
+    gridMain.addHeader({name:"담당자",    colId:"empName",        width:"70",  align:"left",     type:"ro"});
+    gridMain.addHeader({name:"결재",     colId:"decideYn1",      width:"70",   align:"center",  type:"combo"});
+    gridMain.addHeader({name:"#cspan",  colId:"decideYn2",      width:"70",   align:"center",  type:"combo"});
+    gridMain.addHeader({name:"#cspan",  colId:"decideYn3",      width:"70",   align:"center",  type:"combo"});
+    gridMain.addHeader({name:"#cspan",  colId:"decideYn4",      width:"70",   align:"center",  type:"combo"});
+    gridMain.addHeader({name:"비고",     colId:"rmk",            width:"250",  align:"left",    type:"ro"});
+    gridMain.attachHeader("#rspan,#rspan,#rspan,#rspan,#rspan,#rspan,#rspan,#rspan,#rspan,#rspan,기안,대리,팀장,대표이사,#rspan");
+    gridMain.setUserData("","pk","");
+    gridMain.dxObj.setUserData("","@setDate","format_date");
+    gridMain.init();
+    gridMain.cs_setColumnHidden(["compId","empNo","subjectCode","decideDate1","decideEmp1","decideDate2","decideEmp2",
+                                 "decideDate3","decideEmp3","decideDate4","decideEmp4","appDate"]);
+    gridMain.cs_setNumberFormat(["estimateAmt"],"0,000.00"); 
+	gridMain.attachEvent("onRowSelect",doOnRowSelect);
+    
+    gridSub = new dxGrid(subLayout.cells("c"),false);
+    gridSub.addHeader({name:"No",   colId:"no",       width:"50",  align:"center", type:"cntr"});
+    gridSub.addHeader({name:"품명",  colId:"itemName", width:"150", align:"left",   type:"ro"});
+    gridSub.addHeader({name:"규격",  colId:"itemSpec", width:"100", align:"left",   type:"ro"});
+    gridSub.addHeader({name:"수량",  colId:"qty",      width:"80",  align:"right",  type:"ron"});
+    gridSub.addHeader({name:"단가",  colId:"cost",     width:"90",  align:"right",  type:"ron"});
+    gridSub.addHeader({name:"금액",  colId:"amt",      width:"90",  align:"right",  type:"ron"});
+    gridSub.addHeader({name:"비고",  colId:"rmk",      width:"200", align:"left",   type:"ron"});
+    gridSub.setUserData("","pk","");
+    gridSub.init();
+    gridSub.cs_setNumberFormat(["qty","cost","amt"],"0,000.00"); 
+
+    combo01 =gridMain.getColumnCombo(gridMain.getColIndexById("decideYn1"));
+	combo02 =gridMain.getColumnCombo(gridMain.getColIndexById("decideYn2"));
+	combo03 =gridMain.getColumnCombo(gridMain.getColIndexById("decideYn3"));
+	combo04 =gridMain.getColumnCombo(gridMain.getColIndexById("decideYn4"));
+	
+	gfn_single_comboLoad(combo01,["0","1","4","5"],["미결","결재","반려","출장"],4);
+	gfn_single_comboLoad(combo02,["0","1","4","5"],["미결","결재","반려","출장"],4);
+	gfn_single_comboLoad(combo03,["0","1","4","5"],["미결","결재","반려","출장"],4);
+	gfn_single_comboLoad(combo04,["0","1","4","5"],["미결","결재","반려","출장"],4);
+	
+	gfn_payPaymentSub_comboLoad("decideYn1","C26","0","1","","","");
+	
+	$("#downBtn").click(function(e){
+			var fileName = $("#fileName").val();
+			if(fileName == ''){
+				dhtmlx.alert("다운로드할 파일이 없습니다.");
+			}else{
+				fileDown(fileName);
+			}
+	});
+	
+	$('#payGubn').change(function(){
+		fn_search();
+	})
+	
+    jsonData();
+    fn_search();
+});
+function fileDown(fileName){
+	
+};
+
+function jsonData(){
+	if(PARAM_INFO.actTabId != undefined){
+		ActTabId = PARAM_INFO.actTabId;
+	}
+};
+
+function doOnRowSelect(id,ind){
+	var obj = {};
+	obj.setDate = gridMain.setCells(id, gridMain.getColIndexById("setDate")).getValue();
+	obj.setDate = obj.setDate.substring(0,4)+obj.setDate.substring(5,7)+obj.setDate.substring(8,10);
+	obj.setSeq = gridMain.setCells(id, gridMain.getColIndexById("setSeq")).getValue();
+	gfn_callAjaxForForm("frmMain",obj,"formSearch");
+	gfn_callAjaxForGrid(gridSub,obj,"subGridSearch",subLayout.cells("c"));
+};
+
+function fn_search(){
+	var obj = {};
+	obj.sDate = searchDate($('#sDate').val());
+	obj.eDate = searchDate($('#eDate').val());
+	obj.payGubn = $("#payGubn").val();
+	gfn_callAjaxForGrid(gridMain,obj,"gridMainSearch",subLayout.cells("a"),fn_searchCB);
+};
+
+function fn_searchCB(data){
+	if(data != ''){
+		var empNo = $("#empNo").val();
+		cs_payDecide(gridMain,data,empNo,"decide");
+		gridMain.selectRow(0, true, true, true);
+	}else{
+		byId("frmMain").reset();
+		var t = dateformat(new Date());
+		byId("balDate").value = t; 
+		byId("comDate").value = t; 
+	}
+};
+
+function fn_save(){
+	  decideValue();
+	  var jsonStr = gridMain.getJsonUpdated();
+	  if(jsonStr == null || jsonStr.length <= 0){ return;}  
+	    $("#jsonData").val(jsonStr);
+	    var params = $("#pForm").serialize();  
+	   gfn_callAjaxComm(params,"gridMainSave",fn_search);
+};
+
+function decideValue(){
+	for(var i=0;i<gridMain.getRowsNum();i++){
+		var decideYn1 = gridMain.setCells2(i,gridMain.getColIndexById("decideYn1")).getValue();
+		var decideYn2 = gridMain.setCells2(i,gridMain.getColIndexById("decideYn2")).getValue();
+		var decideYn3 = gridMain.setCells2(i,gridMain.getColIndexById("decideYn3")).getValue();
+		var decideYn4 = gridMain.setCells2(i,gridMain.getColIndexById("decideYn4")).getValue();
+		gridMain.setCells2(i,gridMain.getColIndexById("decideYn1")).setValue(dec_payDecide(decideYn1));
+		gridMain.setCells2(i,gridMain.getColIndexById("decideYn2")).setValue(dec_payDecide(decideYn2));
+		gridMain.setCells2(i,gridMain.getColIndexById("decideYn3")).setValue(dec_payDecide(decideYn3));
+		gridMain.setCells2(i,gridMain.getColIndexById("decideYn4")).setValue(dec_payDecide(decideYn4));
+		var appDate = dateformat(new Date());
+		appDate = appDate.substring(0,4)+appDate.substring(5,7)+appDate.substring(8,10);
+    	gridMain.setCells2(i,gridMain.getColIndexById("appDate")).setValue(appDate);
+	};
+};
+
+function fn_print(){
+	
+}
+
+function fn_exit(){
+	mainTabbar.tabs("603400").close();
+};
+</script>
+<form id="pForm" name="pForm">
+    <input type="hidden" name="jsonData" id="jsonData">
+</form>
+<div id="bootContainer">
+    <input type="hidden" id="empNo" name="empNo" value="${empNo}">
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">등록일자</label>
+				<input name="sDate" id="sDate" type="text" value="" placeholder="" class="searchDate format_date">
+				<input type="button" id="calpicker1" name="calpicker1" class="calicon inputCal" onclick="setSens(1,'eDate', 'max')"> ~ 
+				<input name="eDate" id="eDate" type="text" value="" placeholder="" class="searchDate format_date">
+				<input type="button" id="calpicker2" name="calpicker2" class="calicon inputCal" onclick="setSens(1,'sDate', 'min')">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">결재구분</label>
+				<select name="payGubn" id="payGubn" class="selectbox0" style="width: 80px;">
+				  <option value="0">미결재</option>
+				  <option value="1">결재</option>
+				</select>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="bootContainer2" class="dtlContainer">
+  <form name="frmMain" id="frmMain">
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title0">품의구분</label>
+				<select name="consultKindNm" id="consultKindNm" class="selectbox0"></select>
+			</div>
+		</div>
+	    <div class="left" style="margin-left: 130px;">
+			<div class="ml30">
+				<label class="title0">성명</label>
+				<input name="empNo" id="empNo" type="text" value="" class="inputbox0">
+				<input name="empName" id="empName" type="text" value="" class="inputbox0">
+			</div>
+		</div>
+		<div class="left" style="margin-left: 60px;">
+			<div class="ml30">
+				<label class="title1">담당자확인</label>
+				<select name="decideYn1" id="decideYn1" class="selectbox0"></select>
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">예산과목</label>
+				<input name="subjectCode" id="subjectCode" type="text" value="" class="inputbox0">
+				<input name="subjectName" id="subjectName" type="text" value="" class="inputbox0">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">연예산</label>
+				<input name="yearEstimateAmt" id="yearEstimateAmt" type="text" value="" class="inputbox0 format_int" style="text-align: right;">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">잔액</label>
+				<input name="yearEstimateJan" id="yearEstimateJan" type="text" value="" class="inputbox0 format_int" style="text-align: right;">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">예상금액</label>
+				<input name="EstimateAmt" id="EstimateAmt" type="text" value="" class="inputbox0 format_int" style="text-align: right;">
+			</div>
+		</div>
+	  </div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">용도</label>
+				<input name="usage" id="usage" type="text" value="" class="inputbox6" style="width: 710px;">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">발의일자</label>
+				<input name="balDate" id="balDate" type="text" value="" placeholder="" class="searchDate format_date" >
+				<input type="button" id="calpicker3" name="calpicker3" class="calicon inputCal">
+			</div>
+		</div>
+		<div class="left" style="margin-left: 70px;">
+			<div class="ml30">
+				<label class="title0">완료일자</label>
+				<input name="comDate" id="comDate" type="text" value="" placeholder="" class="searchDate format_date" >
+				<input type="button" id="calpicker4" name="calpicker4" class="calicon inputCal">
+			</div>
+		</div>
+		<div class="left" style="margin-left: 38px;">
+			<div class="ml30">
+				<label class="title1">완료신청자</label>
+				<input name="comEmpNo" id="comEmpNo" type="text" value="" class="inputbox0">
+				<input name="comEmpName" id="comEmpName" type="text" value="" class="inputbox0">
+			</div>
+		</div>
+	  </div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+				<label class="title0">첨부파일</label>
+				<input name="fileName" id="fileName" type="text" value="" class="inputbox2" >
+				<input type="button" name="downBtn" id="downBtn" class="btn3" value="파일받기">
+			</div>
+		</div>
+	</div>	
+  </form>	
+</div>
+<div id="container"></div>

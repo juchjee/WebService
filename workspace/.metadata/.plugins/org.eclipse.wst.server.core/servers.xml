@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<servers>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/Tomcat v7.0 Server at localhost-config" deployDir="wtpwebapps" hostname="localhost" id="Tomcat v7.0 Server at localhost" name="Tomcat v7.0 Server at localhost" runtime-id="Apache Tomcat v7.0" saveSeparateContextFiles="false" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="100" stop-timeout="100" testEnvironment="true" timestamp="4">
+    <list key="modules" value0="isds::org.eclipse.jst.jee.server:isds::jst.web::3.0"/>
+  </server>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/cs-config" deployDir="wtpwebapps" hostname="localhost" id="cs" name="cs" runtime-id="Apache Tomcat v7.0" saveSeparateContextFiles="false" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="100" stop-timeout="100" testEnvironment="true" timestamp="4">
+    <list key="modules" value0="isas_cs::org.eclipse.jst.jee.server:isas_cs::jst.web::2.5"/>
+  </server>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/mng-config" deployDir="wtpwebapps" hostname="localhost" id="mng" name="mng" runtime-id="Apache Tomcat v7.0" saveSeparateContextFiles="false" secure="false" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="600" stop-timeout="600" testEnvironment="true" timestamp="6">
+    <list key="modules" value0="isas_manager::org.eclipse.jst.jee.server:isas_manager::jst.web::2.5"/>
+  </server>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/client-config" deployDir="wtpwebapps" hostname="localhost" id="client" modulesReloadableByDefault="true" name="client" runtime-id="Apache Tomcat v7.0" saveSeparateContextFiles="false" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="100" stop-timeout="100" testEnvironment="true" timestamp="5">
+    <list key="modules" value0="isas_client::org.eclipse.jst.jee.server:isas_client::jst.web::2.5"/>
+  </server>
+</servers>

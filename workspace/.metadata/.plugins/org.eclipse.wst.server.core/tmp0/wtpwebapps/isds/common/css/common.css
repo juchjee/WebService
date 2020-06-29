@@ -1,0 +1,135 @@
+@charset "utf-8";
+*{margin: 0;padding: 0;}
+*html #container { height: 100%;}
+html {height:100%; font-size:12px; color:#555555; line-height:150%; font-family: 돋움,Dotum, AppleGothic, sans-serif; background-color:#e7e7e7;}
+body {height: 100%; font-size:12px; color:#555555; line-height:150%; font-family: 돋움,Dotum, AppleGothic, sans-serif; background-color:#e7e7e7;}
+
+ul{float:left; list-style-type:none;}
+li{float:left; list-style-type:none;}
+img{border:0;}
+input[readonly],input[disabled] {cursor: not-allowed;background-color: #eee;opacity: 1;}
+input:focus { border-color: #66afe9;
+              outline: 0;
+              -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+              box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);}
+
+/* Grid Basic */
+.grid-basic {width:100%; margin-bottom:20px; border-collapse:collapse; border-spacing:0;}
+.grid-basic td .hdrcell {height:24px; padding-top:6px; text-align:center; vertical-align:middle; font-family:"굴림","gulim"; font-weight:bold; background:url(/images/board/table_bg.gif) repeat-x; border-top:2px solid #cccccc;}
+.grid-basic td {min-height:27px; font-family:"굴림","gulim"; color:#444444; border-bottom:1px solid #e5e5e5; background:none;}
+.grid-basic .left {padding:0 20px; text-align:left;}
+.dhx_combo_select{font-size:12px; background-color:#fff; overflow:hidden;cursor:default;position:absolute;height:auto;z-index:600;}
+
+/* calendar, submitImg icon */
+.calicon{
+background:url("/images/calendar/Calendar-icon.png") no-repeat;
+background-position: right top;
+border: 0px;
+}
+
+.imgTest{
+	background-image: url(/images/button/dhtmlx/row_add.gif); /* 16px x 16px */
+    background-color: transparent; /* make the button transparent */
+    background-repeat: no-repeat;  /* make the background image appear only once */
+    background-position: 0px 3px;  /* equivalent to 'top left' */
+    border: none;           /* assuming we don't want any borders */
+    cursor: pointer;        /* make the cursor like hovering over an <a> element */
+    padding-left: 16px;     /* make text start to the right of the image */
+}
+.imgRowRemove{
+	background-image: url(/images/button/dhtmlx/row_remove.gif); /* 16px x 16px */
+    background-color: transparent; /* make the button transparent */
+    background-repeat: no-repeat;  /* make the background image appear only once */
+    background-position: 0px 3px;  /* equivalent to 'top left' */
+    border: none;           /* assuming we don't want any borders */
+    cursor: pointer;        /* make the cursor like hovering over an <a> element */
+    padding-left: 16px;     /* make text start to the right of the image */
+}
+
+/* validation label color 변경*/
+label.error{color:red;}
+
+/*  .login_logo { 
+	position:absolute; 
+	width:400px; left:0; right:0; margin-left:auto; margin-right:auto;
+	height:720px; top: 0; bottom:0; margin-top:auto; margin-bottom:auto;
+}
+
+.loginCm { 
+	position:absolute; 
+	width:400px; left:0; right:0; margin-left:auto; margin-right:auto;
+	height:100px; top: 0; bottom:0; margin-top:480px; margin-bottom:auto;
+} */
+
+
+#container{position: relative; width: 100%; height: 100%;}
+#bootContainer{position: relative; overflow-x: auto; min-width: 580px; width: 100%; height: 100%;}
+#bootContainer2{overflow-x: auto; min-width: 610px;}
+#bootContainer3{overflow-x: auto; min-width: 610px;}
+
+/* 검색조건 */
+div.textAreaHeader { margin:10px 0 5px 0; color:#666; max-height:150px; zoom:1;}
+div.textAreaHeader:after {clear:both; content:""; display:block;}
+div.textAreaHeader select, div.listHeader input {  color:#666; vertical-align:middle; }
+div.textAreaHeader a, div.listHeader img { vertical-align:middle; }
+div.textAreaHeader div.left { float:left; }
+div.textAreaHeader div.right { float:right; }
+div.textAreaHeader div.left > div, div.listHeader div.right > div { display:inline-block; }
+div.textAreaHeader div.viewTypeItem { margin-left:7px; }
+div.textAreaHeader div.viewTypeItem li { display:inline-block;  }
+div.textAreaHeader div.layoutTypeItem { padding-left:7px; margin-left:4px; background:url(../images/common/bar_gray_2.gif) no-repeat left 3px; }
+div.textAreaHeader div.layoutTypeItem li { display:inline-block; }
+
+div.listHeader { margin:10px 0 5px 0; color:#666; max-height:24px; zoom:1;}
+div.listHeader:after {clear:both; content:""; display:block;}
+div.listHeader select, div.listHeader input {  color:#666; vertical-align:middle; }
+div.listHeader a, div.listHeader img { vertical-align:middle; }
+div.listHeader div.left { float:left; }
+div.listHeader div.right { float:right; }
+div.listHeader div.left > div, div.listHeader div.right > div { display:inline-block; }
+div.listHeader div.viewTypeItem { margin-left:7px; }
+div.listHeader div.viewTypeItem li { display:inline-block;  }
+div.listHeader div.layoutTypeItem { padding-left:7px; margin-left:4px; background:url(../images/common/bar_gray_2.gif) no-repeat left 3px; }
+div.listHeader div.layoutTypeItem li { display:inline-block; }
+.mlZero { margin-left:4px !important; }
+.ml10 { margin-left:10px !important; }
+.ml12 { margin-left:12px !important; }
+.ml20 { margin-left:20px !important; }
+.ml30 { margin-left:30px !important; }
+.ml40 { margin-left:40px !important; }
+.ml50 { margin-left:50px !important; }
+
+/* 입력관련 */
+input.inputCal  {width: 21px;  height: 25px; font-size: 12px; border: 0px solid #ccc; padding-left: 5px;}
+input.inputSeq  {width: 50px;  height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox0 {width: 85px;  height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox1 {width: 120px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox2 {width: 150px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox3 {width: 200px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox4 {width: 300px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.inputbox5 {width: 396px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+label.title0 {width: 50px;  display: inline-block; text-align: right;}
+label.title1 {width: 70px;  display: inline-block; text-align: right;}
+label.title2 {width: 100px; display: inline-block; text-align: right;}
+label.title3 {width: 120px; display: inline-block; text-align: right;}
+label.cardTitle {width: 100px; display: inline-block; text-align: left; margin-left:10px;}
+label.cardTitle2 {width: 80px; display: inline-block; text-align: left; margin-left:10px;}
+label.wordTitle {width: 10px; display: inline-block; text-align: left;}
+select.selectbox1{width: 126px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+select.selectbox2{width: 150px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+select.selectbox3{width: 200px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+select.selectbox4{width: 300px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+select.selectbox5{width: 396px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+button.btn1{width: 30px;  height: 20px; font-size: 12px; border: 1px solid #ccc;}
+button.btn2{width: 50px;  height: 20px; font-size: 12px; border: 1px solid #ccc;}
+button.btn3{width: 100px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+button.btn4{width: 120px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+
+/* 조회폼 input 조정 */
+input.searchDate {width: 85px;  height: 20px; font-size: 12px; border: 1px solid #ccc; text-align: center; padding-right: 5px;}
+input.searchCode {width: 85px;  height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+input.searchName {width: 145px; height: 20px; font-size: 12px; border: 1px solid #ccc; padding-left: 5px;}
+select.searchBox {width: 92px; height: 20px; font-size: 12px; border: 1px solid #ccc;}
+
+/* 팝업입력관련 */
+label.poptitle1   {width: 40px;  display: inline-block; text-align: left;}

@@ -1,0 +1,17 @@
+127.0.0.1 - - [08/Apr/2019:08:51:48 +0900] "GET / HTTP/1.1" 200 414
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /mobile/scm/main/login.do HTTP/1.1" 200 4501
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /component/mobile-extends/mobile_extends.js HTTP/1.1" 200 1388
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /component/dxTouch/codebase/touchui.css HTTP/1.1" 200 45600
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /component/dxTouch/codebase/touchui.js HTTP/1.1" 200 334498
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /common/js/sockjs-0.3.js HTTP/1.1" 200 77230
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /images/logo/isdsLogo.png HTTP/1.1" 200 16941
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:54:01 +0900] "GET /favicon.ico HTTP/1.1" 404 -
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:54 +0900] "POST /loginCheck HTTP/1.1" 200 358
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:54 +0900] "GET /mobile/scm/main/main.do HTTP/1.1" 200 4424
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:54 +0900] "GET /mobile/scm/main/list HTTP/1.1" 200 1744
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:55 +0900] "GET /mobile/scm/orderDelivery/mSalesShipR.do HTTP/1.1" 200 8545
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:55 +0900] "GET /component/dxTouch/codebase/imgs/images.png HTTP/1.1" 200 1581
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:55 +0900] "GET /mobile/scm/stockItem/stockItemByFacR/combo HTTP/1.1" 200 3505
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:55 +0900] "GET /mobile/scm/orderDelivery/mSalesShipR/salesDeptCd HTTP/1.1" 200 22562
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:56 +0900] "GET /mobile/scm/orderDelivery/mSalesShipR/salesEmpCombo HTTP/1.1" 200 147354
+0:0:0:0:0:0:0:1 - - [08/Apr/2019:08:55:57 +0900] "POST /mobile/scm/orderDelivery/mSalesShipR/salesEmpCombo HTTP/1.1" 200 15192

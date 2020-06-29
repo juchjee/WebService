@@ -1,0 +1,22 @@
+<!-- <Context> -->
+<!-- 	<Resource auth="Container" 	 -->
+<!-- 		name="jdbc/www"  -->
+<!-- 		username="ubidom" password="ubi50569!" -->
+<!-- 		url="jdbc:sqlserver://122.49.66.51:6873;DatabaseName=ISDS"   -->
+<!-- 		driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" 	 -->
+<!-- 		factory="org.apache.commons.dbcp.BasicDataSourceFactory" -->
+<!-- 		initialSize="1" maxActive="5" maxWait="10000" minIdle="10" -->
+<!-- 		type="javax.sql.DataSource" defaultAutoCommit="true" /> -->
+<!-- </Context> -->
+
+
+<Context>
+	<Resource auth="Container" 	
+		name="jdbc/www" 
+		username="ubidom" password="ubi50569!"
+		url="jdbc:sqlserver://122.49.66.51:6873;DatabaseName=ISDS;zeroDateTimeBehavior=convertToNull;serverTimezone=UTC;verifyServerCertificate=true;useSSL=true;requireSSL=true"  
+		driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" 	
+		factory="org.apache.commons.dbcp.BasicDataSourceFactory"
+		initialSize="1" maxActive="5" maxWait="10000" minIdle="10"
+		type="javax.sql.DataSource" defaultAutoCommit="true" />
+</Context>

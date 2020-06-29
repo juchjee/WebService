@@ -1,0 +1,19 @@
+1532505191198	Copy file
+1532505199324	Rename resource 'shipmentDao.xml'
+1532505663618	Copy compilation unit
+1532505678084	Rename package 'com.ubi.custManagement.domain'
+1532505690116	Rename type 'ShipmentVO'
+1532505769623	Rename type 'custManagementVO'
+1532508441205	Rename resource 'custManagement'
+1532508449766	Rename resource 'custManagement'
+1532508456572	Rename resource 'custManagementDao.xml'
+1532508464508	Rename package 'com.ubi.erp.custManagement.domain'
+1532508471670	Rename type 'CustManagementVO'
+1532567049881	Copy compilation unit
+1532567058849	Rename type 'ShipmentController'
+1532567077882	Copy compilation unit
+1532567084704	Rename type 'ShipmentDao'
+1532567164800	Copy compilation unit
+1532567170712	Rename type 'ShipmentService'
+1532645078322	Copy file
+1532645109850	Rename resource 'shipProcessS.jsp'

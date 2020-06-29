@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="ChooseWorkspaceDialogSettings">
+		<item value="361" key="DIALOG_Y_ORIGIN"/>
+		<item value="660" key="DIALOG_X_ORIGIN"/>
+	</section>
+	<section name="org.eclipse.ui.dialogs.FilteredResourcesSelectionDialog">
+		<item value="true" key="ShowStatusLine"/>
+		<item value="false" key="ShowDerived"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;workingSet workingSetName=&quot;&quot;/&gt;" key="WorkingSet"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;History&gt;&#x0D;&#x0A;&lt;historyRootNode&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/webapp/WEB-INF/jsp/site/ISDS/cs/tserviceI.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/WEB-INF/jsp/site/ISDS/repair/inusRepairStateDetail.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/java/com/ubi/erp/comm/controller/LoginController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/WEB-INF/jsp/site/ISDS/mm/acessLogin.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/java/site/front/mm/service/impl/MmDAO.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/resources/sqlmap/mssql/site/ISDS/Mm_SQL.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/resources/sqlmap/mssql/site/ISDS/Repair_SQL.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/common/js/selectbox.js&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/WEB-INF/jsp/site/ISDS/repair/inusRepairStateFinishDetail.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/common/js/jSignature.min.js&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/pom.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/WEB-INF/jsp/site/ISDS/repair/inusRepairStateRegister.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/java/site/front/repair/web/RepairController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/java/site/front/repair/service/impl/RepairService.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/java/com/ubi/erp/shipment/dao/ShipmentDao.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/webapp/WEB-INF/jsp/erp/scm/remiconAdmin/partners/shipment/shipmentR.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/resources/logback.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/java/com/ubi/erp/shipment/controller/ShipmentController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/java/com/ubi/erp/shipment/domain/ShipmentVO.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/logback.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/webapp/META-INF/context.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/webapp/WEB-INF/web.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/webapp/WEB-INF/jsp/general/footer.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/webapp/WEB-INF/jsp/site/ISDS/cs/termsRule.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/webapp/WEB-INF/jsp/site/ISDS/cs/privateRule.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/webapp/WEB-INF/web.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/bin/target/classes/egovframework/egovProps/site.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/resources/logback.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/sql/com/ubi/erp/web/comm/loginDao.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/target/isas-manager-1.0.0/WEB-INF/classes/egovframework/egovProps/site.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/Servers/mng-config/server.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/Servers/Tomcat v7.0 Server at localhost-config/server.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/webapp/WEB-INF/web.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/resources/egovframework/egovProps/globals.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/resources/egovframework/egovProps/globals.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/resources/egovframework/egovProps/site.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/resources/egovframework/egovProps/site.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/bin/src/main/resources/egovframework/egovProps/globals.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_client/src/main/resources/egovframework/egovProps/globals.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/webapp/WEB-INF/jsp/site/mng/cs/telCsL.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_cs/src/main/java/site/front/cs/service/impl/CsService.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/sql/com/ubi/erp/web/orderDelivery/orderDeliveryDao.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/webapp/WEB-INF/jsp/erp/scm/work/partners/remicon/remiconR.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/webapp/WEB-INF/jsp/erp/scm/work/partners/remicon/remiconS.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/sql/com/ubi/erp/web/dailyWork/dailyWorkDao.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/sql/com/ubi/erp/web/instPayment/instPaymentDao.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isds/resource/sql/com/ubi/erp/web/shipment/shipmentDao.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/webapp/WEB-INF/jsp/site/mng/cs/telCsR.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/java/site/mng/cs/service/impl/CsService.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/webapp/WEB-INF/jsp/site/mng/cs/tserviceR.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/java/site/mng/cs/web/CsController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/resources/egovframework/egovProps/site.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/isas_manager/src/main/resources/sqlmap/mssql/site/mng/cs/Cs_SQL.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;/historyRootNode&gt;&#x0D;&#x0A;&lt;/History&gt;" key="History"/>
+		<section name="DialogBoundsSettings">
+			<item value="820" key="DIALOG_WIDTH"/>
+			<item value="259" key="DIALOG_Y_ORIGIN"/>
+			<item value="500" key="DIALOG_HEIGHT"/>
+			<item value="1088" key="DIALOG_X_ORIGIN"/>
+			<item value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕" key="DIALOG_FONT_NAME"/>
+		</section>
+	</section>
+	<section name="ExternalProjectImportWizard">
+		<item value="false" key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_NESTED_PROJECTS"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="C:\project\workspace\isas_client"/>
+			<item value="C:\project\workspace\isas_manager"/>
+			<item value="E:\CS팀 AS 모바일 프로젝트\00_최신소스\isas_manager"/>
+			<item value="E:\CS팀 AS 모바일 프로젝트\00_최신소스\isas_client"/>
+			<item value="C:\project\workspace\isas_cs"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
+	</section>
+	<section name="ResourceNavigator">
+		<item value="Aggregate for window 1443080503666" key="ResourceWorkingSetFilter.STORE_WORKING_SET"/>
+		<item value="true" key="LINK_NAVIGATOR_TO_EDITOR"/>
+		<item value="1" key="ResourceViewer.STORE_SORT_TYPE"/>
+	</section>
+	<section name="CleanDialogSettings">
+		<item value="581" key="DIALOG_WIDTH"/>
+		<item value="true" key="BUILD_NOW"/>
+		<item value="false" key="BUILD_ALL"/>
+		<item value="253" key="DIALOG_Y_ORIGIN"/>
+		<item value="441" key="DIALOG_HEIGHT"/>
+		<item value="2463" key="DIALOG_X_ORIGIN"/>
+		<item value="false" key="TOGGLE_SELECTED"/>
+	</section>
+</section>

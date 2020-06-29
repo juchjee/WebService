@@ -1,0 +1,65 @@
+@charset "utf-8";
+
+.sub.cont .btnWrap .btn{width:135px;height:40px;line-height:1.4;font-size:15px;}
+
+/* Notice */
+.ntc .box{border-bottom:1px solid #ccc;}
+.ntc .box a, .ntc_top .tit{display:block;padding:15px;background:url(../img/icon_arrow01.png) no-repeat 97% 50%;background-size:7px 15px;}
+.ntc .box a > p{font-size:15px;}
+.ntc ul, .ntc_top ul{overflow:hidden;margin-top:7px;}
+.ntc ul li, .ntc_top ul li{float:left;margin-right:8px;padding-right:8px;position:relative;font-size:13px;color:#666;}
+.ntc ul li:last-child:after, .ntc_top ul li:last-child:after{display:none;}
+.ntc ul li:after, .ntc_top ul li:after{content:'';display:inline-block;width:1px;height:10px;background:#aaa;position:absolute;right:0;top:1px;}
+/* Notice Detail */
+.ntc_top .tit{background:none;}
+.ntc_top .tit > p{font-size:17px;font-family:'nbgB';}
+.ntc_cont{padding:15px 15px 150px;line-height:20px;color:#666;border-top:1px solid #ccc;border-bottom:1px solid #ccc;}
+.ntc_cont p{font-size:14px;}
+
+/* 검색옵션 및 하단 테이블 */
+.sch_opt_bx{background:#ebebeb;padding:10px;}
+.sch_opt_bx table{width:100%;}
+.sch_opt_bx table th{text-align:left;font-family:'nbgB';width:60px;font-size:13px;}
+.sch_opt_bx table td{padding:2px 0;}
+.sch_opt_bx .sch_btn{display:block;background:#02a8cb;width:100%;text-align:center;color:#fff;height:40px;font-size:16px;padding:12px;box-sizing:border-box;margin-top:11px;}
+.ing_bx{border:1px solid #ccc;margin:10px;}
+.ing_bx a{display:block;background:url(../img/icon_arrow01.png) no-repeat 97% 80px;background-size:7px;}
+.ing_bx a:active{background-position:97% -21px;}
+.ing_bx.in{margin:0;background:none;}
+.ing_bx.in .box .type01 dt{width:50px;}
+.ing_bx.view{background:none;}
+.ing_bx.view .box .situ{padding:0;}
+.ing_bx.view .box .situ dt{width:100px;padding:6px 0 6px 12px;}
+.ing_bx.view .box .situ dd{border-bottom:1px solid #ccc;padding:6px 0;min-height:25px;}
+.ing_bx.view .box .situ2{padding:0;border-bottom:1px solid #ccc;}
+.ing_bx.view .box .situ2:after{content:'';display:block;clear:both;}
+.ing_bx.view .box .situ2 dt{width:35%;float:left;font-family:'nbgB';padding:10px 0 10px 12px;}
+.ing_bx.view .box .situ2 dd{width:60%;float:left;padding:10px 7px;min-height:25px;box-sizing:border-box;}
+
+.ing_bx .box{font-size:13px;position:relative;}
+.ing_bx .box .tit,.ing_bx .box .date{font-family:'nbgB';background:#ebebeb;border-bottom:1px solid #ccc;}
+.ing_bx .box .tit{padding:12px;}
+.ing_bx .box .date{padding:10px;}
+.ing_bx .box .situ{padding:12px;line-height:25px;overflow:hidden;}
+.ing_bx .box .situ dt{font-family:'nbgB';width:75px;float:left;}
+.ing_bx .box .situ .call{background:url(../img/icon_view_call.png) no-repeat 0 1px;background-size:21px;padding-left:30px;width:38%;display:inline-block;color:#f00;font-family:'nbgB';}
+.ing_bx .box .situ2{}
+.ing_bx .box .situ2 dt{}
+.ing_bx .box .situ2 dd{}
+.ing_bx .box .type01{line-height:25px;/*overflow:hidden;*/}
+.ing_bx .box .type01 dt{font-family:'nbgB';width:90px;float:left;padding:10px;}
+.ing_bx .box .type01 dd{border-bottom:1px solid #ccc;padding:5px 10px;height:35px;}
+.ing_bx .box .type01 dd:last-child{border:none;}
+.ing_bx .box .type01 .input_txt_bx input{width:65% !important;box-sizing:border-box;position:absolute;right:0;}
+.ing_bx .box .type01 .cal_input{width:65% !important;box-sizing:border-box;position:absolute;right:0;}
+.ing_bx .box .select_guide{position:relative;}
+.ing_bx .box .select_guide > div{width:65% !important;position:absolute;right:0;}
+.photo_bx{overflow:hidden;}
+.photo_bx .photo{width:32%;height:65px;float:left;border:1px solid #ccc;background:#eee url(../img/icon_camera.png) no-repeat 50%;background-size:32px 24px;}
+.photo_bx .photo.last{margin:0 1%;}
+.photo_bx .more_btn{width:32.5%;height:67px;display:inline-block;background:#bbb url(../img/icon_more_plue.png) no-repeat 50%;background-size:27px;text-indent:-9999em;}
+.sign_bx{border:1px solid #ccc;background:#eee;height:160px;}
+.sign_bx p{font-size:13px;color:#999;text-align:center;padding-top:75px;}
+.sign_bx + .btnWrap{margin-top:7px;text-align:center;}
+.tit_box{padding:20px 10px 0px;}
+.tit_box > h3{font-size:15px;}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+	<settings useStatementNamespaces="true" lazyLoadingEnabled="false"/>
+	<typeHandler javaType="java.util.Calendar" jdbcType="TIMESTAMP" callback="egovframework.rte.psl.dataaccess.typehandler.CalendarTypeHandler" />
+
+	<sqlMap resource="sqlmap/mssql/site/comm/Comm_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Caregory_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Main_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Mm_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Bbt_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Cs_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/ISDS/User_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Evn_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/ISDS/Map_SQL.xml"/>
+</sqlMapConfig>

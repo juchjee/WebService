@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;mAgencyShipR.jsp&apos; to &apos;orderDelivery&apos;&#x0D;&#x0A;- Original project: &apos;isds&apos;&#x0D;&#x0A;- Destination element: &apos;orderDelivery&apos;&#x0D;&#x0A;- Original element: &apos;mAgencyShipR.jsp&apos;" description="Copy file" element1="webapp/WEB-INF/jsp/mobile/scm/orderDelivery/mAgencyShipR.jsp" files="1" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1553057949741" target="/isds/webapp/WEB-INF/jsp/mobile/scm/orderDelivery" units="0" version="1.0"/>
+</session>

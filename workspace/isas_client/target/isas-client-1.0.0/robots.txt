@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /order/
+Disallow: /user/
+Disallow: /mm/
+Disallow: /extInterface/
+Disallow: /cashbill/

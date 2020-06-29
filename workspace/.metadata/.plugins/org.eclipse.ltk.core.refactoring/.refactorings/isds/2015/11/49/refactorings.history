@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete 2 elements from project &apos;isds&apos;&#x0D;&#x0A;- Original project: &apos;isds&apos;&#x0D;&#x0A;- Original elements:&#x0D;&#x0A;     decorators.xml&#x0D;&#x0A;     sitemesh.xml" description="Delete elements" element1="webapp/WEB-INF/resource/decorators.xml" element2="webapp/WEB-INF/sitemesh.xml" elements="0" flags="589830" id="org.eclipse.jdt.ui.delete" resources="2" stamp="1448850128444" subPackages="false" version="1.0"/>
+</session>

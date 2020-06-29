@@ -1,0 +1,10 @@
+eclipse.preferences.version=1
+externalMigrateFromAuthorizationDatabase/isMigrated=true
+migrateFromAuthorizationDatabase/isMigrated=true
+repositories/00f377d9c44f0016190cfbbb6ac51234=00f377d9c44f0016190cfbbb6ac51234;https\://dev.naver.com/svn/emission-ubidom;https\://dev.naver.com/svn/emission-ubidom;branches;tags;trunk;true;b8732996-0e2e-0510-889f-dc2cbd5c372d;https\://dev.naver.com/svn/emission-ubidom;;false;;;0
+repositories/40aaf0ac9483001512ca91b80de99191=40aaf0ac9483001512ca91b80de99191;https\://dev.naver.com/svn/isds-ubidom;https\://dev.naver.com/svn/isds-ubidom;branches;tags;trunk;true;;;;false;<https\://dev.naver.com\:443> Document repository;;0
+repositories/904f19face4100161f6d9ca5a8f95cf4=904f19face4100161f6d9ca5a8f95cf4;https\://dev.naver.com/svn/dongsung;https\://dev.naver.com/svn/dongsung;branches;tags;trunk;true;b109463e-752b-0510-8e18-c9cb3a7b52e2;https\://dev.naver.com/svn/dongsung;;false;;;0
+repositories/90a736891d6300151becf5ecc56d0782=90a736891d6300151becf5ecc56d0782;https\://dev.naver.com/svn/ubidom;https\://dev.naver.com/svn/ubidom;branches;tags;trunk;true;f046ac4f-c919-0510-be46-bd9f7cbf0be5;https\://dev.naver.com/svn/ubidom;;false;<https\://dev.naver.com\:443> Document repository;;0
+repositories/a07c75c1983f0016108dee922b6d5f32=a07c75c1983f0016108dee922b6d5f32;https\://dev.naver.com/svn/kw-ubidom-erp;https\://dev.naver.com/svn/kw-ubidom-erp;branches;tags;trunk;true;9c055bd5-1834-0510-a24c-a11b66f60d82;https\://dev.naver.com/svn/kw-ubidom-erp;;false;<https\://dev.naver.com\:443> Document repository;;0
+repositories/a0b00db3fb990018162dfc315c86fd54=a0b00db3fb990018162dfc315c86fd54;https\://61.35.170.112/svn/i6/ISDS;https\://61.35.170.112/svn/i6/ISDS;branches;tags;trunk;true;;;;false;;;0
+repositories/b0189bb2fb990018162dfc315c86fd54=b0189bb2fb990018162dfc315c86fd54;https\://61.35.170.112/svn/i6/ISDS_AGENCY;https\://61.35.170.112/svn/i6/ISDS_AGENCY;branches;tags;trunk;true;;;;false;;;0

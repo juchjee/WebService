@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CaregoryDAO">
+
+	<typeAlias alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<!-- 해댱 권한에 대한 Menu Category list를 가지고 온다 -->
+	<select id="CaregoryDAO.getStoreCaregoryList" parameterClass="map" resultClass="camelMap">
+		SELECT PROD_CATEGORY_CD AS FRONT_MENU_CD ,
+		       PROD_CATEGORY_NM AS FRONT_MENU_NM ,
+		       PROD_CATEGORY_CD AS BOARD_MST_CD,
+		       #rootMallUri# + #param# + PROD_CATEGORY_CD AS FRONT_URL ,
+		       0 AS DEPTH1 ,
+		       ROW_NUMBER() OVER(ORDER BY PROD_CATEGORY_SORT ASC) AS DEPTH2
+		  FROM P_PROD_CATEGORY
+		 WHERE PROD_CATEGORY_GRP_CD = 'root'
+		       AND PROD_CATEGORY_DIS_YN = 'Y'
+	</select>
+
+	<!-- 해댱 권한에 대한 Menu Category list를 가지고 온다 -->
+	<select id="CaregoryDAO.getCategoryList" parameterClass="map" resultClass="camelMap">
+	WITH ASW_S_FRONT_MENU_LIST AS
+			 (SELECT 1 AS CLEVEL ,
+			         SFM.FRONT_MENU_CD ,
+			         SFM.FRONT_MENU_GROUP ,
+			         SFM.FRONT_MENU_NM ,
+			         SFM.FRONT_PAGE_CD,
+			         SFM.FRONT_SV_TP,
+			         SFM.FRONT_MENU_TP,
+			         (SELECT  TOP 1 SFM_I.BOARD_MST_CD
+			         FROM     ASW_S_FRONT_MENU SFM_I
+			         WHERE    SFM_I.FRONT_MENU_GROUP != 'root'
+			         AND      SFM_I.FRONT_MENU_GROUP  = SFM.FRONT_MENU_CD
+					 AND      SFM_I.FRONT_SV_TP in ('ALL',#signTp#)
+			         ORDER BY SFM_I.FRONT_SORT
+			         )
+			                                                    AS BOARD_MST_CD ,
+			         CONVERT(VARCHAR(255), SFM.FRONT_SORT + 1 ) AS SORT,
+			         CONVERT(int, SFM.FRONT_SORT)               AS DEPTH1,
+			         0                                          AS DEPTH2
+			 FROM    ASW_S_FRONT_MENU SFM
+			 WHERE   SFM.FRONT_MENU_GROUP = 'root'
+ 			   AND     SFM.FRONT_USE_YN         = 'Y'
+		  	   AND     SFM.FRONT_MENU_TP = 'WEB'
+
+			 UNION ALL
+
+			 SELECT CLEVEL+1 ,
+			        SFM_M.FRONT_MENU_CD ,
+			        SFM_M.FRONT_MENU_GROUP ,
+			        SFM_M.FRONT_MENU_NM ,
+			        SFM_M.FRONT_PAGE_CD ,
+			        SFM_M.FRONT_SV_TP,
+			        SFM_M.FRONT_MENU_TP,
+			        SFM_M.BOARD_MST_CD ,
+			        CONVERT(VARCHAR(255), CONVERT(NVARCHAR, SFM_L.SORT) + '-' + CONVERT(VARCHAR(255), SFM_M.FRONT_SORT)) AS SORT,
+			        CONVERT(int, SFM_L.DEPTH1)                                                                           AS DEPTH1,
+			        CONVERT(int, SFM_M.FRONT_SORT - 1)                                                                   AS DEPTH2
+			 FROM   ASW_S_FRONT_MENU SFM_M
+			        INNER JOIN ASW_S_FRONT_MENU_LIST SFM_L
+			        ON     SFM_M.FRONT_MENU_GROUP = SFM_L.FRONT_MENU_CD
+			 WHERE  SFM_M.FRONT_USE_YN                  = 'Y'
+              AND   SFM_M.FRONT_MENU_TP = 'WEB'
+
+			 )
+			 SELECT   SFM_L.CLEVEL ,
+			          SFM_L.FRONT_MENU_CD ,
+			          SFM_L.FRONT_MENU_GROUP ,
+			          SFM_L.FRONT_MENU_NM ,
+			          SFM_L.FRONT_PAGE_CD ,
+			          SFM_L.BOARD_MST_CD,
+			          SFM_L.FRONT_SV_TP,
+			          SFM_L.FRONT_MENU_TP,
+		      		  #rootFrontUri# +
+			          CASE
+			                   WHEN SFM_L.FRONT_PAGE_CD = 'view'
+			                   THEN FRONT_PAGE_CD + '/' + FRONT_PAGE_CD + '.do' + #param#
+			                                         + SFM_L.BOARD_MST_CD
+			                   WHEN SFM_L.FRONT_PAGE_CD = 'uni'
+			                   THEN BBT.BOARD_TP_FRONT_URL
+			                   ELSE BBT.BOARD_TP_FRONT_URL + #param#
+			                            + SFM_L.BOARD_MST_CD
+			          END AS FRONT_URL,
+			          SFM_L.SORT,
+			          SFM_L.DEPTH1,
+			          SFM_L.DEPTH2
+			 FROM     ASW_S_FRONT_MENU_LIST SFM_L
+			          LEFT JOIN ASW_BOARD_MST BBM
+			          ON       BBM.BOARD_MST_CD = SFM_L.BOARD_MST_CD
+			          LEFT JOIN ASW_BOARD_TP BBT
+			          ON       BBT.BOARD_TP_CD = BBM.BOARD_TP_CD
+			 ORDER BY SORT
+
+
+	</select>
+
+	<select id="CaregoryDAO.getCompanyMap" parameterClass="map" resultClass="camelMap">
+		SELECT COMPANY_REG_KEY
+				, COMPANY_NM
+				, COMPANY_OWNER
+				, COMPANY_BIZ_NO
+				, COMPANY_TEL
+				, COMPANY_EMAIL_SENDER
+				, COMPANY_EMAIL
+				, COMPANY_CATEGORY
+				, COMPANY_EVENT
+				, COMPANY_ZIPCODE
+				, COMPANY_ADDR
+				, COMPANY_ADDR_DTL
+				, COMPANY_TELESALES_NO
+				, COMPANY_PRIVACY_ADM
+				, COMPANY_OTHER_REG_NM
+				, COMPANY_OTHER_REG_NO
+				, COMPANY_FAX
+				, COMPANY_CS_TEL
+		FROM ASW_S_COMPANY
+	</select>
+
+
+</sqlMap>

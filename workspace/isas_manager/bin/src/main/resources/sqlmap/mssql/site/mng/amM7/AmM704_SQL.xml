@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM704DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM704DAO.amM704" parameterClass="map" resultClass="camelMap">
+		SELECT A.ADM_ID
+       		   , A.ADM_NAME
+       		   , A.ADM_TEL
+	   		   , CONVERT(VARCHAR(10), A.ADM_JOB_DT, 120) AS ADM_JOB_DT
+	   		   , CONVERT(VARCHAR(10), A.ADM_REG_DT, 120) AS ADM_REG_DT
+	           , A.ADM_EMAIL
+	           , A.ADM_AUTH_CD
+	   		   , (SELECT B.ADM_AUTH_NM FROM ASW_S_ADM_AUTH B  WITH(NOLOCK) WHERE B.ADM_AUTH_CD = A.ADM_AUTH_CD ) as ADM_AUTH_NM
+	   		   , A.ADM_POSITION
+	   		   , (SELECT C.ADM_POSITION_NM FROM ASW_S_ADM_POSITION C  WITH(NOLOCK) WHERE C.ADM_POSITION_CD = A.ADM_POSITION ) as ADM_POSITION_NM
+		FROM ASW_S_ADM A WITH(NOLOCK)
+		WHERE 1=1
+		<isNotEmpty  property="USE_FLAG_YN" prepend="AND">
+			USE_FLAG_YN = #USE_FLAG_YN#
+		</isNotEmpty>
+		<isNotEmpty  property="ADM_ID" prepend="AND">
+			ADM_ID like '%' + #ADM_ID# + '%'
+		</isNotEmpty>
+		<isNotEmpty  property="ADM_NAME" prepend="AND">
+			ADM_NAME like '%' + #ADM_NAME# + '%'
+		</isNotEmpty>
+		<isNotEmpty  property="ADM_AUTH_CD" prepend="AND">
+			ADM_AUTH_CD = #ADM_AUTH_CD#
+		</isNotEmpty>
+		<isNotEmpty  property="ADM_POSITION" prepend="AND">
+			ADM_POSITION = #ADM_POSITION#
+		</isNotEmpty>
+	</select>
+
+	<select id="AmM704DAO.amM704A" parameterClass="map" resultClass="camelMap">
+		SELECT ADM_AUTH_CD
+		       , ADM_AUTH_NM
+		FROM ASW_S_ADM_AUTH WITH(NOLOCK)
+		WHERE USE_FLAG_YN = 'Y'
+	</select>
+
+	<select id="AmM704DAO.amM704P" parameterClass="map" resultClass="camelMap">
+		SELECT ADM_POSITION_CD
+			   , ADM_POSITION_NM
+		FROM ASW_S_ADM_POSITION WITH(NOLOCK)
+		WHERE ADM_POSITION_USE_YN = 'Y'
+	</select>
+
+	<!--  -->
+	<select id="AmM704DAO.amM704PD" parameterClass="map" resultClass="camelMap">
+		SELECT ADM_ID
+			   , ADM_NAME
+			   , ADM_PW
+			   , ADM_TEL
+			   , ADM_EMAIL
+			   , ADM_AUTH_CD
+			   , ADM_POSITION
+			   , USE_FLAG_YN
+			   , CONVERT(VARCHAR(10), ADM_JOB_DT, 120) AS ADM_JOB_DT
+			   , CONVERT(VARCHAR(10), ADM_REG_DT, 120) AS ADM_REG_DT
+		FROM ASW_S_ADM WITH(NOLOCK)
+		WHERE ADM_ID = #ADM_ID#
+	</select>
+
+</sqlMap>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SaDAO">
+
+	<typeAlias alias="loginVO" type="egovframework.cmmn.vo.LoginVO" />
+
+	<!-- 로그인 처리를 위한 resultMap -->
+	<resultMap id="login" class="egovframework.cmmn.vo.LoginVO">
+		<result property="admId" column="ADM_ID" />
+		<result property="admPw" column="ADM_PW" />
+		<result property="admName" column="ADM_NAME" />
+		<result property="admTel" column="ADM_TEL" />
+		<result property="admJobDt" column="ADM_JOB_DT" />
+		<result property="admRegDt" column="ADM_REG_DT" />
+		<result property="admEmail" column="ADM_EMAIL" />
+		<result property="admAuthCd" column="ADM_AUTH_CD" />
+		<result property="admPosition" column="ADM_POSITION" />
+		<result property="useFlagYn" column="USE_FLAG_YN" />
+		<result property="admAuthNm" column="ADM_AUTH_NM" />
+	</resultMap>
+
+	<select id="SaDAO.actionLogin" parameterClass="loginVO" resultMap="login">
+		SELECT A.*
+		       ,B.ADM_AUTH_NM
+		  FROM ASW_S_ADM A LEFT OUTER JOIN ASW_S_ADM_AUTH B
+		       ON A.ADM_AUTH_CD = B.ADM_AUTH_CD
+	       WHERE a.ADM_ID = #admId#
+              AND a.ADM_PW = #admPw#
+	</select>
+	
+	<select id="SaDAO.actionCrmLogin" parameterClass="loginVO" resultMap="login">
+		SELECT A.*
+		       ,B.ADM_AUTH_NM
+		  FROM ASW_S_ADM A LEFT OUTER JOIN ASW_S_ADM_AUTH B
+		       ON A.ADM_AUTH_CD = B.ADM_AUTH_CD
+	       WHERE a.ADM_ID = #admId#
+	</select>
+	
+</sqlMap>

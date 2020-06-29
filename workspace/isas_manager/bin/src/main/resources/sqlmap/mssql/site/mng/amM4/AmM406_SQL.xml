@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM406DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM406DAO.eBanner" parameterClass="map" resultClass="camelMap">
+		SELECT BANNER_LOCAL_CD,
+		       BANNER_LOCAL_NM,
+		       BANNER_WIDTH_SIZE,
+		       BANNER_HEIGHT_SIZE,
+		       BANNER_MOBILE_WIDTH_SIZE,
+		       BANNER_MOBILE_HEIGHT_SIZE
+		  FROM ASW_BANNER  WITH(NOLOCK)
+		  <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="BANNER_LOCAL_CD" >
+				BANNER_LOCAL_CD != #BANNER_LOCAL_CD#
+		  	</isNotEmpty>
+		  </dynamic>
+		  ORDER BY BANNER_LOCAL_CD ASC
+	</select>
+
+	<select id="AmM406DAO.eBannerList" parameterClass="map" resultClass="camelMap">
+		SELECT EBL.BANNER_CD,
+		       EBL.BANNER_TITLE,
+		       EBL.BANNER_LOCAL_CD,
+		       EBL.ATTCH_CD,
+		       EBL.ATTCH_MOBILE_CD,
+		       EBL.BANNER_LINK,
+		       CONVERT(VARCHAR(16), EBL.BANNER_START_DT, 120) + ' ~ ' + + ISNULL(CONVERT(VARCHAR(16), EBL.BANNER_END_DT, 120),'무제한') as BANNER_DT,
+		       CONVERT(VARCHAR(16), EBL.BANNER_START_DT, 120) AS BANNER_START_DT,
+		       CONVERT(VARCHAR(16), EBL.BANNER_END_DT, 120) AS BANNER_END_DT,
+		       EBL.BANNER_STATUS,
+		       (CASE WHEN EBL.BANNER_STATUS = 'Y' THEN '노출' ELSE '비노출' END) as BANNER_STATUS_NM,
+		       EBL.REG_ID,
+		       (SELECT SA.ADM_NAME FROM ASW_S_ADM SA WHERE SA.ADM_ID = EBL.REG_ID) AS REG_NM,
+		       CONVERT(CHAR(10), EBL.REG_DT, 23) AS REG_DT,
+		       EBL.BACKG_ROUND_COLOR,
+		       EB.BANNER_LOCAL_NM,
+		       EB.BANNER_WIDTH_SIZE,
+		       EB.BANNER_HEIGHT_SIZE,
+		       EB.BANNER_MOBILE_WIDTH_SIZE,
+		       EB.BANNER_MOBILE_HEIGHT_SIZE,
+		       GA.ATTCH_FILE_PATH,
+		       GA.ATTCH_FILE_NM,
+		       ISNULL(MGA.ATTCH_FILE_PATH, GA.ATTCH_FILE_PATH) AS ATTCH_MOBILE_FILE_PATH,
+		       ISNULL(MGA.ATTCH_FILE_NM, GA.ATTCH_FILE_NM) AS ATTCH_MOBILE_FILE_NM
+		  FROM ASW_BANNER_LIST EBL  WITH(NOLOCK)
+		  	LEFT OUTER JOIN ASW_BANNER EB ON EBL.BANNER_LOCAL_CD = EB.BANNER_LOCAL_CD
+		  	LEFT OUTER JOIN ASW_G_ATTCH GA ON EBL.ATTCH_CD = GA.ATTCH_CD
+		  	LEFT OUTER JOIN ASW_G_ATTCH MGA ON EBL.ATTCH_MOBILE_CD = MGA.ATTCH_CD
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="BANNER_CD" >
+				EBL.BANNER_CD = #BANNER_CD#
+		  	</isNotEmpty>
+			<isNotEmpty prepend="AND" property="BANNER_DT" >
+				<![CDATA[
+				EBL.BANNER_START_DT <= CONVERT(DATETIME, #BANNER_DT# + ' 23:59:59.999')
+				AND (EBL.BANNER_END_DT IS NULL OR EBL.BANNER_END_DT >= CONVERT(DATETIME, #BANNER_DT# + ' 00:00:00.001'))
+				]]>
+		  	</isNotEmpty>
+			<isNotEmpty prepend="AND" property="BANNER_TITLE" >
+	  			EBL.BANNER_TITLE like '%'+#BANNER_TITLE#+'%'
+		  	</isNotEmpty>
+			<isNotEmpty prepend="AND" property="BANNER_LOCAL_CD" >
+	  			EBL.BANNER_LOCAL_CD = #BANNER_LOCAL_CD#
+		  	</isNotEmpty>
+			<isNotEmpty prepend="AND" property="BANNER_STATUS" >
+	  			EBL.BANNER_STATUS = #BANNER_STATUS#
+		  	</isNotEmpty>
+		</dynamic>
+		ORDER BY EBL.BANNER_LOCAL_CD, EBL.BANNER_TITLE ASC, REG_DT DESC
+	</select>
+
+</sqlMap>

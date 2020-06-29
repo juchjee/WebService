@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EvnDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="EvnDAO.amM401" parameterClass="map" resultClass="camelMap">
+
+	</select>
+
+	<select id="EvnDAO.selectEventList" parameterClass="map" resultClass="camelMap">
+	SELECT	NUM, EVENT_SEQ, EVENT_TITLE, START_DT, END_DT, EVENT_LIST_IMG, EVENT_RANK_YN, PARTY_COUNTS, EVENT_LIMITS_COUNT, EVENT_LIMITS_TP_UL
+	FROM
+		(SELECT	ROW_NUMBER() OVER( ORDER BY	EVENT_SEQ DESC ) AS NUM
+						,ET.EVENT_SEQ
+						,ET.EVENT_TITLE
+						,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) AS START_DT
+						,CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS END_DT
+						,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_LIST_IMG) AS EVENT_LIST_IMG
+						,EVENT_RANK_YN
+						,(CASE
+	   						WHEN	ET.EVENT_TP	 = 'EET00002'
+	   						THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   						WHEN	ET.EVENT_TP = 'EET00003'
+	   						THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   						ELSE '0'
+	   					END) AS PARTY_COUNTS
+						,ET.EVENT_LIMITS_COUNT
+						,ET.EVENT_LIMITS_TP_UL
+		FROM		E_EVENT ET
+		WHERE		1=1
+					AND CONVERT(VARCHAR(10), ET.EVENT_START_DT, 121) <![CDATA[<=]]> CONVERT(VARCHAR(10), GETDATE(), 121)
+					AND CONVERT(VARCHAR(10), ET.EVENT_END_DT, 121) >= CONVERT(VARCHAR(10), GETDATE(), 121)
+	) X
+	<isNotEmpty property="START_PAGE_NUM">
+	WHERE NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+	</isNotEmpty>
+	</select>
+
+	<select id="EvnDAO.selectEventListCount" parameterClass="map" resultClass="int">
+	SELECT		 COUNT(*)
+	FROM
+	(SELECT	 ROW_NUMBER() OVER( ORDER BY	EVENT_SEQ DESC ) AS NUM
+					,ET.EVENT_SEQ
+					,ET.EVENT_TITLE
+					,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) AS START_DT
+					,CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS END_DT
+					,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_LIST_IMG) AS EVENT_LIST_IMG
+					,EVENT_RANK_YN
+					,(CASE
+   						WHEN	ET.EVENT_TP	 = 'EET00002'
+   						THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+   						WHEN	ET.EVENT_TP = 'EET00003'
+   						THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+   						ELSE '0'
+   					END) AS PARTY_COUNTS
+					,ET.EVENT_LIMITS_COUNT
+					,ET.EVENT_LIMITS_TP_UL
+		FROM		E_EVENT ET
+		WHERE		1=1
+					AND CONVERT(VARCHAR(10), ET.EVENT_START_DT, 121) <![CDATA[<=]]> CONVERT(VARCHAR(10), GETDATE(), 121)
+					AND CONVERT(VARCHAR(10), ET.EVENT_END_DT, 121) >= CONVERT(VARCHAR(10), GETDATE(), 121)
+	) X
+	</select>
+
+	<select id="EvnDAO.selectEventPastList" parameterClass="map" resultClass="camelMap">
+	SELECT	NUM, EVENT_SEQ, EVENT_TITLE, START_DT, END_DT, EVENT_LIST_IMG, EVENT_RANK_YN, PARTY_COUNTS, EVENT_LIMITS_COUNT, EVENT_LIMITS_TP_UL
+	FROM
+		(SELECT	 ROW_NUMBER() OVER( ORDER BY	EVENT_SEQ DESC ) AS NUM
+						,ET.EVENT_SEQ
+						,ET.EVENT_TITLE
+						,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) AS START_DT
+						,CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS END_DT
+						,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_LIST_IMG) AS EVENT_LIST_IMG
+						,EVENT_RANK_YN
+						,(CASE
+	   						WHEN	ET.EVENT_TP	 = 'EET00002'
+	   						THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   						WHEN	ET.EVENT_TP = 'EET00003'
+	   						THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   						ELSE '0'
+	   					END) AS PARTY_COUNTS
+						,ET.EVENT_LIMITS_COUNT
+						,ET.EVENT_LIMITS_TP_UL
+		FROM		E_EVENT ET
+		WHERE		ET.EVENT_END_DT <![CDATA[<]]> GETDATE()-1
+	) X
+	<isNotEmpty property="START_PAGE_NUM">
+	WHERE NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+	</isNotEmpty>
+	</select>
+
+	<select id="EvnDAO.selectEventPastListCount" parameterClass="map" resultClass="int">
+	SELECT		 COUNT(*)
+		FROM
+		(SELECT		 ET.EVENT_SEQ
+							,ET.EVENT_TITLE
+							,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) AS START_DT
+							,CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS END_DT
+							,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_LIST_IMG) AS EVENT_LIST_IMG
+							,EVENT_RANK_YN
+							,(CASE
+		   						WHEN	ET.EVENT_TP	 = 'EET00002'
+		   						THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+		   						WHEN	ET.EVENT_TP = 'EET00003'
+		   						THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+		   						ELSE '0'
+		   					END) AS PARTY_COUNTS
+							,ET.EVENT_LIMITS_COUNT
+							,ET.EVENT_LIMITS_TP_UL
+			FROM		E_EVENT ET
+			WHERE		ET.EVENT_END_DT <![CDATA[<]]> GETDATE()-1
+	) X
+	</select>
+
+	<select id="EvnDAO.selectEventDetailList" parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		SELECT
+				       (	SELECT EVENT_TP_NM
+				       		FROM E_EVENT_TP ETP
+				        	WHERE ETP.EVENT_TP_CD = ET.EVENT_TP
+				       ) AS EVENT_TP_NM
+       					,ET.EVENT_TITLE
+       					,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) + ' ~ ' +CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS EVENT_DT
+	   					,(	SELECT MBR_LEV_NM+'이상'
+	   						FROM M_MBR_LEV_PLICY MLP
+	   						WHERE MLP.MBR_LEV_CD = ET.MBR_LEV_LIMIT_CD
+	   							AND MBR_LEV_USE_YN = 'Y'
+	   					) AS MBR_LEV_LIMIT_NM
+	   					,
+	   					(
+	   						CASE
+								WHEN ET.EVENT_LIMITS_TP_UL = 'L'
+								THEN CONVERT(CHAR(18), ET.EVENT_LIMITS_COUNT)
+								ELSE '무제한'
+							END
+	   					)AS EVENT_PART_LIMIT_COUNT
+	   					,
+	   					(
+	   						CASE
+	   							WHEN	ET.EVENT_TP	 = 'EET00002'
+	   							THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   							WHEN	ET.EVENT_TP = 'EET00003'
+	   							THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = ET.EVENT_SEQ)
+	   							ELSE '0'
+	   						END
+	   					)AS EVENT_PART_COUNT
+
+	   					,
+	   	   				(	CASE
+							WHEN ET.EVENT_RANK_YN = 'Y' THEN '지정 '
+			                ELSE '비지정'
+			                END
+						) AS EVENT_WINNERS_RANK_YN
+						,'당첨자발표sql필요' as EVENT_WINNERS_BTN
+						,ET.EVENT_SEQ
+  		FROM		E_EVENT ET
+  		WHERE		1=1
+  	]]>
+	<isNotEmpty prepend="AND" property="EVENT_TP" >
+		<![CDATA[ ET.EVENT_TP = #EVENT_TP# ]]>
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="MBR_LEV_CD" >
+		EXISTS (SELECT 1 FROM M_MBR_LEV_PLICY MLP WHERE MLP.MBR_LEV_AMOT >= (SELECT MBR_LEV_AMOT FROM M_MBR_LEV_PLICY WHERE MBR_LEV_CD = #MBR_LEV_CD#) AND MLP.MBR_LEV_CD = ET.MBR_LEV_LIMIT_CD)
+	</isNotEmpty>
+	<isNotEmpty prepend="AND" property="EVENT_TITLE" >
+		<![CDATA[ ET.EVENT_TITLE like '%'+#EVENT_TITLE#+'%' ]]>
+	</isNotEmpty>
+
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT">
+				<![CDATA[ CONVERT(VARCHAR(10),ET.EVENT_START_DT,121) >= #TXT_FROM_DT# ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT">
+				<![CDATA[ CONVERT(VARCHAR(10),ET.EVENT_END_DT,121) <= #TXT_TO_DT# ]]>
+		</isNotEmpty>
+
+	<![CDATA[
+		ORDER BY ET.REG_DT DESC
+	]]>
+
+	</select>
+
+	<!-- 다운로드용 쿠폰 검색  -->
+	<select id="EvnDAO.amM401Sec" parameterClass="map" resultClass="camelMap">
+	SELECT	 COPN_CD
+				,COPN_NM
+	FROM	 E_COPN
+	WHERE	 COPN_TP_PDMC = 'D'
+			<isNotEmpty prepend="and" property="SRCH_KEY">
+				 COPN_NM like '%' + #SRCH_KEY# +'%'
+			</isNotEmpty>
+	</select>
+
+	<!--  해당 이벤트 상세조회  -->
+	<select id="EvnDAO.selectEventDetail"  parameterClass="map" resultClass="camelMap">
+		SELECT	 ET.EVENT_SEQ
+					,ET.EVENT_TP
+					,ET.EVENT_TITLE
+					,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) + ' ~ ' +CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS EVENT_DT
+					,CONVERT(VARCHAR(10), ET.EVENT_START_DT, 120) AS EVENT_START_DT
+					,CONVERT(VARCHAR(10), ET.EVENT_END_DT, 120) AS EVENT_END_DT
+					,CONVERT(VARCHAR(10), ET.REG_DT, 120) AS REG_DT
+					,ET.EVENT_LIMITS_TP_UL
+					,ISNULL(ET.EVENT_LIMITS_COUNT, 0) AS EVENT_LIMITS_COUNT
+					,(
+	   					CASE
+	   						WHEN	ET.EVENT_TP	 = 'EET00002'
+	   						THEN	(SELECT COUNT(*) FROM E_EVENT_APP_PARTY WHERE EVENT_SEQ = #EVENT_SEQ#)
+	   						WHEN	ET.EVENT_TP = 'EET00003'
+	   						THEN	(SELECT COUNT(*) FROM E_QUIZ_PARTY WHERE EVENT_SEQ = #EVENT_SEQ#)
+	   						ELSE '0'
+	   					END
+	   				) AS EVENT_PART_COUNT
+					,ET.MBR_LEV_LIMIT_CD
+					,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_LIST_IMG) AS EVENT_LIST_IMG
+					,(SELECT ATTCH_FILE_PATH FROM ASW_G_ATTCH WHERE ATTCH_CD = ET.EVENT_SNS_IMG) AS EVENT_SNS_IMG
+					,ET.EVENT_RANK_YN
+					,ET.EVENT_LEAD_CONT
+					,ET.EVENT_CONT
+					,(SELECT MBR_LEV_NO FROM M_MBR_LEV_PLICY WHERE MBR_LEV_CD = ET.MBR_LEV_LIMIT_CD) AS MBR_LEV_NO
+		FROM	 E_EVENT ET
+		WHERE	 ET.EVENT_SEQ = #EVENT_SEQ#
+	</select>
+
+	<!-- 퀴즈 이벤트인경우 퀴즈 조회 -->
+	<select id="EvnDAO.selectQuizList" parameterClass="map" resultClass="camelMap">
+	SELECT	 EEQ.EVENT_SEQ
+				,EEQ.EVENT_QUIZ_NO
+				,EEQ.EVENT_QUIZ_TP_CS
+				,EEQ.EVENT_QUIZ_ANS
+				,EEQ.EVENT_QUIZ_QUEST
+	FROM	 E_EVENT_QUIZ EEQ
+	WHERE	 EVENT_SEQ = #EVENT_SEQ#
+	</select>
+
+	<!-- 퀴즈 이벤트인경우 퀴즈 조회 -->
+	<select id="EvnDAO.selectQuizChoiceList" parameterClass="map" resultClass="camelMap">
+	SELECT	 EQC.QUIZ_NO
+				,EQC.QUIZ_QUEST_NO
+				,EQC.QUIZ_ITEM
+	FROM	 E_QUIZ_CHOICE EQC
+	WHERE	 QUIZ_NO = #QUIZ_NO#
+	</select>
+
+	<!-- 퀴즈 이벤트인경우 퀴즈 조회 -->
+	<select id="EvnDAO.selectCopnDonwList" parameterClass="map" resultClass="camelMap">
+	SELECT	 ECD.EVENT_SEQ
+				,ECD.COPN_CD
+				,ECD.COPN_IMG
+				,ECN.COPN_NM
+				,ATC.ATTCH_FILE_NM
+				,ATC.ATTCH_FILE_PATH
+	FROM	 E_EVENT_COPN_DOWN ECD inner join E_COPN ECN 	ON	 ECD.COPN_CD = ECN.COPN_CD
+	 														 inner join ASW_G_ATTCH ATC 	ON	 ECD.COPN_IMG = ATC.ATTCH_CD
+	WHERE	 EVENT_SEQ = #EVENT_SEQ#
+	</select>
+
+	<select id="EvnDAO.selectEventCodeList" parameterClass="map" resultClass="camelMap">
+	SELECT	 EVENT_TP_CD
+				,EVENT_TP_NM
+	FROM	 E_EVENT_TP EET
+	WHERE	 EVENT_TP_USE_YN = 'Y'
+	</select>
+
+	<!--  당첨자 조회  -->
+	<select id="EvnDAO.selectWinnersDetail"  parameterClass="map" resultClass="camelMap">
+	SELECT	 EEW.EVENT_SEQ
+				,EEW.EVENT_WINNERS_TITLE
+				,EEW.EVENT_WINNERS_CONT
+				,EEW.EVENT_WINNERS_REG_ID
+				,CONVERT(VARCHAR(10), EEW.EVENT_WINNERS_REG_DT, 120) AS EVENT_WINNERS_REG_DT
+				,EEW.EVENT_WINNERS_HIT
+	FROM	 E_EVENT_WINNERS EEW
+	WHERE	 EEW.EVENT_SEQ = #EVENT_SEQ#
+	</select>
+
+	<!-- 당첨자조회 조회 수 증가 -->
+	<update id="EvnDAO.updateWinnersHit"  parameterClass="map">
+	UPDATE	E_EVENT_WINNERS
+	SET			EVENT_WINNERS_HIT = (ISNULL(EVENT_WINNERS_HIT, 0))+1
+	WHERE	 	EVENT_SEQ = #EVENT_SEQ#
+	</update>
+
+	<!-- 기존 퀴즈이벤트 응모여부 확인 -->
+	<select id="EvnDAO.selectAlreadyQuizPart" parameterClass="map" resultClass="int">
+	SELECT	COUNT(*)
+	FROM	E_QUIZ_PARTY
+	WHERE	EVENT_SEQ = #EVENT_SEQ#
+		AND	MBR_ID	=	#MBR_ID#
+	</select>
+
+	<!-- 기존 응모이벤트 응모여부 확인 -->
+	<select id="EvnDAO.selectAlreadyAppPart" parameterClass="map" resultClass="int">
+	SELECT	COUNT(*)
+	FROM	E_EVENT_APP_PARTY
+	WHERE	EVENT_SEQ = #EVENT_SEQ#
+		AND	MBR_ID	=	#MBR_ID#
+	</select>
+
+	<!-- 응모가능 회원등급 여부 확인용 레벨값 조회 -->
+	<select id="EvnDAO.selectMbrLev" parameterClass="map" resultClass="int">
+	SELECT	MBR_LEV_NO
+	FROM	M_MBR_LEV_PLICY
+	WHERE	MBR_LEV_CD = #MBR_LEV_CD#
+	</select>
+
+	<!-- 진행중인 이벤트인지 판단 1=진행중 0=완료 -->
+	<select id="EvnDAO.selectEventProceed" parameterClass="map" resultClass="int">
+	SELECT	COUNT(*)
+	FROM	E_EVENT
+	WHERE EVENT_SEQ = #EVENT_SEQ#
+		AND	EVENT_END_DT > GETDATE()-1
+	</select>
+
+	<select id="EvnDAO.eBannerTopDetail" parameterClass="map" resultClass="camelMap">
+		SELECT EBL.BANNER_CD,
+		       EBL.BANNER_TITLE,
+		       EBL.BANNER_LOCAL_CD,
+		       GA.ATTCH_FILE_PATH,
+		       ISNULL(MGA.ATTCH_FILE_PATH, GA.ATTCH_FILE_PATH) AS ATTCH_MOBILE_FILE_PATH,
+		       EBL.BANNER_LINK,
+		       EBL.BACKG_ROUND_COLOR
+		  FROM ASW_BANNER_LIST EBL
+		   LEFT OUTER JOIN ASW_G_ATTCH GA ON EBL.ATTCH_CD = GA.ATTCH_CD
+		   LEFT OUTER JOIN ASW_G_ATTCH MGA ON EBL.ATTCH_MOBILE_CD = MGA.ATTCH_CD
+		 WHERE EBL.BANNER_STATUS = 'Y'
+		 	AND BANNER_LOCAL_CD = 'EBR00001'
+		 <![CDATA[
+			 AND EBL.BANNER_START_DT <= GETDATE()
+			 AND (EBL.BANNER_END_DT IS NULL OR EBL.BANNER_END_DT >= GETDATE())
+		 ]]>
+		 ORDER BY EBL.BANNER_LOCAL_CD ASC, REG_DT DESC
+	</select>
+
+	<select id="EvnDAO.selecUseCpon" parameterClass="map" resultClass="camelMap">
+	SELECT
+		   ISNULL((SELECT count(MCL.COPN_CD)  FROM dbo.M_MBR_COPN_LIST MCL where MCL.COPN_CD = '$COPN_CD$'),0) as ECN_COUNT
+		  ,ISNULL((SELECT count(MCL.COPN_CD)  FROM dbo.M_MBR_COPN_LIST MCL where MCL.COPN_CD = '$COPN_CD$' and MCL.MBR_ID = #MBR_ID#),0) as ECN_MBR_COUNT
+		  ,ISNULL((SELECT CASE WHEN ECN.COPN_ISU_TP_UL = 'U' THEN 999999999 ELSE ECN.COPN_ISU_QTY END FROM E_COPN ECN where ECN.COPN_CD = '$COPN_CD$'),0) as ECN_QTY
+	</select>
+</sqlMap>

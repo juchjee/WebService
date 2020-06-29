@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.orderDelivery.dao.MOrderDeliveryDao">
+	<resultMap type="MOrderDeliveryVO" id="MOrderDeliveryMap" />
+	
+    <!-- 공사 / 제조 팝업 및 기타 -->
+    <select id="selFacCd" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+    <![CDATA[
+      SELECT A.SITE_FAC_CD AS FAC_CD, B.FAC_NM
+        FROM CCM101 A LEFT OUTER JOIN BCC300 B ON A.SITE_FAC_CD = B.FAC_CD
+       WHERE A.ID = #{id}
+       AND A.USE_YN = '1'
+       AND A.SITE_FAC_DIV = 'fac'
+    ]]>
+    </select>
+    
+    <select id="selFacCdMobile" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+    <![CDATA[
+	   SELECT A.SITE_FAC_CD AS ID, B.FAC_NM AS VALUE
+	   FROM CCM101 A LEFT OUTER JOIN BCC300 B ON A.SITE_FAC_CD = B.FAC_CD
+       WHERE A.ID = #{id}
+       AND A.USE_YN = '1'
+       AND A.SITE_FAC_DIV = 'fac'
+    ]]>
+	</select>
+    
+     <select id="selAllFacCd" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+     <![CDATA[
+       SELECT A.FAC_CD, A.FAC_NM FROM BCC300 A
+     ]]> 
+    </select>
+    
+    <select id="selManuDeliverySeq" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+    <![CDATA[
+    	SELECT right('00000' + convert(varchar, isnull(convert(int, max(DELI_SEQ)), 0) + 1), 5) AS DELI_SEQ FROM CCM110 WHERE DELI_DATE = #{deliDate}
+    ]]>
+    </select>
+    
+    <select id="selManuDeliveryNo" parameterType="MOrderDeliveryVO" resultType="String">
+    <![CDATA[
+    	SELECT right('00000' + convert(varchar, isnull(convert(int, max(DELI_NO)), 0) + 1), 5) AS DELI_NO FROM CCM110 WHERE DELI_DATE = #{deliDate} AND DELI_SEQ = #{deliSeq}
+    ]]>
+    </select>
+   
+	<!-- 제조 발주확인 / 현황   -->
+	<select id="selManuOrderChkS" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+		SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON, A.OUTS_RMK,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM, A.OUTS_DELI_QTY, Convert(varchar(10),A.OUTS_DELI_DT,112) as OUTS_DELI_DT
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND B.SCM_YN = '1' 
+	       AND A.OUTS_END_YN = '0'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} 
+	       ]]>
+	       <choose>
+	        <when test="outsCon == 'all'">
+	         AND B.PO_DT BETWEEN #{poStDt} AND #{poEdDt}
+	        </when>
+	        <when test="outsCon == 'okchk'">
+	         AND A.OUTS_CON  = 1
+	         AND B.PO_DT  BETWEEN #{poStDt} AND #{poEdDt}
+	        </when>
+	        <when test="outsCon == 'michk'">
+	         AND A.OUTS_CON = 0
+	        </when>
+	       </choose>
+	       <![CDATA[
+	       ORDER BY A.PO_NO, A.PO_SQ
+	       ]]>
+	</select>
+
+    <insert id="prcsManuOrderChkS" parameterType="MOrderDeliveryVO">
+      <if test="outsDeliDt == ''">
+         UPDATE MMB150 SET OUTS_CON = '1', OUTS_CON_ID = #{id}, OUTS_CON_DT = case when outs_con = '0' then GETDATE() else outs_con_dt end, OUTS_RMK = #{outsRmk}, OUTS_DELI_DT= null
+        WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND CUST_CD = #{custCd} AND DLV_DT = #{dlvDt}
+      </if>
+      <if test="outsDeliDt != ''">
+         UPDATE MMB150 SET OUTS_CON = '1', OUTS_CON_ID = #{id}, OUTS_CON_DT = case when outs_con = '0' then GETDATE() else outs_con_dt end , OUTS_RMK = #{outsRmk}, OUTS_DELI_DT= #{outsDeliDt}
+        WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND CUST_CD = #{custCd} AND DLV_DT = #{dlvDt}
+      </if>
+    </insert>
+    
+    <insert id="delManuOrderChkS" parameterType="MOrderDeliveryVO">
+      <if test="outsDeliDt == ''">
+         UPDATE MMB150 SET OUTS_CON = '0', OUTS_CON_ID = #{id},  OUTS_RMK = #{outsRmk}, OUTS_DELI_DT= null
+        WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND CUST_CD = #{custCd} AND DLV_DT = #{dlvDt}
+      </if>
+      <if test="outsDeliDt != ''">
+         UPDATE MMB150 SET OUTS_CON = '0', OUTS_CON_ID = #{id}, OUTS_RMK = #{outsRmk}, OUTS_DELI_DT= #{outsDeliDt}
+        WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND CUST_CD = #{custCd} AND DLV_DT = #{dlvDt}
+      </if> 
+	</insert>
+	
+	<select id="selManuOrderChkR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	  SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS,
+	          CASE WHEN A.OUTS_CON = '1' THEN '확인' ELSE '미확인' END AS OUTS_CON,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND B.SCM_YN = '1'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd}
+	       ]]> 
+	       <choose>
+	        <when test="outsCon == 'all'">
+	          AND B.PO_DT BETWEEN #{stPoDt} AND #{edPoDt}
+	        </when>
+	        <when test="outsCon == 'okchk'">
+	         AND A.OUTS_CON  = 1
+	         AND B.PO_DT BETWEEN #{stPoDt} AND #{edPoDt}
+	        </when>
+	        <when test="outsCon == 'michk'">
+	         AND A.OUTS_CON = 0
+	        </when>
+	       </choose>
+	       ORDER BY A.PO_NO, A.PO_SQ
+	</select>
+	
+	<!--  공사 납품등록 / 현황 -->
+	<!--  <select id="selManuDeliverySMst" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	   SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON, A.OUTS_DELI_QTY,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,B.PO_FAC,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM, A.STAT_BC, A.OUTS_END_YN, H.TITLE AS STAT_BC_NM,
+		       (A.PO_QTY-A.OUTS_DELI_QTY) AS MI_DELI_QTY, (A.PO_NO+CAST(A.PO_SQ as nvarchar(2))) AS MASTER_KEY
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G, BCA200 H
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND A.STAT_BC = H.BASE_CD 
+	       AND H.MAIN_CD LIKE 'MM110%'
+	       AND B.SCM_YN = '1' AND A.OUTS_CON  = '1'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} 
+           AND A.PO_QTY - A.OUTS_DELI_QTY > 0
+           AND A.OUTS_END_YN = '0'
+           ORDER BY A.PO_NO, A.PO_SQ
+	</select>  -->
+	
+	 <select id="selManuDeliverySMst" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	 <![CDATA[
+	   SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON, A.OUTS_DELI_QTY,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,B.PO_FAC,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM, A.STAT_BC, A.OUTS_END_YN, H.TITLE AS STAT_BC_NM,
+		       (A.PO_QTY-A.OUTS_DELI_QTY) AS MI_DELI_QTY, (A.PO_NO+CAST(A.PO_SQ as nvarchar(2))) AS MASTER_KEY
+	      FROM MMB150 A INNER JOIN MMB100 B ON (A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD)
+	                    INNER JOIN BCV100 C ON (A.CUST_CD = C.CUST_CD)
+	                    INNER JOIN DMA100 D ON (A.ITM_ID = D.ITM_ID)
+	                    INNER JOIN BCW100 E ON (B.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1')
+	                    INNER JOIN BCA200 F ON (D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%')
+	                    INNER JOIN BCA200L G ON (B.URG_BC = G.BASE_CD AND G.LAN_ID = '1')
+	                    LEFT OUTER JOIN BCA200 H ON (A.STAT_BC = H.BASE_CD AND H.MAIN_CD LIKE 'MM110%')
+	     WHERE  
+	       B.SCM_YN = '1' AND A.OUTS_CON  = '1'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} 
+           AND A.PO_QTY - A.OUTS_DELI_QTY > 0
+           AND A.OUTS_END_YN = '0'
+           ORDER BY A.PO_NO, A.PO_SQ
+           ]]>
+	</select> 
+	
+	<insert id="prcsOutsEndYn" parameterType="MOrderDeliveryVO" >
+	<![CDATA[
+	   UPDATE MMB150 SET OUTS_END_YN = '1' WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq}
+	   ]]>
+	</insert>
+	
+	<select id="selManuDeliveryDeliQty" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[   SELECT A.PO_NO, A.PO_SQ, A.PO_QTY  FROM MMB150 A 
+	             WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND A.PO_QTY < (A.OUTS_DELI_QTY-#{oldDeliQty}) + #{deliQty}
+	             ]]>
+	</select>
+	
+	<select id="selManuDeliverySSub" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+		SELECT A.DELI_KEY, A.DELI_DATE, A.DELI_SEQ, A.DELI_NO, A.CUST_CD, A.PO_FAC, A.IN_WH, A.ITM_ID, A.DELI_QTY, A.DELI_QTY AS OLD_DELI_QTY, A.IN_QTY,
+		       A.PO_NO, A.PO_SEQ AS PO_SQ, A.RMKS,
+		       B.PO_QTY, (B.PO_QTY - B.OUTS_DELI_QTY) AS MI_DELI_QTY,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM,
+		       Convert(varchar(10), G.PO_DT,112) as PO_DT
+		FROM CCM110 A, MMB150 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, MMB100 G
+		WHERE A.PO_NO = B.PO_NO AND A.PO_SEQ = B.PO_SQ AND A.CUST_CD = C.CUST_CD AND A.ITM_ID = D.ITM_ID
+		  AND A.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+		  AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+		  AND A.PO_NO = G.PO_NO AND A.CUST_CD = G.CUST_CD AND G.SCM_YN = '1'
+		  AND A.DELI_DATE = #{deliDate} AND A.DELI_SEQ = #{deliSeq} AND A.PO_FAC = #{facCd} AND A.CUST_CD = #{custCd}
+		  ORDER BY A.DELI_KEY, A.DELI_DATE
+		  ]]>
+	</select>
+	
+	<insert id="prcsManuDeliveryS" parameterType="MOrderDeliveryVO" >
+	   <if test="cudKey == 'INSERT'">         
+        <![CDATA[ INSERT INTO CCM110 (DELI_KEY, DELI_DATE, DELI_SEQ, DELI_NO, CUST_CD, PO_FAC, IN_WH, ITM_ID, DELI_QTY, PO_NO, PO_SEQ, OUT_CID, OUT_CDT,RMKS)
+                  VALUES(#{deliDate}+#{deliSeq}+#{deliNo}, #{deliDate}, #{deliSeq},#{deliNo}, #{custCd}, #{poFac},#{inWh}, #{itmId}, #{deliQty}, #{poNo}, 
+                             #{poSq},#{id},GETDATE(),#{rmks})        
+            
+            UPDATE MMB150 SET OUTS_DELI_QTY = OUTS_DELI_QTY + #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]>                              
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+         <![CDATA[ UPDATE CCM110  SET  DELI_QTY = #{deliQty}, OUT_MID = #{id}, OUT_MDT = GETDATE(), RMKS = #{rmks} WHERE DELI_KEY = #{deliKey}
+          
+          UPDATE MMB150 SET OUTS_DELI_QTY = (OUTS_DELI_QTY-#{oldDeliQty}) + #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]>
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM110 WHERE DELI_KEY = #{deliKey}
+          
+           <![CDATA[UPDATE MMB150 SET OUTS_DELI_QTY = OUTS_DELI_QTY- #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]> 
+        </if>
+	</insert>
+	
+	<select id="selManuDeliveryR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	    SELECT A.DELI_KEY, A.DELI_DATE, A.DELI_SEQ, A.DELI_NO, A.CUST_CD, A.PO_FAC, A.IN_WH, A.ITM_ID, A.DELI_QTY, 
+		       A.PO_NO, A.PO_SEQ AS PO_SQ, A.RMKS,
+		       B.PO_QTY, Convert(varchar(10),B.DLV_DT,112) AS DLV_DT,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM
+		FROM CCM110 A, MMB150 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F
+		WHERE A.PO_NO = B.PO_NO AND A.PO_SEQ = B.PO_SQ AND A.CUST_CD = C.CUST_CD AND A.ITM_ID = D.ITM_ID
+		  AND A.IN_WH = E.WH_CD AND E.FAC_CD IN (#{facCd}) AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+		  AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+		  AND A.DELI_DATE BETWEEN #{stDeliDate} AND #{edDeliDate} AND A.PO_FAC = #{facCd} AND A.CUST_CD = #{custCd}
+		  ORDER BY A.DELI_KEY, A.DELI_DATE
+		  ]]>
+	</select>
+	
+	<select id="selInboundR" parameterType="MOrderDeliveryVO"  resultType="MOrderDeliveryVO">
+	<![CDATA[
+	  SELECT A.IN_BS, A.IN_NO, A.IN_SQ, Convert(varchar(10),A.IN_DT,112) as IN_DT , A.FAC_CD, A.WH_CD, A.CUST_CD, A.DEPT_CD, A.ITM_ID, A.UM_BC, A.IN_BC, A.UM_QTY, A.IN_QTY, A.RTN_BC,
+	         A.IN_UP, A.IN_AMT, A.CURY_BC, A.EX_RT, A.ETC_AMT, A.ETC_TOT_AMT, A.REG_ID, A.ENT_BC, A.MNG_NO, A.MNG2_NO, A.QC_EMP, QC_NM = Y.EMP_NM,
+	         A.QC_YN, A.RMKS, A.MDT, MNM = U.NM, A.LC_NO, A.LC_SQ, A.BL_NO, A.BL_SQ, A.CAR_AMT,
+	         B.ITM_CD, B.ITM_NM, B.ITM_BC, B.GRP1_CD, B.SPEC, 
+	         D.CUST_NM,
+	         E.PO_NO, E.PO_SQ, X.OK_YN,
+	         F.TITLE AS UM_BC_NM, G.TITLE AS ITM_BC_NM
+	   FROM LEA100 A LEFT JOIN DMA100 B ON (A.ITM_ID = B.ITM_ID)
+	                 LEFT JOIN SCU100 U ON (A.MID = U.REG_ID)
+	                 LEFT JOIN HRA100 Y ON (A.QC_EMP = Y.EMP_NO)
+	                 LEFT JOIN LEA130 E ON (A.IN_NO = E.IN_NO AND A.IN_SQ = E.IN_SQ) 
+					 LEFT JOIN LEA500 X ON (A.IN_NO = X.IN_NO AND A.IN_SQ = X.IN_SQ) <!-- 매입 -->
+                     LEFT JOIN BCV100 D ON (D.CUST_CD = A.CUST_CD)  <!-- JOIN BCA200V Y1 ON (B.ITM_BC = Y1.BASE_CD AND Y1.M2 = 'Y') -->
+                     INNER JOIN BCA200 F ON (B.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%')
+                     INNER JOIN BCA200 G ON (B.ITM_BC = G.BASE_CD AND G.MAIN_CD LIKE 'DM100%')
+	  WHERE A.IN_DT BETWEEN #{stInDt} AND #{edInDt}
+	    AND A.FAC_CD = #{facCd}
+	    AND A.CUST_CD = #{custCd}
+	    AND A.IN_BC = 'LE100100'
+	    AND A.ENT_BC = 'LE900200'
+      ORDER BY A.IN_NO, A.IN_SQ
+      ]]>
+	</select>
+	
+	<select id="selDeliInboundR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	  SELECT  A.DELI_KEY, A.DELI_DATE, A.DELI_SEQ, A.DELI_NO, A.CUST_CD, A.PO_FAC,G.FAC_NM, A.IN_WH, A.ITM_ID, A.DELI_QTY, A.IN_QTY, (A.DELI_QTY - A.IN_QTY) AS MI_IN_QTY,
+		       A.PO_NO, A.PO_SEQ AS PO_SQ, 
+		       B.PO_QTY, Convert(varchar(10),B.DLV_DT,112) AS DLV_DT, B.PO_QTY - B.OUTS_DELI_QTY AS MI_DELI_QTY,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM
+		FROM CCM110 A, MMB150 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCC300 G, CCM101 H
+		WHERE A.PO_NO = B.PO_NO AND A.PO_SEQ = B.PO_SQ AND A.CUST_CD = C.CUST_CD AND A.ITM_ID = D.ITM_ID
+		  AND A.IN_WH = E.WH_CD AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+		  AND A.PO_FAC = H.SITE_FAC_CD  AND H.ID = #{id} AND H.USE_YN = '1' AND H.SITE_FAC_DIV = 'fac'
+		  AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+		  AND A.PO_FAC = G.FAC_CD
+		  AND A.DELI_DATE BETWEEN #{stDeliDate} AND #{edDeliDate}
+		  AND A.CUST_CD = #{custCd}
+		  AND A.PO_FAC Like  '%' + #{facCd} + '%'
+		  ]]> 
+		   <if test="gubn == 'miIn'">
+		    AND (A.DELI_QTY - A.IN_QTY) > 0
+		  </if>
+		  <if test="gubn == 'in'">
+		    AND (A.DELI_QTY - A.IN_QTY) =  0
+		  </if>
+		  <![CDATA[
+		  ORDER BY A.DELI_KEY, A.DELI_DATE
+		  ]]>
+	</select>
+	
+	
+	<!-- 출하요청등록현황 -->
+	<!-- 사업장 콤보박스  -->
+	<select id="selComboFacCd" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+      SELECT DISTINCT 
+             ID = A.MNG_FAC
+           , VALUE = B.FAC_NM
+	    FROM BCC300 A
+	         JOIN BCC300 B ON B.FAC_CD = A.MNG_FAC
+	]]>
+    </select>
+
+	<!-- 거래처 콤보박스  -->
+	<select id="selComboCustCd" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT ID = A.CUST_CD
+	        , VALUE = A.CUST_CD + ' / ' + A.CUST_NM
+	        , A.DE_BC
+	        , BIZ_NO =DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',REPLACE(A.BIZ_NO,'-',''),'')  
+	        , A.CEO_NM
+	        , TAX_BC = ISNULL(A.TAX_BC,'FA630200')
+	        , A.NAT_CD
+	        , A.CURY_BC
+	        , A.SAL_CUST
+	        , SAL_CUST_NM = B.CUST_NM
+	        , A.RPT_BC
+	        , A.CREDIT_BC
+	        , B.CEO_NM
+	        , B.ADDR1
+	     FROM BCV100 A
+		      LEFT JOIN BCV100 B ON B.CUST_CD = A.SAL_CUST
+	    WHERE A.SAL_YN = '1'
+		  AND A.USE_YN = '1'
+	]]>
+		  <if test="custCd != '' and custCd != null">
+	      AND (A.CUST_NM LIKE '%' + #{custCd} + '%' OR A.CUST_CD LIKE #{custCd} + '%' ) /* 거래처코드 */
+          </if>
+    </select>
+
+	<!-- 출하현황(대리점용) 조회  -->
+	<select id="selAgencyShipR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT Y1.SO_NO
+	        , A.CUST_CD
+            , CUST = E.CUST_NM
+	        , OUT_DT = SUBSTRING(CONVERT(CHAR, A.OUT_DT, 121),0,11) /* 출고일자 */
+	        , NM = ISNULL((SELECT NM FROM SCU100 WHERE REG_ID = Y3.SO_RID ), U1.NM) /* 영업사원 */
+	        , SAL_BC = ISNULL(Y3.SAL_BC, A.SAL_BC)
+	        , SAL_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = ISNULL(Y3.SAL_BC, A.SAL_BC))
+	        , A.TCOLOR
+	        , TCOLOR_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.TCOLOR)
+	        , A.TSIZE
+	        , TSIZE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.TSIZE)
+	        , A.TGRADE
+	        , TGRADE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.TGRADE)
+	        , A.FLD_CD
+	        , H.FLD_NM
+	        , C.ITM_CD
+	        , C.ITM_NM
+	        , C.SPEC
+	        , WEIGHT_TOT = ISNULL(A.OUT_QTY,0) * CASE WHEN ISNULL(D1.WEIGHT,0) = 0 THEN 0 ELSE D1.WEIGHT END
+	        , A.OUT_QTY
+	        , DLV_YARD = ISNULL(Y3.DLV_YARD,'')
+	        , A.OUT_UP
+	        , A.OUT_AMT
+	        , A.OUT_BS
+	        /* PK */
+	        , A.OUT_NO
+			, A.OUT_SQ
+			, A.FAC_CD
+			, FAC_NM = (SELECT FAC_NM FROM BCC300 WHERE FAC_CD = A.FAC_CD)
+			, A.WH_CD
+			, A.ITM_ID
+			, DLV_YARD = ISNULL(Y3.DLV_YARD,'') /* 납품장소 */
+         FROM LEB100 A 
+		      JOIN DMA100 C  ON A.ITM_ID = C.ITM_ID
+              JOIN DMA210 D1 ON A.ITM_ID = D1.ITM_ID AND A.OUT_BS = D1.BS_CD
+			  JOIN BCV100 E  ON A.CUST_CD  = E.CUST_CD
+    		  JOIN BCV200 H  ON A.FLD_CD   = H.FLD_CD
+    	      LEFT JOIN SCU100 U1 ON U1.REG_ID  = A.REG_ID 
+    	      LEFT JOIN LEB120 Y  ON A.OUT_NO   = Y.OUT_NO  AND A.OUT_SQ = Y.OUT_SQ
+    	      LEFT JOIN LEM150 Y1 ON Y.MOV_NO   = Y1.MOV_NO AND Y.MOV_SQ = Y1.MOV_SQ
+    	      LEFT JOIN SDB100 Y3 ON Y1.SO_NO   = Y3.SO_NO
+		WHERE 1=1
+          AND A.OUT_BC IN ((SELECT Z.BASE_CD FROM BCA200V Z WHERE Z.MAIN_CD = 'LE200' AND (Z.M2 = '1' OR Z.M1 = '1') ))  /* 매출용출하만보여주기*/
+          AND A.OUT_BC NOT IN ('LE200800', 'LE200630') 
+          AND ISNULL(A.OUT_QTY,0) + ISNULL(A.OUT_AMT,0) <> 0 
+		  AND C.ITM_CD BETWEEN ISNULL('0', '0') AND ISNULL('ZZZZZZZ', 'ZZZZ')
+		  AND A.OUT_DT BETWEEN #{frDt} AND #{toDt} /* 조회조건(주문일자)-필수 */
+		  AND (A.CUST_CD = #{custCd} OR A.CUST_CD2 = #{custCd})  /* 조회조건 (거래처)-필수 */
+		  ]]>
+		  <if test="facCd != null and facCd != ''">
+		  AND A.FAC_CD = #{facCd}
+		  </if>
+		  <![CDATA[
+		ORDER BY A.CUST_CD, A.FLD_CD, A.OUT_DT, A.TRANS_NO, A.OUT_NO, A.OUT_SQ
+		]]>
+    </select>
+
+	<!-- 출하현황(대리점용) 조회 - detail  -->
+	<select id="selAgencyShipDtlR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT Y1.SO_NO
+	        , A.CUST_CD
+            , E.CUST_NM
+	        , NM = ISNULL((SELECT NM FROM SCU100 WHERE REG_ID = Y3.SO_RID ), U1.NM) /* 영업사원 */
+	        , SAL_BC = ISNULL(Y3.SAL_BC, A.SAL_BC)
+	        , SAL_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = ISNULL(Y3.SAL_BC, A.SAL_BC))
+	        , A.FLD_CD
+	        , H.FLD_NM
+	        , C.ITM_CD
+	        , C.ITM_NM
+	        , A.OUT_QTY
+	        , A.OUT_AMT
+	        
+	        , CAR_NO = ISNULL(B.CAR_NO,'')
+			, DRV_NM = ISNULL(B.DRV_NM,'')
+			, MOBILE = ISNULL(B.MOBILE,'')
+		
+	        /* PK */
+	        , A.OUT_NO
+			, A.OUT_SQ
+			, OUT_DT = SUBSTRING(CONVERT(CHAR, A.OUT_DT, 121),0,11) /* 출고일자 */
+	        , A.OUT_BS
+			, A.FAC_CD
+			, FAC_NM = (SELECT FAC_NM FROM BCC300 WHERE FAC_CD = A.FAC_CD)
+			, A.WH_CD
+			, A.ITM_ID
+			, DLV_YARD = ISNULL(Y3.DLV_YARD,'') /* 납품장소 */
+         FROM LEB100 A 
+		      JOIN DMA100 C  ON A.ITM_ID = C.ITM_ID
+              JOIN DMA210 D1 ON A.ITM_ID = D1.ITM_ID AND A.OUT_BS = D1.BS_CD
+			  JOIN BCV100 E  ON A.CUST_CD  = E.CUST_CD
+    		  JOIN BCV200 H  ON A.FLD_CD   = H.FLD_CD
+    	      LEFT JOIN SCU100 U1 ON U1.REG_ID  = A.REG_ID 
+    	      LEFT JOIN LEB120 Y  ON A.OUT_NO   = Y.OUT_NO  AND A.OUT_SQ = Y.OUT_SQ
+    	      LEFT JOIN LEM150 Y1 ON Y.MOV_NO   = Y1.MOV_NO AND Y.MOV_SQ = Y1.MOV_SQ
+    	      LEFT JOIN SDB100 Y3 ON Y1.SO_NO   = Y3.SO_NO
+    	      
+    	      LEFT OUTER JOIN LEB200 B ON A.TRANS_NO = B.TRANS_NO /* 운송정보 추가 */
+		WHERE 1=1
+          AND A.OUT_BC IN ((SELECT Z.BASE_CD FROM BCA200V Z WHERE Z.MAIN_CD = 'LE200' AND (Z.M2 = '1' OR Z.M1 = '1') ))  /* 매출용출하만보여주기*/
+          AND A.OUT_BC NOT IN ('LE200800', 'LE200630') 
+          AND ISNULL(A.OUT_QTY,0) + ISNULL(A.OUT_AMT,0) <> 0 
+		  AND C.ITM_CD BETWEEN ISNULL('0', '0') AND ISNULL('ZZZZZZZ', 'ZZZZ')
+		  AND A.OUT_NO = #{outNo}
+		  AND A.OUT_SQ = #{outSq}
+		ORDER BY A.CUST_CD, A.FLD_CD, A.OUT_DT, A.TRANS_NO, A.OUT_NO, A.OUT_SQ
+		  ]]>
+    </select>
+    
+    
+    <!-- 영업사원 콤보박스  -->
+	<select id="selComboSalesEmp" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT ID = A.EMP_NO
+	        , VALUE = (SELECT DEPT_NM FROM HRA200 WHERE DEPT_CD = A.DEPT_CD) + ' / ' + A.EMP_NM
+	        , A.DEPT_CD
+	     FROM HRA100 A
+	    WHERE A.BS_CD = '01' /* 본사 */
+		  AND A.GRP_BC = 'HR15701' /* 영업직군 */
+		  AND A.STAT_BC = 'HR125100' /* 재직 */
+		  AND A.RANK_BC <> 'HR15201' /* 임원제외 */ 
+		  AND A.HIGH_BC >= 'HR15114' /* 차장이하 */
+	]]>
+		  <if test="deptCd != '' and deptCd != null">
+	      AND A.DEPT_CD LIKE '%' + #{deptCd} + '%'
+          </if>
+    	ORDER BY RANK_BC /* 직급순 */
+    </select>
+    
+    <!-- 영업부서 콤보박스  -->
+	<select id="selComboSalesDept" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT ID = A.DEPT_CD
+	        , VALUE = A.DEPT_NM
+	     FROM HRA200 A
+	    WHERE DEPT_CD IN (SELECT DEPT_CD 
+	    					FROM HRA100 
+	    				   WHERE BS_CD = '01' /* 본사 */
+	    				     AND GRP_BC = 'HR15701' /* 영업직군 */
+	    				     AND STAT_BC = 'HR125100' /* 재직 */
+	    				     AND RANK_BC <> 'HR15201' /* 임원제외 */ 
+	    				     AND HIGH_BC >= 'HR15114' /* 차장이하 */)
+	      AND USE_YN = '1'
+		  AND UP_DEPT <> '01'
+		  --AND UP_DEPT NOT IN (SELECT DEPT_CD FROM HRA200 WHERE UP_DEPT = '01')
+		ORDER BY DEPT_NM
+		]]>
+    </select>
+    
+    
+    <!-- 출하현황(영업사원용) 조회  -->
+	<select id="selSalesShipR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT A.OUT_DT /* 출하일자 */
+		     , B.BS_CD /* 사업장코드 */
+			 , EMP_NO = ISNULL(Y3.SO_RID, U1.REG_ID)    /* 출고자 */
+			 , EMP_NM = ISNULL((SELECT NM FROM SCU100 WHERE REG_ID = Y3.SO_RID ), U1.NM) /* 담당자 */
+			 , C.ITM_CD /* 품목코드 */
+			 , A.FLD_CD /* 현장코드 */
+			 , H.FLD_NM /* 현장명 */
+			 , A.OUT_QTY /* 수량 */
+			 , A.CUST_CD
+			 , CUST_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD)
+			 , A.FAC_CD /* 출고사업장 */
+			 , B.FAC_NM 
+			 , A.OUT_NO
+			 , A.OUT_SQ
+		FROM LEB100 A
+		     LEFT JOIN BCC300 B  ON A.FAC_CD = B.FAC_CD
+			 LEFT JOIN DMA100 C  ON A.ITM_ID = C.ITM_ID
+			 LEFT JOIN LEB120 Y  ON A.OUT_NO   = Y.OUT_NO  AND A.OUT_SQ = Y.OUT_SQ
+			 LEFT JOIN LEM150 Y1 ON Y.MOV_NO   = Y1.MOV_NO AND Y.MOV_SQ = Y1.MOV_SQ
+			 LEFT JOIN SDB100 Y3 ON Y1.SO_NO   = Y3.SO_NO
+			 LEFT JOIN SCU100 U1 ON U1.REG_ID  = A.REG_ID
+			 LEFT JOIN SCU100 U2 ON U2.REG_ID  = Y3.SO_RID
+			 LEFT JOIN BCV200 H  ON A.FLD_CD   = H.FLD_CD 
+		WHERE A.OUT_BC IN ((SELECT Z.BASE_CD FROM BCA200V Z WHERE Z.MAIN_CD = 'LE200' AND (Z.M2 = '1' OR Z.M1 = '1') ))  /* 매출용 출하만 보여주기 */
+		  AND A.OUT_BC NOT IN ('LE200800', 'LE200630')   	/* 판매폐기와 건설폐기는 보여주지 말것 */
+		  AND ISNULL(CASE WHEN A.WH_CD = '580' OR A.WH_CD = 'A580' THEN A.UNIT_QTY ELSE A.OUT_QTY END,0) + ISNULL(A.OUT_AMT,0) <> 0 
+		  AND C.ITM_CD BETWEEN ISNULL('0', '0') AND ISNULL('ZZZZZZZ', 'ZZZZ')
+		  AND A.FAC_CD IN ('100', '550', '400', '600','150','155') /* 제조쪽에서 조회할 사업장 일부만 조회 */
+		  AND U2.DEPT_CD = #{deptCd}
+		  AND A.OUT_DT = #{outDt} /* 출하일자 */
+		  ]]>
+		  <if test="empNo != null and empNo != ''">
+		  AND Y3.SO_RID  = (SELECT REG_ID FROM   SCU100 WHERE EMP_NO = #{empNo}) /* 사번 */
+		  </if>
+		  <if test="facCd != null and facCd != ''">
+		  AND A.FAC_CD = #{facCd}
+		  </if>
+		  <![CDATA[
+		ORDER BY A.CUST_CD, A.FLD_CD, A.OUT_DT, A.TRANS_NO, A.OUT_NO, A.OUT_SQ
+		]]>
+    </select>
+
+    <!-- 출하현황(영업사원용) 조회  detail -->
+	<select id="selSalesShipDtlR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	<![CDATA[
+	   SELECT OUT_DT = SUBSTRING(CONVERT(CHAR, A.OUT_DT, 121),0,11) /* 출고일자 */
+		     , B.BS_CD /* 사업장코드 */
+			 , EMP_NO = ISNULL(Y3.SO_RID, U1.REG_ID)    /* 출고자 */
+			 , EMP_NM = ISNULL((SELECT NM FROM SCU100 WHERE REG_ID = Y3.SO_RID ), U1.NM) /* 담당자 */
+			 , C.ITM_CD /* 품목코드 */
+			 , C.ITM_NM /* 품목명 */
+			 , A.FLD_CD /* 현장코드 */
+			 , H.FLD_NM /* 현장명 */
+			 , A.OUT_QTY /* 수량 */
+			 , A.OUT_AMT /* 금액 */
+			 , A.CUST_CD
+			 , CUST_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD)
+			 , A.FAC_CD /* 출고사업장 */
+			 , B.FAC_NM 
+			 , DLV_YARD = ISNULL(Y3.DLV_YARD,'') /* 납품장소 */
+			 , CAR_NO = ISNULL(K.CAR_NO,'')
+			 , DRV_NM = ISNULL(K.DRV_NM,'')
+			 , MOBILE = ISNULL(K.MOBILE,'')
+		FROM LEB100 A
+		     LEFT JOIN BCC300 B  ON A.FAC_CD = B.FAC_CD
+			 LEFT JOIN DMA100 C  ON A.ITM_ID = C.ITM_ID
+			 LEFT JOIN LEB120 Y  ON A.OUT_NO   = Y.OUT_NO  AND A.OUT_SQ = Y.OUT_SQ
+			 LEFT JOIN LEM150 Y1 ON Y.MOV_NO   = Y1.MOV_NO AND Y.MOV_SQ = Y1.MOV_SQ
+			 LEFT JOIN SDB100 Y3 ON Y1.SO_NO   = Y3.SO_NO
+			 LEFT JOIN SCU100 U1 ON U1.REG_ID  = A.REG_ID
+			 LEFT JOIN SCU100 U2 ON U2.REG_ID  = Y3.SO_RID
+			 LEFT JOIN BCV200 H  ON A.FLD_CD   = H.FLD_CD 
+			 LEFT OUTER JOIN LEB200 K ON A.TRANS_NO = K.TRANS_NO /* 운송정보 추가 */
+		WHERE A.OUT_BC IN ((SELECT Z.BASE_CD FROM BCA200V Z WHERE Z.MAIN_CD = 'LE200' AND (Z.M2 = '1' OR Z.M1 = '1') ))  /* 매출용 출하만 보여주기 */
+		  AND A.OUT_BC NOT IN ('LE200800', 'LE200630')   	/* 판매폐기와 건설폐기는 보여주지 말것 */
+		  AND ISNULL(CASE WHEN A.WH_CD = '580' OR A.WH_CD = 'A580' THEN A.UNIT_QTY ELSE A.OUT_QTY END,0) + ISNULL(A.OUT_AMT,0) <> 0 
+		  AND C.ITM_CD BETWEEN ISNULL('0', '0') AND ISNULL('ZZZZZZZ', 'ZZZZ')
+		  AND A.FAC_CD IN ('100', '550', '400', '600','150','155') /* 제조쪽에서 조회할 사업장 일부만 조회 */
+		  AND A.OUT_NO = #{outNo}
+		  AND A.OUT_SQ = #{outSq}
+		ORDER BY A.CUST_CD, A.FLD_CD, A.OUT_DT, A.TRANS_NO, A.OUT_NO, A.OUT_SQ
+		]]>
+    </select>
+
+</mapper>

@@ -1,0 +1,43 @@
+@charset "utf-8";
+
+.info_color{overflow:hidden;position:absolute;right:40px;bottom:15px;height:15px;}
+.info_color li{float:left;position:relative;font-size:12px;padding-left:20px;}
+.info_color li:before{content:'';display:inline-block;width:14px;height:14px;background:#000;position:absolute;left:0;top:0;}
+.info_color li.y{margin-right:20px;}
+.info_color li.y:before{background:#e0e0e0;}
+.info_color li.s:before{background:#02A7CB;}
+
+.rsv_wrap_bx{overflow:hidden;margin-top:30px;border-left:1px solid #ddd;}
+.rsv_wrap_bx + p{margin:15px 0 0;}
+.rsv_wrap_bx .top{height:95px;position:relative;overflow:hidden;border-bottom:1px solid #ddd;}
+.rsv_wrap_bx .tit{font-size:18px;font-family:'ngB';text-align:center;margin-top:20px;}
+.rsv_wrap_bx .btm{padding:20px 0;text-align:center;font-size:16px;font-family:'ngB';border-top:1px solid #ddd;}
+.rsv_wrap_bx .btm .fc-blue{color:#02A7CB;}
+.rsv_wrap_bx .body{box-sizing:border-box;width:90%;height:379px;padding:35px 0 25px 0;margin:0 auto;}
+.rsv_wrap_bx .body .ymd{position:relative;margin-bottom:25px;text-align:center;}
+.rsv_wrap_bx .body .ymd a{position:absolute;top:0px;text-indent:-9999em;display:block;width:10px;height:18px;background:url(../img/sub/ico_arrw_wrap.png) no-repeat 0 0;}
+.rsv_wrap_bx .body .ymd span{font-size:17px;font-family:'ngB';}
+.rsv_wrap_bx .body .ymd .prev{left:0;background-position:0 0;}
+.rsv_wrap_bx .body .ymd .next{right:0;background-position:0 -19px;}
+
+.rsv_date_bx, .rsv_time_bx{border:1px solid #ddd;overflow:hidden;width:98%;float:left;margin-left:-1px;box-sizing:border-box;}
+.rsv_time_bx .body{width:auto;padding:20px 0;}
+.rsv_wrap_bx dl{overflow:hidden;}
+.rsv_wrap_bx dl dt{float:left;padding:10px 40px 0 30px;display:inline-block;font-size:17px;font-family:'ngB';}
+.rsv_wrap_bx dl dd{float:left;width:300px;}
+.rsv_wrap_bx dl dd ul li{display:inline-block;float:left;margin:3px 4px;width:140px;background:#eee;height:35px;line-height:35px;text-align:center;}
+.rsv_wrap_bx dl dd ul li a{display:block;background:#e0e0e0;}
+.rsv_wrap_bx dl.pm{margin-top:15px;}
+
+/* mth //달력 테이블 */
+.rsv thead th{height:35px;line-height:35px;vertical-align: middle;border-top:1px solid #ddd;border-bottom:1px solid #ddd;font-size:16px;font-family:'ngB';}
+.rsv tbody td{height:35px;line-height:35px;border:5px solid #fff;text-align:center;font-size:15px;}
+.rsv tbody td.y{background:#e0e0e0;}
+.rsv tbody td.s{background:#02A7CB;color:#fff;}
+.rsv tbody td.sun{color:#ff0000;}
+.rsv tbody td.sun, .rsv tbody td.sat{background:none;}
+.rsv tbody{border-spacing:10px;}
+.rsv .y {background:#e0e0e0;}
+.rsv .s {background:#02A7CB;color:#fff;}
+.rsv .f {background:#fff;}
+.rsv  li{cursor:pointer;}

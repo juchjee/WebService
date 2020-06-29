@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.instPayment.dao.InstPaymentDao">
+	<resultMap type="InstPaymentVO" id="InstPaymentMap" />
+ 
+     <!-- 팝업 및 기타  -->
+     <select id="selHadocontNo" parameterType="InstPaymentVO" resultType="InstPaymentVO">
+     <![CDATA[
+       SELECT HADOCONT_NO, HADOCONT_DS FROM CMB100 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+     ]]>
+     </select>
+     
+     <select id="selNowCurrentDate" resultType="InstPaymentVO">
+     <![CDATA[
+       SELECT convert(char(10),GETDATE(),112) AS NOW_DATE
+      ]]>
+     </select>
+     
+     <select id="selBillingDate" parameterType="InstPaymentVO" resultType="InstPaymentVO">
+     <![CDATA[
+       SELECT CONTROL_SDT, CONTROL_EDT FROM CCM500 
+       WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND HADOCONT_NO = #{hadocontNo} AND CONTROL_YM = #{workYm} AND CON_YN = '1'
+     ]]>
+     </select>
+     
+	<!-- 기성청구 등록  -->		
+	<select id="selBillingS" statementType="CALLABLE" parameterType="InstPaymentVO" resultType="InstPaymentVO">
+	<![CDATA[	select  #{workYm} as work_ym, a.site_cd, a.hadocont_no, a.cost_id,
+				c.cost_cd, c.item_ds, c.size_sz, c.unit_ds,
+				'하도' as hd_fd, isnull(a.hado_qn,0) as hado_qn, isnull(a.hado_up,0) as hado_up, isnull(a.hado_am,0) as hado_am,
+				isnull(b.hadogsp_qn,0) 	as hadogsp_qn, 	isnull(b.hadogsp_am,0) as hadogsp_am,
+				isnull(b.hadogs_qn,0) 	as hadogs_qn, 	isnull(b.hadogs_am,0) as hadogs_am,
+				isnull(b.hadogst_qn,0) 	as hadogst_qn, 	isnull(b.hadogst_am,0) as hadogst_am,
+				isnull(b.data_yn,'N') 	as data_yn, '' as dFlag,
+			     b.out_cid as out_chk, isnull(D.scm_hadogs_qn,0) as scm_hadogs_qn, isnull(d.con_kind,'10') as con_kind, d.con_rmk
+			from	CMB200 a
+					 left join	(
+							select	a.site_cd, a.hadocont_no, a.cost_id,
+								sum(case when a.work_ym < #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogsp_qn,
+								sum(case when a.work_ym < #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogsp_am,
+								sum(case when a.work_ym = #{workYm} then isnull(a.scm_hadogs_qn,0) else a.scm_hadogs_qn end) as scm_hadogs_qn,
+								sum(case when a.work_ym = #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogs_qn,
+								sum(case when a.work_ym = #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogs_am,
+								sum(isnull(a.hadogs_qn,0)) as hadogst_qn, sum(isnull(a.hadogs_am,0)) as hadogst_am,
+								max(case when a.work_ym = #{workYm} and cost_id is null then 'N' else 'Y' end) as data_yn,
+								max(case when a.work_ym = #{workYm} then isnull(a.out_cid, '0') else '0' end) as out_cid
+							from	CMC200 a
+							where	a.site_cd = #{siteCd}
+							and	a.hadocont_no = #{hadocontNo}
+							and	a.work_ym <= #{workYm}
+							group by a.site_cd, a.hadocont_no, a.cost_id
+							) b on a.site_cd = b.site_cd and a.hadocont_no = b.hadocont_no and a.cost_id = b.cost_id		
+					inner join 	CMA210 c on a.site_cd = c.site_cd and a.cost_id = c.cost_id and c.sq_sn = #{sqSn}
+					left join (
+					  select site_cd, hadocont_no, cost_id, con_kind, con_rmk, SCM_HADOGS_QN 
+					    from CMC200  
+					   where site_cd = #{siteCd}
+							and	hadocont_no = #{hadocontNo}
+							and	work_ym = #{workYm}
+					) d on a.site_cd = d.site_cd and a.hadocont_no = d.hadocont_no and a.cost_id = d.cost_id
+			where	a.site_cd = #{siteCd}
+			and	a.hadocont_no = #{hadocontNo}
+			and	a.acture_yn = '1'
+			order by c.cost_cd ]]>
+	</select>
+		
+	<insert id="prcsBillingS" parameterType="InstPaymentVO">
+      <if test="cudKey == 'INSERT'">
+      <![CDATA[
+         INSERT INTO CMC200 (WORK_YM, SITE_CD, HADOCONT_NO, COST_ID, DOKUBGS_QN, DOKUBGS_AM, SILHENGGS_QN, SILHENGGS_AM,
+                             HADOGS_QN, HADOGS_AM,SCM_HADOGS_QN, OUT_CID, OUT_CDT, con_kind)
+           SELECT #{workYm}, A.SITE_CD, A.HADOCONT_NO, A.COST_ID, #{scmHadogsQn},#{scmHadogsQn}*A.DOKUB_UP, #{scmHadogsQn}, #{scmHadogsQn}*A.SILHENG_UP,
+                  #{scmHadogsQn},#{hadogsAm}, #{scmHadogsQn}, #{id},GETDATE(), '10'
+             FROM CMB200 A
+            WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND ACTURE_YN = '1'
+      ]]> 
+      </if>
+      <if test="cudKey == 'UPDATE'">
+          <if test="conKind == '10'">
+          <![CDATA[
+            UPDATE CMC200 SET HADOGS_QN = #{scmHadogsQn}, HADOGS_AM = #{hadogsAm}, DOKUBGS_QN = #{scmHadogsQn}, DOKUBGS_AM = #{scmHadogsQn}*A.DOKUB_UP,
+                           SILHENGGS_QN = #{scmHadogsQn}, SILHENGGS_AM = #{scmHadogsQn}*A.SILHENG_UP, OUT_MID = #{id}, OUT_MDT = GETDATE(), 
+                           SCM_HADOGS_QN = #{scmHadogsQn}
+           FROM CMB200 A INNER JOIN CMC200 B ON (A.SITE_CD = B.SITE_CD AND A.HADOCONT_NO = B.HADOCONT_NO AND A.COST_ID = B.COST_ID)
+          WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND B.WORK_YM = #{workYm}
+          ]]>
+          </if>
+          <if test="conKind == '20'">
+          <![CDATA[
+            UPDATE CMC200 SET SCM_HADOGS_QN = #{scmHadogsQn}, OUT_MID = #{id}, OUT_MDT = GETDATE(), CON_KIND = '30'
+           FROM CMB200 A INNER JOIN CMC200 B ON (A.SITE_CD = B.SITE_CD AND A.HADOCONT_NO = B.HADOCONT_NO AND A.COST_ID = B.COST_ID)
+          WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND B.WORK_YM = #{workYm}
+          ]]>
+          </if>
+          <if test="conKind == '30'">
+          <![CDATA[
+            UPDATE CMC200 SET SCM_HADOGS_QN = #{scmHadogsQn}, OUT_MID = #{id}, OUT_MDT = GETDATE()
+           FROM CMB200 A INNER JOIN CMC200 B ON (A.SITE_CD = B.SITE_CD AND A.HADOCONT_NO = B.HADOCONT_NO AND A.COST_ID = B.COST_ID)
+          WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND B.WORK_YM = #{workYm}
+          ]]>
+          </if>
+      </if>
+	</insert>
+	
+	<insert id="prcsBillingFinalDate" parameterType="InstPaymentVO">
+	<![CDATA[
+	  UPDATE CCM500 SET REG_FINAL_DT = GETDATE() 
+           WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}  AND HADOCONT_NO = #{hadocontNo} AND CONTROL_YM = #{workYm}
+     ]]>
+	</insert>
+	
+	<select id="selExcelBillingS" parameterType="InstPaymentVO" resultType="int">
+	<![CDATA[
+	    SELECT COUNT(*) AS CNT FROM CMC200 WHERE WORK_YM = #{workYm} AND SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo} AND COST_ID = #{costId}
+	    ]]>
+	</select>
+	
+	<insert id="prcsExcelBillingS" parameterType="InstPaymentVO">
+      <if test="cudKey == 'INSERT'">
+      <![CDATA[
+         INSERT INTO CMC200 (WORK_YM, SITE_CD, HADOCONT_NO, COST_ID, DOKUBGS_QN, DOKUBGS_AM, SILHENGGS_QN, SILHENGGS_AM, 
+                             HADOGS_QN, HADOGS_AM,con_kind , OUT_CID, OUT_CDT, scm_hadogs_qn)
+           SELECT #{workYm}, A.SITE_CD, A.HADOCONT_NO, A.COST_ID, #{hadogsQn},#{hadogsQn}*A.DOKUB_UP, #{hadogsQn}, #{hadogsQn}*A.SILHENG_UP,
+                  #{hadogsQn},#{hadogsAm},'10', #{id},GETDATE(),#{hadogsQn}
+             FROM CMB200 A
+            WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND ACTURE_YN = '1'
+         ]]>        
+      </if>
+      <if test="cudKey == 'UPDATE'">
+      <![CDATA[
+         UPDATE CMC200 SET HADOGS_QN = #{hadogsQn}, HADOGS_AM = #{hadogsAm}, DOKUBGS_QN = #{hadogsQn}, DOKUBGS_AM = #{hadogsQn}*A.DOKUB_UP,
+                           SILHENGGS_QN = #{hadogsQn}, SILHENGGS_AM = #{hadogsQn}*A.SILHENG_UP, SCM_HADOGS_QN = #{hadogsQn}
+           FROM CMB200 A INNER JOIN CMC200 B ON (A.SITE_CD = B.SITE_CD AND A.HADOCONT_NO = B.HADOCONT_NO AND A.COST_ID = B.COST_ID)
+          WHERE A.SITE_CD = #{siteCd} AND A.HADOCONT_NO = #{hadocontNo} AND A.COST_ID = #{costId} AND B.WORK_YM = #{workYm}
+          ]]>
+      </if>
+	</insert>
+		
+	<!-- <insert id="prcsExcelBillingS" parameterType="InstPaymentVO">
+      MERGE INTO CMC200 MI
+	     USING (SELECT #{siteCd} AS SITE_CD, #{workYm} AS WORK_YM, #{hadocontNo} AS HADOCONT_NO, #{costId} AS COST_ID) GMI
+	        ON MI.SITE_CD = GMI.SITE_CD AND MI.WORK_YM = GMI.WORK_YM AND MI.HADOCONT_NO = GMI.HADOCONT_NO AND MI.COST_ID = GMI.COST_ID
+	      WHEN MATCHED THEN  
+           UPDATE SET DOKUBGS_QN = #{hadogsQn},SILHENGGS_QN = #{hadogsQn},HADOGS_QN = #{hadogsQn}, 
+                       HADOGS_AM = #{hadogsAm}, out_mid = #{id}, out_mdt = GETDATE()
+         WHEN NOT MATCHED THEN  
+	        INSERT (WORK_YM, SITE_CD, HADOCONT_NO, COST_ID,DOKUBGS_QN,SILHENGGS_QN, HADOGS_QN, HADOGS_AM,req_con,out_cid, out_cdt)
+	        values(#{workYm}, #{siteCd}, #{hadocontNo},#{costId},#{hadogsQn},#{hadogsQn}, #{hadogsQn}, #{hadogsAm},'0',#{id},GETDATE());
+	</insert> -->
+	
+	<insert id="delBillingS" parameterType="InstPaymentVO">
+	<![CDATA[
+       DELETE FROM CMC200 WHERE WORK_YM = #{workYm} AND SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo}
+    ]]> 
+	</insert>
+	
+	<insert id="delBillingFinalDate" parameterType="InstPaymentVO">
+	<![CDATA[
+	  UPDATE CCM500 SET REG_FINAL_DT = null 
+           WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}  AND HADOCONT_NO = #{hadocontNo} AND CONTROL_YM = #{workYm}
+    ]]>
+	</insert>
+	
+	<!-- <select id="selBillingR" statementType="CALLABLE" parameterType="InstPaymentVO" resultMap="InstPaymentMap" resultType="ResultSet">
+		 {call UP_BILLINGR_LIST(#{workYm,jdbcType=VARCHAR},#{hadocontNo,jdbcType=VARCHAR},#{siteCd,jdbcType=VARCHAR},#{flag,jdbcType=VARCHAR},#{sqSn,jdbcType=INTEGER})}	
+	</select> -->
+	<select id="selBillingR" statementType="CALLABLE" parameterType="InstPaymentVO" resultMap="InstPaymentMap" resultType="ResultSet">
+	<![CDATA[
+			select '1' as kind, #{workYm} as work_ym, a.site_cd, a.hadocont_no, a.cost_id,
+				c.cost_cd, c.item_ds, c.size_sz, c.unit_ds,
+				'하도' as hd_fd, isnull(a.hado_qn,0) as hado_qn, isnull(a.hado_up,0) as hado_up, isnull(a.hado_am,0) as hado_am,
+				isnull(b.hadogsp_qn,0) 	as hadogsp_qn, 	isnull(b.hadogsp_am,0) as hadogsp_am,
+				isnull(b.hadogs_qn,0) 	as hadogs_qn, 	isnull(b.hadogs_am,0) as hadogs_am,
+				isnull(b.hadogst_qn,0) 	as hadogst_qn, 	isnull(b.hadogst_am,0) as hadogst_am,
+				isnull(b.data_yn,'N') 	as data_yn, '' as dFlag,
+			    b.out_cid as out_chk, isnull(b.scm_hadogs_qn,0) as scm_hadogs_qn, isnull(d.con_kind,'10') as con_kind, d.con_rmk
+			from	CMB200 a
+					 left join	(
+							select	a.site_cd, a.hadocont_no, a.cost_id,
+			   			        sum(case when a.work_ym < #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogsp_qn,
+								sum(case when a.work_ym < #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogsp_am,	
+								sum(case when a.work_ym = #{workYm} then isnull(a.scm_hadogs_qn,0) else a.scm_hadogs_qn end) as scm_hadogs_qn,
+								sum(case when a.work_ym = #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogs_qn,
+								sum(case when a.work_ym = #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogs_am,
+								sum(isnull(a.hadogs_qn,0)) as hadogst_qn, sum(isnull(a.hadogs_am,0)) as hadogst_am,
+								max(case when a.work_ym = #{workYm} and cost_id is null then 'N' else 'Y' end) as data_yn,
+								max(case when a.work_ym = #{workYm} then isnull(a.out_cid, '0') else '0' end) as out_cid
+							from	CMC200 a
+							where	a.site_cd = #{siteCd}
+							and	a.hadocont_no = #{hadocontNo}
+							and	a.work_ym <= #{workYm}
+							group by a.site_cd, a.hadocont_no, a.cost_id
+							) b on a.site_cd = b.site_cd and a.hadocont_no = b.hadocont_no and a.cost_id = b.cost_id		
+					inner join 	CMA210 c on a.site_cd = c.site_cd and a.cost_id = c.cost_id and c.sq_sn = #{sqSn}
+					left join (
+					  select site_cd, hadocont_no, cost_id, con_kind, con_rmk from	CMC200  
+					   where site_cd = #{siteCd}
+							and	hadocont_no = #{hadocontNo}
+							and	work_ym = #{workYm}
+					) d on a.site_cd = d.site_cd and a.hadocont_no = d.hadocont_no and a.cost_id = d.cost_id
+			where	a.site_cd = #{siteCd}
+			and	a.hadocont_no = #{hadocontNo}
+			]]>
+			<if test="conKind == '10'">
+			  and (d.con_kind like #{conKind} + '%' or d.con_kind is null)
+			</if>
+			<if test="conKind == '20'">
+			  and d.con_kind = '20'
+			</if>
+			<if test="conKind == '30'">
+			  and d.con_kind = '30'
+			</if>
+			<if test="conKind == '50'">
+			  and d.con_kind = '50'
+			</if>
+			<![CDATA[	
+			and	a.acture_yn = '1'
+			order by c.cost_cd, kind
+			]]> 
+	</select>
+
+	<!-- 첨부파일 관리  -->
+	<select id="selBillingFileSave" parameterType="InstPaymentVO" resultType="InstPaymentVO">
+	<![CDATA[	
+		SELECT SITE_CD, HADOCONT_NO, WORK_YM, SQ_SN, FILE_PATH, FILE_NM, FILE_SIZE, RMKS, FILE_ID
+		FROM CCM240
+		WHERE SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo} AND WORK_YM = #{workYm}
+		ORDER BY WORK_YM, SQ_SN
+	]]>
+	</select>
+	
+	<insert id="prcsBillingFileSave" parameterType="InstPaymentVO">
+       <if test="cudKey == 'INSERT'">        
+       <![CDATA[	
+          INSERT INTO CCM240 (SITE_CD, HADOCONT_NO, WORK_YM, SQ_SN, FILE_PATH, FILE_NM, FILE_SIZE,RMKS,FILE_ID,OUT_CID,OUT_CDT)
+                SELECT  #{siteCd},#{hadocontNo},#{workYm},right('000' + convert(varchar, isnull(convert(int, max(SQ_SN)), 0) + 1), 3),
+                        #{filePath},#{fileNm},#{fileSize},#{rmks},#{fileId}, #{id}, GETDATE()
+                  FROM CCM240 
+                  WHERE SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo} AND WORK_YM = #{workYm}
+       ]]>
+	   </if>
+	   <if test="cudKey == 'UPDATE'">        
+	   <![CDATA[	  
+          UPDATE CCM240 
+             SET  FILE_PATH = #{filePath}, FILE_NM = #{fileNm}, FILE_SIZE = #{fileSize}, RMKS = #{rmks}, FILE_ID = #{fileId}, OUT_MID = #{id}, OUT_MDT = GETDATE()
+             WHERE SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo} AND WORK_YM = #{workYm} AND SQ_SN = #{sqSn}
+          ]]> 
+        </if>  
+       <if test="cudKey == 'DELETE'">
+       <![CDATA[	 
+          DELETE FROM CCM240 WHERE SITE_CD = #{siteCd} AND HADOCONT_NO = #{hadocontNo} AND WORK_YM = #{workYm} AND SQ_SN = #{sqSn}
+         ]]>       
+        </if>
+	</insert>
+	
+	<select id="selExcelUploadGrid" parameterType="InstPaymentVO" resultType="InstPaymentVO">
+	<![CDATA[	
+	  select  #{workYm} as work_ym, a.site_cd, b.hadocont_no,
+	          a.grpcost_id as cost_id, a.grpcost_cd as cost_cd, a.grpcost_ds as item_ds, a.grpcost_gr as cost_gr, a.upgrpcost_id as upcost_id,
+	          MAX(case when a.cost_yn = 'Y' then B.size_sz else null end) as size_sz,
+	          MAX(case when a.cost_yn = 'Y' then b.unit_ds else null end) as unit_ds,
+		      MAX(case when a.cost_yn = 'Y' then 'Y' else 'N' end) as cost_yn,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hado_qn,0) else null end) as hado_qn,
+	          MAX(case when a.cost_yn = 'Y' then ISNULL(b.hado_up,0) else null end) as hado_up,
+	          SUM(isnull(b.hado_am,0)) as hado_am,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_qn,0) else null end) as hadogsp_qn,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_am,0) else null end) as hadogsp_am,
+		      SUM(case when a.cost_yn = 'Y' then isnull(b.hadogs_qn,0) else null end) as hadogs_qn,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogs_am,0) else null end) as hadogs_am,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_qn,0) else null end) as hadogst_qn,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_am,0) else null end) as hadogst_am,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_qn,0) else null end) as hadogsm_qn,
+	          SUM(case when a.cost_yn = 'Y' then isnull(b.hadogsp_am,0) else null end) as hadogsm_am
+	   from   dbo.fnCmShCostList(#{siteCd}, #{sqSn}) a
+	            inner join  (
+	                        select  a.site_cd, a.hadocont_no, a.cost_id, a.item_ds, a.size_sz, a.unit_ds,
+	                                a.hado_qn, a.hado_up, a.hado_am,
+	                                ISNULL(b.hadogsp_qn,0) as hadogsp_qn, ISNULL(b.hadogsp_am,0) as hadogsp_am,
+					                ISNULL(b.hadogs_qn,0) as hadogs_qn, ISNULL(b.hadogs_am,0) as hadogs_am
+	                        from    (
+	                                select  a.site_cd, a.hadocont_no, a.cost_id, a.item_ds, a.size_sz, a.unit_ds,
+	                                        ISNULL(a.hado_qn,0) as hado_qn, ISNULL(a.hado_up,0) as hado_up, ISNULL(a.hado_am,0) as hado_am
+	                                from    CMB200 a
+	                                where   a.site_cd = #{siteCd}
+	                                and     a.hadocont_no = #{hadocontNo}
+	                                and     a.acture_yn = '1'
+	                                ) a left join
+	                                (
+	                                select	a.site_cd, a.hadocont_no, a.cost_id,
+	                                        SUM(case when a.work_ym < #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogsp_qn,
+	                                        SUM(case when a.work_ym < #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogsp_am,
+							                SUM(case when a.work_ym = #{workYm} then isnull(a.hadogs_qn,0) else 0 end) as hadogs_qn,
+	                                        SUM(case when a.work_ym = #{workYm} then isnull(a.hadogs_am,0) else 0 end) as hadogs_am
+	                                from    CMC200 a
+	                                where   a.site_cd = #{siteCd}
+	                                and     a.hadocont_no = #{hadocontNo}
+	                                and     a.work_ym <= #{workYm}
+	                                group by a.site_cd, a.hadocont_no, a.cost_id
+	                                ) b on a.site_cd = b.site_cd and a.hadocont_no = b.hadocont_no and a.cost_id = b.cost_id
+	                        where   a.site_cd = #{siteCd}
+	                        and     a.hadocont_no = #{hadocontNo}
+	                        ) b on a.site_cd = b.site_cd and a.upcomcost_id = b.cost_id
+	where   a.site_cd = #{siteCd}
+	and     a.sq_sn = #{sqSn}
+	group by a.site_cd, b.hadocont_no,
+	        a.grpcost_id, a.grpcost_cd, a.grpcost_ds, a.grpcost_gr, a.upgrpcost_id, a.ord_ds
+	order by a.grpcost_cd--,a.ord_ds
+ ]]>
+	</select>	
+	
+</mapper>

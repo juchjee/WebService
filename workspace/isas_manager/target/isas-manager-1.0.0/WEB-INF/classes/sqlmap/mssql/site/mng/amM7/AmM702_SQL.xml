@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM702DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM702DAO.amM702L" parameterClass="map" resultClass="camelMap">
+		SELECT RET_O_REF_SEQ
+			   , RET_O_REF_TIT
+			   , RET_O_REF_CONT
+		FROM ASW_S_RET_O_REF WITH(NOLOCK)
+		WHERE RET_O_REF_USE_YN = 'Y'
+	</select>
+
+</sqlMap>

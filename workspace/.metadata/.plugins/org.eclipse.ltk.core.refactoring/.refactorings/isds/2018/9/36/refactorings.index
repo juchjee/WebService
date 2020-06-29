@@ -1,0 +1,19 @@
+1536020024187	Rename resource 'inusBath'
+1536022393649	Copy file
+1536022400470	Rename resource 'custCardDao.xml'
+1536022845001	Copy compilation unit
+1536022852784	Rename type 'CustCardController'
+1536022893539	Copy compilation unit
+1536022900699	Rename type 'CustCardDao'
+1536022954467	Copy compilation unit
+1536022960026	Rename type 'CustCardVO'
+1536022977624	Copy compilation unit
+1536022983672	Rename type 'CustCardService'
+1536027844814	Rename resource 'mStockItemDao.xml'
+1536028114092	Delete element
+1536037497631	Copy file
+1536216729660	Rename type 'StockItemDao'
+1536216735056	Rename type 'StockItemVO'
+1536216739547	Rename type 'StockItemService'
+1536216836653	Rename resource 'stockItemDao.xml'
+1536217572622	Rename resource 'MStockItemDao.xml'

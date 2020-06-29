@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.ubi.erp.cmm.file.AttachFileDao">
+	
+	<resultMap type="AttachFile" id="AttachFileMap"/>
+	<resultMap type="TempData" id="TempDataMap"/>
+	
+    <select id="selAttachFile" resultType="AttachFile">
+    </select>
+
+    <select id="getAttachFile" resultType="AttachFile">
+    </select>
+    
+    <insert id="insAttachFileMt" parameterType="AttachFile">
+    </insert>
+    
+    <insert id="insAttachFileDt" parameterType="AttachFile">
+    </insert>
+
+    <delete id="delAttachFileMt" parameterType="AttachFile">
+    </delete>
+
+    <delete id="delAttachFileDt" parameterType="AttachFile">
+    </delete>
+    
+    <select id="getNextTempData" resultType="TempData">
+        <![CDATA[
+        SELECT
+        	ISNULL(MAX(REG_IDX),0)+1 regIdx
+        FROM
+        	CCM999
+        WHERE
+        	FMT_ID = #{fmtId}
+        ]]>
+    </select>
+
+    <insert id="insTempData" parameterType="TempData">
+        <![CDATA[
+		INSERT INTO CCM999 (    FMT_ID, REG_IDX, ROW_IDX
+		                              , CLM1 , CLM2 , CLM3 , CLM4 , CLM5 
+		                              , CLM6 , CLM7 , CLM8 , CLM9 , CLM10
+		                              , CLM11, CLM12, CLM13, CLM14, CLM15
+		                              , CLM16, CLM17, CLM18, CLM19, CLM20
+		                              , CLM21, CLM22, CLM23, CLM24, CLM25
+		                              , CLM26, CLM27, CLM28, CLM29, CLM30
+		                              , CLM31, CLM32, CLM33, CLM34, CLM35
+		                              , CLM36, CLM37, CLM38, CLM39, CLM40
+		                              , CLM41, CLM42, CLM43, CLM44, CLM45
+		                              , CLM46, CLM47, CLM48, CLM49, CLM50
+		                              , CLM51, CLM52, CLM53, CLM54, CLM55
+		                              , CLM56, CLM57, CLM58, CLM59, CLM60
+		                              , CLM61, CLM62, CLM63, CLM64, CLM65
+		                              , CLM66, CLM67, CLM68, CLM69, CLM70
+		                              , CLM71, CLM72, CLM73, CLM74, CLM75
+		                              , CLM76, CLM77, CLM78, CLM79, CLM80
+		                              , CLM81, CLM82, CLM83, CLM84, CLM85
+		                              , CLM86, CLM87, CLM88, CLM89, CLM90
+		                              , CLM91, CLM92, CLM93, CLM94, CLM95
+		                              , CLM96, CLM97, CLM98, CLM99, CLM100
+		                           )
+		                    VALUES (  #{fmtId}, #{regIdx}  , #{rowIdx}
+		                              , #{clm1 }, #{clm2 }   , #{clm3 }, #{clm4 }, #{clm5 }
+		                              , #{clm6 }, #{clm7 }   , #{clm8 }, #{clm9 }, #{clm10}
+		                              , #{clm11}, #{clm12}   , #{clm13}, #{clm14}, #{clm15}
+		                              , #{clm16}, #{clm17}   , #{clm18}, #{clm19}, #{clm20}
+		                              , #{clm21}, #{clm22}   , #{clm23}, #{clm24}, #{clm25}
+		                              , #{clm26}, #{clm27}   , #{clm28}, #{clm29}, #{clm30}
+		                              , #{clm31}, #{clm32}   , #{clm33}, #{clm34}, #{clm35}
+		                              , #{clm36}, #{clm37}   , #{clm38}, #{clm39}, #{clm40}
+		                              , #{clm41}, #{clm42}   , #{clm43}, #{clm44}, #{clm45}
+		                              , #{clm46}, #{clm47}   , #{clm48}, #{clm49}, #{clm50}
+		                              , #{clm51}, #{clm52}   , #{clm53}, #{clm54}, #{clm55}
+		                              , #{clm56}, #{clm57}   , #{clm58}, #{clm59}, #{clm60}
+		                              , #{clm61}, #{clm62}   , #{clm63}, #{clm64}, #{clm65}
+		                              , #{clm66}, #{clm67}   , #{clm68}, #{clm69}, #{clm70}
+		                              , #{clm71}, #{clm72}   , #{clm73}, #{clm74}, #{clm75}
+		                              , #{clm76}, #{clm77}   , #{clm78}, #{clm79}, #{clm80}
+		                              , #{clm81}, #{clm82}   , #{clm83}, #{clm84}, #{clm85}
+		                              , #{clm86}, #{clm87}   , #{clm88}, #{clm89}, #{clm90}
+		                              , #{clm91}, #{clm92}   , #{clm93}, #{clm94}, #{clm95}
+		                              , #{clm96}, #{clm97}   , #{clm98}, #{clm99}, #{clm100}
+		                           )
+        ]]>
+    </insert>
+    
+    <select id="fileSeq" resultType="String">
+    <![CDATA[	
+    	 SELECT RIGHT(REPLICATE(0,16) + FILE_SEQ.NEXTVAL, 16)
+    	 ]]>
+    </select>
+    
+    <select id="tempExcelData" parameterType="TempData" resultType="TempData">
+    <![CDATA[	
+       select * from ccm999 where fmt_id = #{fmtId} and reg_idx = #{regIdx}
+       ]]>
+    </select>
+    
+    <delete id="deleteTempExcelData" parameterType="TempData">
+    <![CDATA[	
+    	DELETE FROM CCM999
+    	]]>
+    </delete>
+    
+</mapper>

@@ -1,0 +1,318 @@
+@charset "utf-8";
+
+/* grid */
+.editedRow { color: #b90f0f !important; font-style: italic;}
+.sumRow { color: #0000ff !important; font-style: italic; background: #ffff99;}
+.disableCol{ background-color: #CFCFCF !important;}
+/* /grid */
+
+#prodCateReg{cursor:pointer;}
+.pageContScroll_st1{overflow:auto;}
+.emptyText{line-height:28px;}
+
+
+.editScroll{ overflow:auto; max-height:400px; }
+.attfileAdd{min-height:28px;}
+.quizAdd{min-height:36px;}
+.dtlimgAdd > div{padding-top: 5px;}
+.dtlimgAdd > div:first-child{padding: 0 0;}
+.number{text-align:right;}
+
+.thInfo{margin-top:10px;}
+.partMbr{line-height:28px;  margin-right:10px; color:blue;}
+.partMbrCount{line-height:28px; }
+#prodSetBtn{display:none}
+
+.nowDtlImg div{ min-width:100px; display:inline-block; margin:2px 0 }
+
+.jqx-grid-cell-left-align{padding-left:3px;}
+.jqx-grid-cell-right-align{padding-right:3px;}
+.jqx-grid-column-header > div > div > span{font-weight: bold;}
+.jqx-button{cursor: pointer !important;}
+
+h4{font-size:14px;}
+
+.star_wrap  em {background: url(../images/star.png) no-repeat left top; height: 12px; display: block; text-indent: -9999px; margin:14px 0 0 5px;}
+.star_wrap .star1 em {width: 12px}
+.star_wrap .star2 em {width: 30px}
+.star_wrap .star3 em {width: 44px}
+.star_wrap .star4 em {width: 60px}
+.star_wrap .star5 em {width: 73px}
+
+
+.btn_align_area {
+    font-size: 12px;
+    color: #333;
+    position: relative;
+    top:25px;
+}
+
+.btn_align_area{font-size:12px; color:#333;margin-bottom:30px; overflow:hidden;}
+.btn_align_area > div > *{display:inline-block;}
+.btn_align_area > div > a{vertical-align:top;}
+.btn_align_area > .right{text-align:right; float:right;}
+.btn_align_area > .right > p > span{margin-left:25px;}
+
+.btn_align_area > .left{text-align:left; float:left;}
+.btn_align_area > .left > a{margin-left:15px;}
+.btn_align_area > .left > p{padding-top:14px; word-spacing:-1px;}
+.btn_align_area > .left > p > span{margin-left:25px;}
+.btn_align_area > .left.btns > a{margin-left:0;}
+
+.prodBox { text-align:left;vertical-align:middle; margin-top:10px;margin-left:10px;}
+.prodUit {height:110px;}
+.prodUit > div{display:inline-block; }
+.prodUit > div > div{}
+.orderStyle td{ border-left:#ddd 1px solid;}
+.orderStyle td:FIRST-CHILD {border-left:0px;}
+.ptText{color:#4da2ff;}
+.div_margin{margin:5px 0 5px 0}
+.smallText{font-size:12px;}
+
+.fl_td{float:left;line-height:28px;margin-right:10px;}
+
+#mCSB_2_scrollbar_vertical{}
+
+
+
+
+.coupon_use {
+}
+
+.coupon_use:after {
+	content: "";
+	display: block;
+	clear: both;
+	zoom: 1;
+}
+
+.coupon_use>div {
+	float: left;
+	width: 349px;
+	background-color: #f0f6f9;
+}
+
+.coupon_use>div p {
+	font-size: 13px;
+	color: #777;
+	line-height: 17px;
+	padding: 10px 20px;
+}
+
+.coupon_use>div p:first-child {
+	padding-bottom: 0;
+}
+
+.coupon_use>div:first-child {
+	width: 648px;
+	background-color: #fff;
+}
+
+.coupon_use>div dl {
+}
+
+.coupon_use>div dl:first-child {
+	padding-bottom: 0;
+}
+
+.coupon_use>div dl:first-child dt {
+}
+
+.coupon_use>div dl dt {
+	float: left;
+	line-height: 30px;
+	font-size: 13px;
+	color: #777;
+	width: 80px;
+}
+
+.coupon_use>div dl dd {
+	font-size: 13px;
+	color: #777;
+}
+
+.coupon_use>div dl dd em {
+	font-size: 13px;
+	font-family: 'NanumGothicBold';
+	color: #3d3e72
+}
+
+.coupon_use>div dl dd input {
+	float: left;
+	margin-right: 5px;
+	width: 148px
+}
+
+.coupon_use>div dl dd a.btn03 {
+	margin: 0 10px;
+	padding: 7px 15px
+}
+
+
+
+.point_pdt {
+	margin-top: 30px;
+}
+
+.point_pdt .pit_info {
+	padding: 6px 12px 12px;
+	background-color: #f0f6f9;
+	border: 1px solid #e0e0e0;
+	display: block;
+	margin-bottom: 20px;
+	color: #333;
+	font-size: 13px;
+}
+
+.point_pdt .pit_info em {
+	font-size: 18px;
+	color: #3d3e72;
+	font-family: 'Open Sans', 'NanumGothicBold', arial, sans-serif;
+	letter-spacing: 0;
+	font-weight: 600;
+	position: relative;
+	top: 2px
+}
+
+.point_pdt .pit_info span {
+	float: right;
+	position: relative;
+	top: 4px
+}
+
+.point_pdt .pit_list:after {
+	content: "";
+	display: block;
+	clear: both;
+	zoom: 1;
+}
+
+.point_pdt .pit_list li {
+	float: left;
+	width: 340px;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	border: 2px solid #e0e0e0;
+}
+
+.point_pdt .pit_list li:first-child, .point_pdt .pit_list li:nth-child(2n-1)
+	{
+	margin-left: 0;
+}
+
+.point_pdt .pit_list li>div {
+	float: left;
+	width: 143px;
+	margin: 10px;
+	margin-right: 0;
+	padding-right: 20px;
+	position: relative;
+	min-height: 118px;
+}
+
+.point_pdt .pit_list li>div:first-child {
+	width: 119px;
+	border-right: 1px dashed #e0e0e0;
+	text-align: center
+}
+
+.point_pdt .pit_list li>div:first-child img {
+	display: block;
+	margin: 0 auto;
+}
+
+.point_pdt .pit_list li>div:first-child span {
+	background: url(../images/icon/point_icon.png) no-repeat left center;
+	padding-left: 15px;
+	font-size: 14px;
+	color: #999;
+	font-family: 'Open Sans', 'NanumGothic';
+	letter-spacing: 0;
+	font-weight: 400;
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
+}
+
+.point_pdt .pit_list li>div strong {
+	display: block;
+	font-size: 15px;
+	font-family: 'NanumGothicBold'
+}
+
+.point_pdt .pit_list li>div>span {
+	color: #666;
+	font-size: 13px;
+	line-height: 17px;
+	display: block;
+	margin-top: 10px;
+}
+
+.point_pdt .pit_list li>div>em {
+	display: block;
+	position: absolute;
+	bottom: 5px;
+	font-size: 13px;
+	color: #999;
+}
+
+.point_pdt .pit_list li .ea_box {
+	display: block;
+	position: absolute;
+	bottom: 0;
+	width: 275px;
+}
+
+.point_pdt .pit_list li .ea_box:after {
+	content: "";
+	display: block;
+	clear: both;
+	zoom: 1;
+}
+
+.point_pdt .pit_list li .ea_box span {
+	float: left;
+	height: 27px;
+	line-height: 27px;
+	margin-right: 10px;
+}
+
+.point_pdt .pit_list li .ea_box .ea {
+	float: left
+}
+
+.point_pdt .pit_list li .ea_box .ea:after {
+	content: "";
+	display: block;
+	clear: both;
+	zoom: 1;
+}
+
+.point_pdt .pit_list li .ea_box .ea a {
+	width: 25px;
+	height: 25px;
+	border: 1px solid #ddd;
+	border-left:none;
+	display: block;
+	float: left;
+	text-align: center;
+	line-height: 27px;
+	color: #999;
+}
+
+.point_pdt .pit_list li .ea_box .ea input {
+	width: 55px;
+	height: 25px;
+	line-height: 27px;
+	padding: 0;
+	border: 1px solid #ddd;
+	float: left;
+	text-align: center
+}
+
+.point_pdt .pit_list li .plus_box {
+}
+
+.point_pdt .pit_list li .plus_box em {
+
+}

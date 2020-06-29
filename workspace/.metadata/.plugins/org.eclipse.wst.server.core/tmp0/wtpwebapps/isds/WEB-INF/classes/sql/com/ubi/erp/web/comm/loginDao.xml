@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.comm.dao.LoginDao">
+	<resultMap type="LoginVO" id="LoginMap" />
+
+	<select id="selLoginCheck" parameterType="LoginVO" resultType="LoginVO">
+	 <![CDATA[
+	   SELECT A.ID
+	        , A.PW
+	        , A.BS_CD
+	        , A.SITE_CD
+	        , A.FAC_CD
+	        , ERP_CUST_CD = (SELECT MAX(CUST_CD) FROM SCU100  WHERE EMP_NO = A.ID)
+	        , ERP_CUST_NM = (SELECT MAX(D.CUST_NM) FROM SCU100 C, BCV100 D WHERE C.CUST_CD = D.CUST_CD AND C.EMP_NO = A.ID)
+	        , A.CUST_CD 
+	        , B.CUST_NM
+	        , A.KIND
+	        , A.CONFIRM_YN
+	        , A.USE_YN
+	        , A.MNG_YN
+	        , A.USER_NM
+	        , DEPT_CD = (SELECT DEPT_CD FROM HRA100 WHERE EMP_NO = A.ID) /* 20180907 ryul 추가 */
+	        , A.GR_ID /* 20180910 ryul 추가 */
+	        , BIZ_NO = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',B.BIZ_NO,'')
+	        , WORK_YN = (CASE WHEN A.CUST_CD != 'A' THEN A.USE_YN 
+			                   WHEN A.CUST_CD = 'A' AND (SELECT EMP_NO FROM HRA100 WHERE STAT_BC <> 'HR125300' /* 퇴직 */  AND EMP_NO = A.ID) IS NOT NULL THEN '1'
+							   ELSE '0' END) /* 20180803 ryul 재직여부 추가 */
+	   FROM CCM100 A, BCV100 B
+	   WHERE A.CUST_CD = B.CUST_CD 
+	    AND id=#{id} 
+	    AND pw=#{pw}
+	    ]]>  
+	</select>
+	
+	<select id="selChangeCheck" parameterType="LoginVO" resultType="int">
+	<![CDATA[	
+	   SELECT COUNT(*) AS CNT FROM CCM100  WHERE id=#{id} AND pw=#{pw}
+	   ]]>  
+	</select>
+	
+	<insert id="prcsChangePassWord" parameterType="LoginVO">
+	<![CDATA[	
+	   UPDATE CCM100 SET PW = #{pw} WHERE ID = #{id}
+	   ]]> 
+	</insert>
+	
+	<select id="selLoginSiteCd" parameterType="LoginVO" resultType="LoginVO">
+	<![CDATA[	
+	  SELECT  A.SITE_FAC_CD AS SITE_CD, B.SITE_DS AS SITE_NM, B.CONSTRUCT_DS
+	    FROM CCM101 A,CMZ100 B
+	    WHERE A.SITE_FAC_CD = B.SITE_CD
+	      AND A.ID = #{id}
+	      AND A.SITE_FAC_DIV = 'site'
+	      AND A.USE_YN = '1'
+	     group by A.SITE_FAC_CD, B.SITE_DS, B.CONSTRUCT_DS
+	     ]]>
+	</select>
+	
+</mapper>

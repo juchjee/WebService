@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="BbtDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="BbtDAO.bbt00001L" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ asc) AS NUM,
+		       A.BOARD_SEQ ,
+       		   A.BOARD_CATE_SEQ ,
+       		   CASE WHEN  A.BOARD_CATE_SEQ = 0 THEN '전체공지' ELSE B.BOARD_CATE_NM END as BOARD_CATE_NM,
+       		   A.BOARD_FIRST_YN ,
+       		   A.BOARD_TITLE ,
+       		   A.BOARD_CONT,
+       		   A.DATA_USER_TP_MA,
+       		   A.BOARD_HIT,
+       		   A.REG_ID ,
+       		   CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       		ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       		AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   		AND B.BOARD_CATE_USE_YN = 'Y'
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+	  	<isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="true">
+		  CASE  WHEN BOARD_FIRST_YN = 'Y' THEN 1  END desc, REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+		 <isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="false">
+		 REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+	</select>
+
+	<select id="BbtDAO.bbt00001C"  parameterClass="map" resultClass="int">
+		SELECT isnull(MAX(BOARD_SEQ)+1,1) AS BOARD_SEQ FROM ASW_BOARD_BASE WITH(NOLOCK)
+	</select>
+
+	<select id="BbtDAO.bbt00001V" parameterClass="map" resultClass="camelMap">
+		SELECT BB.BOARD_SEQ
+				   , BB.BOARD_MST_CD
+				   , BB.BOARD_CATE_SEQ
+				   , DD.BOARD_CATE_NM
+       		  	   , CASE WHEN C.QUESTION_TP = '1' THEN 'A/S신청'
+       		  	   	  	  WHEN C.QUESTION_TP = '2' THEN '제품문의'
+       		  	   	  	  WHEN C.QUESTION_TP = '3' THEN '칭찬접수'
+       		  	   	  	  WHEN C.QUESTION_TP = '4' THEN '기타' END as QUESTION_TP
+				   , BB.BOARD_TITLE
+				   , BB.BOARD_CONT
+       		       , BB.BOARD_FIRST_YN
+       		  	   , BB.DATA_USER_TP_MA
+				   , BB.REG_DT
+				   , BB.REG_ID
+				   , (CASE WHEN BB.DATA_USER_TP_MA = 'A' THEN '관리자' ELSE  '회원' END) as REG_MA
+				   , DMH.DATA_MOD_DT AS MOD_DT
+				   , DMH.DATA_MOD_ID AS MOD_ID
+				   , (CASE WHEN DMH.DATA_USER_TP_MA = 'A' THEN '관리자' WHEN BB.DATA_USER_TP_MA = 'M' THEN '회원' ELSE '' END) as MOD_MA
+			FROM ASW_BOARD_BASE BB WITH(NOLOCK)
+				LEFT JOIN (SELECT TOP 1 DATA_MOD_TBL_KEY
+									     , DATA_MOD_ID
+									     , DATA_USER_TP_MA
+									     , DATA_MOD_DT
+									  FROM ASW_G_DATA_MOD_HIS WITH(NOLOCK)
+									 WHERE DATA_MOD_TBL_KEY = #BOARD_SEQ#
+									       AND DATA_MOD_DT =
+									       (SELECT MAX(DATA_MOD_DT) as DATA_MOD_DT
+									         FROM ASW_G_DATA_MOD_HIS WITH(NOLOCK)
+									        WHERE DATA_MOD_TBL = 'ASW_BOARD_BASE'
+									              AND DATA_MOD_TBL_KEY = #BOARD_SEQ#
+									       )) DMH
+	            ON DMH.DATA_MOD_TBL_KEY = CONVERT(VARCHAR,BB.BOARD_SEQ)
+	            LEFT OUTER JOIN ASW_BOARD_TP_PROD X WITH(NOLOCK)
+					ON X.BOARD_SEQ = BB.BOARD_SEQ
+				LEFT OUTER JOIN ASW_BOARD_TP_REPLY C WITH(NOLOCK)
+					ON C.BOARD_SEQ = BB.BOARD_SEQ
+				LEFT JOIN ASW_BOARD_CATE DD WITH(NOLOCK)
+	       			ON DD.BOARD_CATE_SEQ = BB.BOARD_CATE_SEQ
+			WHERE BB.BOARD_SEQ = #BOARD_SEQ#
+	</select>
+
+	<select id="BbtDAO.bbt00001F" parameterClass="map" resultClass="camelMap">
+		SELECT a.BOARD_SEQ
+		       , a.ATTCH_CD
+		       , b.ATTCH_FILE_NM AS ATTCH_FILE_NM
+	   		   , b.ATTCH_REAL_FILE_NM AS ATTCH_REAL_FILE_NM
+	   		   , b.ATTCH_REAL_ABSOLUTE_PATH AS ATTCH_REAL_ABSOLUTE_PATH
+	   		   , b.ATTCH_ID
+	   		   , b.ATTCH_FILE_PATH AS ATTCH_FILE_PATH
+		FROM ASW_BOARD_ATTCH a WITH(NOLOCK)
+		LEFT OUTER JOIN ASW_G_ATTCH b
+		ON b.ATTCH_CD = a.ATTCH_CD
+		WHERE a.BOARD_SEQ = #BOARD_SEQ#
+
+	</select>
+
+	<select id="BbtDAO.selectFunc" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_MST_CD
+       		   , BOARD_FUNC_CD
+	           , (SELECT b.BOARD_FUNC_NM FROM ASW_BOARD_FUNC b  WITH(NOLOCK) WHERE b.BOARD_FUNC_CD = a.BOARD_FUNC_CD ) AS BOARD_FUNC_NM
+		FROM ASW_BOARD_FUNC_MPG a WITH(NOLOCK)
+		WHERE BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+
+	<select id="BbtDAO.bbt00002L" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ asc) AS NUM
+			   , A.BOARD_SEQ
+       		   , A.BOARD_CATE_SEQ
+       		   , CASE WHEN C.QUESTION_TP = '1' THEN 'A/S신청'
+       		  	   	  WHEN C.QUESTION_TP = '2' THEN '제품문의'
+       		  	   	  WHEN C.QUESTION_TP = '3' THEN '칭찬접수'
+       		  	   	  WHEN C.QUESTION_TP = '4' THEN '기타' END as QUESTION_TP
+       		   , CASE WHEN  A.BOARD_CATE_SEQ = 0 THEN '전체공지'  ELSE B.BOARD_CATE_NM  END as BOARD_CATE_NM
+       		   , A.BOARD_TITLE
+       		   , A.BOARD_CONT
+       		   , A.DATA_USER_TP_MA
+       		   , A.BOARD_FIRST_YN
+			   , C.BOARD_REPLY
+       		   , A.REG_ID
+       		   , CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+			   , (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '답변완료' ELSE '처리중' END) AS BOARD_STATE
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   			AND B.BOARD_CATE_USE_YN = 'Y'
+	   		LEFT OUTER JOIN ASW_BOARD_TP_PROD X WITH(NOLOCK)
+				ON X.BOARD_SEQ = A.BOARD_SEQ
+			LEFT OUTER JOIN ASW_BOARD_TP_REPLY C WITH(NOLOCK)
+				ON C.BOARD_SEQ = A.BOARD_SEQ
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE LIKE '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT LIKE '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE LIKE '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+			A.REG_ID LIKE '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="5">
+		/*	Y.PROD_NM LIKE '%' + #SEARCH_TXT# +'%' */
+		</isEqual>
+		<isEqual property="STATE_YN" prepend="AND" compareValue="Y">
+			C.BOARD_REPLY IS NOT NULL
+		</isEqual>
+		<isEqual property="STATE_YN" prepend="AND" compareValue="N">
+			C.BOARD_REPLY IS NULL
+		</isEqual>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+	  	
+		 <isNotEmpty prepend="AND"  property="QUESTION_TP" >
+		 C.QUESTION_TP = #QUESTION_TP#
+		 </isNotEmpty>
+	  	
+		<isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="true">
+		  CASE  WHEN A.BOARD_FIRST_YN = 'Y' THEN 1  END desc, A.REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+		 <isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="false">
+		 A.REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+		 
+		 
+		 
+
+	</select>
+
+	<select id="BbtDAO.bbt00001RP" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_SEQ
+			   , BOARD_REPLY
+		FROM ASW_BOARD_TP_REPLY WITH(NOLOCK)
+		WHERE BOARD_SEQ = #BOARD_SEQ#
+	</select>
+
+	<select id="BbtDAO.bbt00003L" parameterClass="map" resultClass="camelMap">
+		SELECT A.BOARD_SEQ
+       		   , A.BOARD_CATE_SEQ
+       		   , CASE WHEN ISNULL((SELECT X.ATTCH_FILE_PATH FROM ASW_G_ATTCH X WHERE X.ATTCH_CD = V.ATTCH_CD), '') <![CDATA[<>]]> '' THEN B.BOARD_CATE_NM + '(포토)' ELSE B.BOARD_CATE_NM + '(텍스트)' END BOARD_CATE_NM
+       		   , A.BOARD_TITLE
+       		   , A.BOARD_CONT
+       		   , A.DATA_USER_TP_MA
+       		   , A.BOARD_FIRST_YN
+       		   , A.REG_ID
+       		   , CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+			   , (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '완료' ELSE '대기' END) AS BOARD_STATE
+			   , C.PROD_GRADE
+			   , (SELECT PROD_NM FROM P_PROD Y WHERE Y.PROD_CD = X.PROD_CD) AS PROD_NM
+				, ISNULL((select X.ATTCH_FILE_PATH FROM ASW_G_ATTCH X where X.ATTCH_CD = V.ATTCH_CD), '') AS ATTCH_FILE_PATH
+		FROM ASW_BOARD_BASE A
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   			AND B.BOARD_CATE_USE_YN = 'Y'
+	   		LEFT OUTER JOIN ASW_BOARD_TP_PROD X WITH(NOLOCK)
+				ON X.BOARD_SEQ = A.BOARD_SEQ
+			LEFT OUTER JOIN ASW_BOARD_TP_REVIEW C WITH(NOLOCK)
+				ON C.BOARD_SEQ = A.BOARD_SEQ
+			LEFT OUTER JOIN ASW_BOARD_ATTCH V  WITH(NOLOCK) on V.BOARD_SEQ = A.BOARD_SEQ
+				AND (select Y.ATTCH_ID from ASW_G_ATTCH Y  WITH(NOLOCK) where Y.ATTCH_CD = V.ATTCH_CD ) like '%Img%'
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+			A.REG_ID like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="STATE_YN" prepend="AND" compareValue="Y">
+			C.BOARD_REPLY IS NOT NULL
+		</isEqual>
+		<isEqual property="STATE_YN" prepend="AND" compareValue="N">
+			C.BOARD_REPLY is null
+		</isEqual>
+		<isEqual property="PHOTO_KIND" prepend="AND" compareValue="P">
+			ISNULL(V.ATTCH_CD, '') <![CDATA[<>]]> ''
+		</isEqual>
+		<isEqual property="PHOTO_KIND" prepend="AND" compareValue="T">
+			ISNULL(V.ATTCH_CD, '') = ''
+		</isEqual>
+
+		<isNotEmpty property="PROD_CD" prepend="AND" >
+			X.PROD_CD  = #PROD_CD#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+		ORDER BY A.REG_DT desc ,A.BOARD_SEQ DESC
+	</select>
+
+	<select id="BbtDAO.bbt00003RV" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_SEQ
+			   , BOARD_REPLY
+			   , PROD_GRADE
+		FROM ASW_BOARD_TP_REVIEW WITH(NOLOCK)
+		WHERE BOARD_SEQ = #BOARD_SEQ#
+	</select>
+
+	<select id="BbtDAO.bbt00005L" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ asc) AS NUM,
+			   A.BOARD_SEQ AS BOARD_SEQ ,
+       		   A.BOARD_CATE_SEQ AS BOARD_CATE_SEQ ,
+       		   B.BOARD_CATE_NM AS BOARD_CATE_NM ,
+       		   A.BOARD_TITLE AS BOARD_TITLE ,
+       		   A.BOARD_CONT,
+       		   A.BOARD_HIT,
+       		   A.DATA_USER_TP_MA,
+       		   A.BOARD_FIRST_YN,
+       		   A.REG_ID AS REG_ID,
+       		   CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT ,
+       		   (select X.ATTCH_FILE_PATH FROM ASW_G_ATTCH X where X.ATTCH_CD = V.ATTCH_CD ) AS ATTCH_FILE_PATH
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   			AND B.BOARD_CATE_USE_YN = 'Y'
+	   		LEFT OUTER JOIN ASW_BOARD_ATTCH V  WITH(NOLOCK) on V.BOARD_SEQ = A.BOARD_SEQ
+				AND (select Y.ATTCH_ID from ASW_G_ATTCH Y  WITH(NOLOCK) where Y.ATTCH_CD = V.ATTCH_CD ) like '%Img%'
+		WHERE A.BOARD_STATUS_YN = 'Y'
+	  	  AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+		ORDER BY A.REG_DT desc ,A.BOARD_SEQ DESC
+	</select>
+	
+	
+	
+
+	<select id="BbtDAO.bbt00005TP" parameterClass="map" resultClass="camelMap">
+		SELECT IMAGE_TP_LE
+			   , ATTCH_CD
+			   , BOARD_SEQ
+			   , IMAGE_WIDTH
+			   , IMAGE_HEIGHT
+		FROM ASW_BOARD_TP_IMAGE  WITH(NOLOCK)
+		WHERE BOARD_SEQ = #BOARD_SEQ#
+	</select>
+
+
+
+	<select id="BbtDAO.bbt00006V" parameterClass="map" resultClass="camelMap">
+		SELECT A.BOARD_SEQ AS BOARD_SEQ
+       		   , (SELECT B.BOARD_CATE_NM FROM ASW_BOARD_CATE B WHERE B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ) AS BOARD_CATE_NM
+       		   , A.BOARD_CATE_SEQ 
+       		   , A.BOARD_TITLE
+	   		   , A.BOARD_CONT
+	   		   , A.BOARD_HIT
+	   		   , A.BOARD_MST_CD
+	   		   , (SELECT C.OPEN_YN FROM ASW_BOARD_TP_REPLY C WHERE C.BOARD_SEQ = A.BOARD_SEQ) AS OPEN_YN
+	   		   , A.REG_ID
+	   		   , CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+	   		   , (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '답변완료' ELSE '처리중' END) AS BOARD_STATE
+	   		   , C.BOARD_REPLY
+	   		   , CASE
+						WHEN C.QUESTION_TP = '1' THEN 'A/S신청'
+						WHEN C.QUESTION_TP = '2' THEN '제품문의'
+						WHEN C.QUESTION_TP = '3' THEN '칭찬접수'
+						ELSE '기타'
+				END AS QUESTION_TP
+				, C.REP_ID
+				, CONVERT(VARCHAR, C.REP_DT, 120) AS REP_DT  
+		FROM ASW_BOARD_BASE A
+			LEFT OUTER JOIN ASW_BOARD_TP_REPLY C
+		    	ON C.BOARD_SEQ = A.BOARD_SEQ
+		WHERE A.BOARD_SEQ = #BOARD_SEQ#
+	</select>
+
+	
+
+	<select id="BbtDAO.bbt00008TP" parameterClass="map" resultClass="camelMap">
+		SELECT a.BOARD_SEQ,
+		       a.YOUTUBE_LINK,
+		       a.MOV_WIDTH,
+		       a.MOV_HEIGHT
+		FROM   dbo.ASW_BOARD_TP_YOUTUBE a  WITH(NOLOCK)
+		WHERE BOARD_SEQ = #BOARD_SEQ#
+	</select>
+	
+	
+	<select id="BbtDAO.bbt00007L" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ asc) AS NUM,
+		       A.BOARD_SEQ ,
+       		   A.BOARD_CATE_SEQ ,
+       		   C.PROD_PRICE,
+			   C.PROD_PURCH,
+			   C.PROD_TEL,
+       		   A.BOARD_FIRST_YN ,
+       		   A.BOARD_TITLE ,
+       		   A.BOARD_CONT,
+       		   A.DATA_USER_TP_MA,
+       		   A.BOARD_HIT,
+       		   A.REG_ID ,
+       		   CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       		ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       		AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   		AND B.BOARD_CATE_USE_YN = 'Y'
+			LEFT JOIN ASW_BOARD_TP_PROD C WITH(NOLOCK)
+       		       ON C.BOARD_SEQ = A.BOARD_SEQ
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isNotNull prepend="AND" property="BOARD_SEQ">
+			A.BOARD_SEQ = #BOARD_SEQ#
+		</isNotNull>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+	  	<isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="true">
+		  CASE  WHEN BOARD_FIRST_YN = 'Y' THEN 1  END desc, REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+		 <isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="false">
+		 REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+	</select>
+	
+	
+	<select id="BbtDAO.bbt00010L" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ asc) AS NUM,
+		       A.BOARD_SEQ ,
+       		   A.BOARD_CATE_SEQ ,
+       		   CASE WHEN  A.BOARD_CATE_SEQ = 0 THEN '전체공지' ELSE B.BOARD_CATE_NM END as BOARD_CATE_NM,
+       		   C.RECOM_NAME,
+       		   A.BOARD_FIRST_YN ,
+       		   A.BOARD_TITLE ,
+       		   A.BOARD_CONT,
+       		   A.DATA_USER_TP_MA,
+       		   A.BOARD_HIT,
+       		   A.REG_ID ,
+       		   CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			LEFT JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       		ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       		AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   		AND B.BOARD_CATE_USE_YN = 'Y'
+			LEFT JOIN ASW_BOARD_TP_RECOM C WITH(NOLOCK)
+       		       ON C.BOARD_SEQ = A.BOARD_SEQ
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), A.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+	  	<isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="true">
+		  CASE  WHEN BOARD_FIRST_YN = 'Y' THEN 1  END desc, REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+		 <isEqual prepend="ORDER BY" property="BOARD_FIRST_YN" compareValue="false">
+		 REG_DT desc,BOARD_SEQ DESC
+		 </isEqual>
+	</select>
+
+<!--
+	20200427 아이에스동서 > 이누스주식회사
+	{call SMS_SEND('01','$hp$','1588-8613','[아이에스동서]','안녕하십니까. 이누스 입니다.[$tit$]을 공지 하오니 업무에 참조 바랍니다.','LMS')} 
+ -->
+	<select id="bbsSmsSend"  parameterClass="map" remapResults="true">
+		{call SMS_SEND('01','$hp$','1588-8613','[이누스주식회사]','안녕하십니까. 이누스주식회사 입니다.[$tit$]을 공지 하오니 업무에 참조 바랍니다.','LMS')}
+	</select>
+
+	<select id="custSmsSearch"  parameterClass="map" resultClass="camelMap" >
+			select drv_nm, hp  from Asz130 where top_yn = '1' 
+	</select>
+
+</sqlMap>

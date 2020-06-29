@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM701DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<!--  -->
+	<select id="AmM701DAO.amM701Com" parameterClass="map" resultClass="camelMap">
+		SELECT COMPANY_REG_KEY
+				, COMPANY_NM
+				, COMPANY_OWNER
+				, COMPANY_BIZ_NO
+				, COMPANY_TEL
+				, COMPANY_EMAIL_SENDER
+				, COMPANY_EMAIL
+				, COMPANY_CATEGORY
+				, COMPANY_EVENT
+				, COMPANY_ZIPCODE
+				, COMPANY_ADDR
+				, COMPANY_ADDR_DTL
+				, COMPANY_TELESALES_NO
+				, COMPANY_PRIVACY_ADM
+				, COMPANY_OTHER_REG_NM
+				, COMPANY_OTHER_REG_NO
+				, COMPANY_FAX
+				, COMPANY_CS_TEL
+		FROM ASW_S_COMPANY WITH(NOLOCK)
+	</select>
+
+</sqlMap>

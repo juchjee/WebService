@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.orderDelivery.dao.OrderDeliveryDao">
+	<resultMap type="OrderDeliveryVO" id="OrderDeliveryMap" />
+    <!-- 공사 / 제조 팝업 및 기타 -->
+    <select id="selWorkDeliverySeq" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+    <![CDATA[
+    	SELECT right('000' + convert(varchar, isnull(convert(int, max(DELI_SEQ)), 0) + 1), 3) AS DELI_SEQ FROM CCM210 WHERE DELI_DT = #{deliDt} AND SITE_CD = #{siteCd}
+    	]]>
+    </select>
+    
+    <select id="selWorkDeliverySubSeq" parameterType="OrderDeliveryVO" resultType="String">
+    <![CDATA[
+    	SELECT right('000' + convert(varchar, isnull(convert(int, max(DELI_SUB_SEQ)), 0) + 1), 3) AS DELI_SUB_SEQ 
+    	  FROM CCM210 WHERE DELI_DT = #{deliDt} AND DELI_SEQ = #{deliSeq} AND SITE_CD = #{siteCd}
+    	  ]]>
+    </select>
+    
+	<!-- 발주확인 등록  웹/모바일 -->
+	<select id="selWorkOrderChkS" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">	    
+	<![CDATA[
+	 SELECT T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.SQ_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP, T.DELIVERY_DT, T.BAL_DT, T.OUTS_CON,
+            T.ITEM_AM, T.LOCATION_AT, T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT, T.SITE_DS, T.DELI_SEQ, T.OUTS_RMK, T.DELI_QN, T.BAL_ASGN_QTY, T.RMKS,
+            T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO
+      FROM( SELECT DISTINCT  A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID,A.ITEM_CD,A.ITEM_QN,A.ITEM_UP,
+                    A.DELIVERY_DT,A.BAL_DT,A.OUTS_CON, (A.BAL_ASGN_QTY * A.ITEM_UP)  AS ITEM_AM,
+        	      	C.LOCATION_AT, D.KITEM_DS, D.ITEM_SZ, D.ITEM_UT, E.SITE_DS,
+        	      	A.DELI_SEQ, A.OUTS_RMK,A.DELI_QN, A.BAL_ASGN_QTY, A.RMKS,
+        	      	A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO
+        	  FROM CCM200 A, BMB720 B, BMB500 C, BMF400 D, CMZ100 E
+             WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO 
+               AND A.COST_ID = B.COST_ID AND A.SQ_NO  = B.SQ_NO
+        	   AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO 
+        	   AND A.ITEM_CD = D.ITEM_CD  AND A.SITE_CD = E.SITE_CD
+        	   AND A.END_YN = '0'
+               AND A.ETC_KIND = 'COM'
+             UNION ALL
+            SELECT DISTINCT  A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID, A.ETC_CD AS ITEM_CD,A.ITEM_QN, 0 AS ITEM_UP,
+                   A.DELIVERY_DT,A.BAL_DT,A.OUTS_CON, 0  AS ITEM_AM,
+        	       C.LOCATION_AT, D.ETC_NM AS KITEM_DS, ETC_SZ AS ITEM_SZ, ETC_UT AS ITEM_UT, E.SITE_DS,
+        	       A.DELI_SEQ, A.OUTS_RMK,A.DELI_QN, A.BAL_ASGN_QTY, A.RMKS,
+        	       A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO
+        	  FROM CCM200 A, BMB720 B, BMB500 C, CCM600 D, CMZ100 E
+             WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO 
+               AND A.COST_ID = B.COST_ID AND A.SQ_NO  = B.SQ_NO
+        	   AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO 
+        	   AND A.ETC_CD = D.ETC_CD AND D.USE_YN = '1'
+               AND A.SITE_CD = E.SITE_CD
+        	   AND A.END_YN = '0'
+               AND A.ETC_KIND = 'ETC'
+          ) T
+        WHERE T.SITE_CD = #{siteCd} AND T.CUST_CD = #{custCd} 
+        ]]>
+	    <choose>
+	      <when test="outsCon == 'all'">
+	         AND T.BAL_DT = #{balDt} 
+	      </when>
+	      <when test="outsCon == 'okchk'">
+	        AND T.OUTS_CON  = '1'
+	        AND T.BAL_DT = #{balDt} 
+	      </when>
+	      <when test="outsCon == 'michk'">
+	         AND T.OUTS_CON = '0'
+	      </when>
+	    </choose>
+	    <![CDATA[
+	    ORDER BY T.MR_NO, T.SITE_CD
+	    ]]>
+	</select>
+	
+	<insert id="prcsWorkOrderChkS" parameterType="OrderDeliveryVO">
+	<![CDATA[
+	     UPDATE CCM200 SET
+	      OUTS_CON = 1, OUTS_CON_ID = #{id}, OUTS_CON_DT = case when outs_con = '0' then GETDATE() else outs_con_dt end, OUTS_RMK = #{outsRmk}
+	     WHERE  SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo}
+	     AND SQ_NO = #{sqNo} AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeq}
+	     ]]>
+	</insert>
+	
+	<insert id="delWorkOrderChkS" parameterType="OrderDeliveryVO">
+	<![CDATA[
+	     UPDATE CCM200 SET
+	      OUTS_CON = 0, OUTS_CON_ID = #{id}, OUTS_RMK = #{outsRmk}
+	     WHERE  SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo}
+	     AND SQ_NO = #{sqNo} AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeq}
+	     ]]>
+	</insert>
+	
+	<select id="selWorkOrderChkR" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	<![CDATA[
+	 SELECT T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.SQ_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP, T.DELIVERY_DT, T.BAL_DT,
+            T.ITEM_AM, CASE WHEN T.OUTS_CON = '1' THEN '확인' ELSE '미확인' END AS OUTS_CON, T.RMKS, T.LOCATION_AT, T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT, T.SITE_DS,
+            T.DELI_SEQ, T.BAL_ASGN_QTY, T.END_YN, T.OUTS_RMK, T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO
+      FROM( SELECT A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID,A.ITEM_CD,A.ITEM_QN,A.ITEM_UP, A.DELIVERY_DT,A.BAL_DT,
+	              (A.BAL_ASGN_QTY * A.ITEM_UP)  AS ITEM_AM, A.OUTS_CON,
+	      	       A.RMKS, C.LOCATION_AT, D.KITEM_DS, D.ITEM_SZ, D.ITEM_UT, E.SITE_DS,
+	      	       A.DELI_SEQ, A.BAL_ASGN_QTY, A.END_YN, A.OUTS_RMK,
+	      	       A.ETC_KIND, '일반'  AS ETC_KIND_NM, A.ETC_REQ_NO
+	         FROM CCM200 A, BMB720 B, BMB500 C, BMF400 D, CMZ100 E
+            WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO AND A.COST_ID = B.COST_ID
+	          AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO	  AND A.SQ_NO = B.SQ_NO   
+	          AND A.ITEM_CD = D.ITEM_CD  AND A.SITE_CD = E.SITE_CD
+              AND A.ETC_KIND = 'COM'
+            UNION ALL
+            SELECT A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID, A.ETC_CD AS ITEM_CD,A.ITEM_QN, 0 AS ITEM_UP, A.DELIVERY_DT,A.BAL_DT,
+	               0 AS ITEM_AM, A.OUTS_CON,
+	      	       A.RMKS, C.LOCATION_AT, D.ETC_NM AS KITEM_DS, D.ETC_SZ AS ITEM_SZ, D.ETC_UT AS ITEM_UT, E.SITE_DS,
+	      	       A.DELI_SEQ, A.BAL_ASGN_QTY, A.END_YN, A.OUTS_RMK,
+	      	       A.ETC_KIND, '잡자재'  AS ETC_KIND_NM, A.ETC_REQ_NO
+	          FROM CCM200 A, BMB720 B, BMB500 C, CCM600 D, CMZ100 E
+             WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO AND A.COST_ID = B.COST_ID
+	           AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO AND A.SQ_NO = B.SQ_NO   
+	           AND A.ETC_CD = D.ETC_CD AND D.USE_YN = '1'
+               AND A.SITE_CD = E.SITE_CD
+               AND A.ETC_KIND = 'ETC'
+          )T WHERE T.SITE_CD = #{siteCd} AND T.CUST_CD = #{custCd}
+          ]]>
+	     <choose>
+	       <when test="outsCon == 'all'">
+	        AND T.BAL_DT BETWEEN #{stBalDt} AND #{edBalDt}
+	       </when>
+	       <when test="outsCon == 'okchk'">
+	        AND T.OUTS_CON  = 1
+	        AND T.BAL_DT BETWEEN #{stBalDt} AND #{edBalDt}
+	       </when>
+	       <when test="outsCon == 'michk'">
+	        AND T.OUTS_CON = 0
+	        AND T.BAL_DT BETWEEN #{stBalDt} AND #{edBalDt}
+	       </when>
+	     </choose>
+	     <![CDATA[
+	     ORDER BY T.MR_NO, T.SITE_CD
+	     ]]>
+	</select>
+	
+	<!--  공사 납품등록/현황 -->
+	<select id="selWorkDeliverySMst" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.SQ_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP, T.ITEM_AM, T.DELIVERY_DT, T.BAL_DT, T.OUTS_CON,
+              T.RMKS, T.LOCATION_AT, T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT, T.SITE_DS, T.MI_DELI_QTY, T.MASTER_KEY, T.DELI_SEQ, T.OUTS_RMK, T.BAL_ASGN_QTY,
+              T.ETC_CD, T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO
+         FROM(SELECT DISTINCT A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID,A.ITEM_CD,A.ITEM_QN,A.ITEM_UP,A.ITEM_AM, A.DELIVERY_DT,A.BAL_DT,A.OUTS_CON,
+	      	         A.RMKS, C.LOCATION_AT, D.KITEM_DS, D.ITEM_SZ, D.ITEM_UT, E.SITE_DS, A.BAL_ASGN_QTY - A.DELI_QN AS MI_DELI_QTY,
+	      	        (A.MR_NO+A.INQ_NO+CAST(A.SQ_NO AS CHAR(3))+A.PO_NO) AS MASTER_KEY, A.DELI_SEQ,A.OUTS_RMK, A.BAL_ASGN_QTY,
+                     A.ETC_CD, A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO
+	            FROM CCM200 A, BMB720 B, BMB500 C, BMF400 D, CMZ100 E
+               WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO AND A.COST_ID = B.COST_ID 
+	             AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO AND A.SQ_NO = B.SQ_NO   
+	             AND A.ITEM_CD = D.ITEM_CD  AND A.SITE_CD = E.SITE_CD
+	             AND A.RFID_YN = '0'
+	             AND A.OUTS_CON = 1  AND A.BAL_ASGN_QTY - A.DELI_QN > 0
+	             AND A.OUTS_END_YN = '0'
+	             AND A.END_YN = '0'
+                 AND A.ETC_KIND = 'COM'
+            UNION ALL
+             SELECT DISTINCT A.SITE_CD, A.MR_NO,A.INQ_NO,A.PO_NO,A.SQ_NO,A.CUST_CD,A.COST_ID, A.ETC_CD AS ITEM_CD,A.ITEM_QN,A.ITEM_UP,A.ITEM_AM, A.DELIVERY_DT,A.BAL_DT,A.OUTS_CON,
+	      	        A.RMKS, C.LOCATION_AT, D.ETC_NM AS KITEM_DS,D.ETC_SZ AS ITEM_SZ, D.ETC_UT AS ITEM_UT, E.SITE_DS, A.BAL_ASGN_QTY - A.DELI_QN AS MI_DELI_QTY,
+	      	       (A.MR_NO+A.INQ_NO+CAST(A.SQ_NO AS CHAR(3))+A.PO_NO) AS MASTER_KEY, A.DELI_SEQ,A.OUTS_RMK, A.BAL_ASGN_QTY,
+                    A.ITEM_CD AS ETC_CD, A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO
+	          FROM CCM200 A, BMB720 B, BMB500 C, CCM600 D, CMZ100 E
+             WHERE A.SITE_CD = B.SITE_CD AND A.MR_NO = B.MR_NO AND A.INQ_NO = B.INQ_NO AND A.PO_NO = B.PO_NO AND A.COST_ID = B.COST_ID 
+	           AND B.SITE_CD = C.SITE_CD AND B.MR_NO = C.MR_NO AND B.INQ_NO = C.INQ_NO AND B.PO_NO = C.PO_NO AND A.SQ_NO = B.SQ_NO   
+	           AND A.ETC_CD = D.ETC_CD AND D.USE_YN = '1'  AND A.SITE_CD = E.SITE_CD
+	           AND A.RFID_YN = '0'
+	           AND A.OUTS_CON = 1  AND A.BAL_ASGN_QTY - A.DELI_QN > 0
+	           AND A.OUTS_END_YN = '0'
+	           AND A.END_YN = '0'
+               AND A.ETC_KIND = 'ETC'
+           )T WHERE T.SITE_CD = #{siteCd} AND T.CUST_CD = #{custCd}
+           ORDER BY T.MR_NO, T.INQ_NO, T.PO_NO
+           ]]>
+	</select>
+	
+	<select id="selWorkDeliverySSub" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ, T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP,
+              T.ITEM_AM, T.DELIVERY_DT, T.DELI_QTY, T.OLD_DELI_QTY, T.MI_DELI_QTY, 
+              T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT, T.DELI_SEQ_F, T.SQ_NO, T.INVOICE_QN, T.END_YN, T.BAL_ASGN_QTY,
+              T.ETC_UP, T.ETC_AM, T.ETC_KIND,T.ETC_KIND_NM, T.ETC_REQ_NO, T.ETC_CD
+        FROM(SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.DELI_QTY AS OLD_DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		            A.DELI_SEQ_F, A.SQ_NO, A.INVOICE_QN, C.END_YN, C.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ETC_CD
+		       FROM CCM210 A, BMF400 B, CCM200 C
+		      WHERE A.ITEM_CD = B.ITEM_CD AND A.SITE_CD = C.SITE_CD AND A.MR_NO = C.MR_NO AND A.INQ_NO = C.INQ_NO AND A.PO_NO = C.PO_NO
+		        AND A.SQ_NO = C.SQ_NO AND A.CUST_CD = C.CUST_CD AND A.COST_ID = C.COST_ID AND A.DELI_SEQ_F = C.DELI_SEQ
+		        AND A.ETC_KIND = 'COM'
+		     UNION ALL
+             SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ETC_CD AS ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.DELI_QTY AS OLD_DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.ETC_NM AS KITEM_DS, B.ETC_SZ AS ITEM_SZ, B.ETC_UT AS ITEM_UT,
+		            A.DELI_SEQ_F, A.SQ_NO, A.INVOICE_QN, C.END_YN, C.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ITEM_CD AS ETC_CD
+		      FROM CCM210 A, CCM600 B, CCM200 C
+		     WHERE A.ETC_CD = B.ETC_CD AND B.USE_YN = '1' 
+               AND A.SITE_CD = C.SITE_CD AND A.MR_NO = C.MR_NO AND A.INQ_NO = C.INQ_NO AND A.PO_NO = C.PO_NO
+		       AND A.SQ_NO = C.SQ_NO AND A.CUST_CD = C.CUST_CD AND A.COST_ID = C.COST_ID AND A.DELI_SEQ_F = C.DELI_SEQ
+		       AND A.ETC_KIND = 'ETC'
+            )T WHERE T.DELI_DT = #{deliDt} AND T.SITE_CD = #{siteCd} AND T.DELI_SEQ = #{deliSeq} AND T.CUST_CD = #{custCd} 
+               ORDER BY T.DELI_NO, T.DELI_SEQ, T.DELI_SUB_SEQ
+               ]]>
+	</select>
+	
+	<insert id="prcsWorkDeliverySCom" parameterType="OrderDeliveryVO">
+	    <if test="cudKey == 'INSERT'">         
+        <![CDATA[ INSERT INTO CCM210 (DELI_NO, DELI_DT, DELI_SEQ, DELI_SUB_SEQ, SITE_CD, MR_NO, INQ_NO, PO_NO, CUST_CD, COST_ID, 
+                             ITEM_CD, ITEM_QN, ITEM_UP, ITEM_AM, DELIVERY_DT, DELI_QTY,OUT_CID,OUT_CDT,DELI_SEQ_F, SQ_NO,
+                             ETC_UP,ETC_AM,ETC_KIND, ETC_REQ_NO, ETC_CD)
+                     VALUES(#{deliDt}+#{deliSeq}+#{deliSubSeq}, #{deliDt}, #{deliSeq},#{deliSubSeq}, #{siteCd}, #{mrNo},#{inqNo}, #{poNo}, #{custCd}, #{costId}, 
+                             #{itemCd},#{itemQn}, #{itemUp},#{itemAm}, #{deliveryDt}, #{deliQty},#{id},GETDATE(),#{deliSeqF}, #{sqNo},
+                             #{etcUp},#{etcAm},#{etcKind},#{etcReqNo},#{etcCd})        
+            
+            UPDATE CCM200 SET DELI_QN = DELI_QN + #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]>                             
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM210  SET  DELI_QTY = #{deliQty},ETC_UP = #{etcUp}, ETC_AM = #{etcAm}, OUT_MID = #{id}, OUT_MDT = GETDATE() WHERE DELI_NO = #{deliNo}
+          
+          <![CDATA[UPDATE CCM200 SET DELI_QN = (DELI_QN - #{oldDeliQty}) + #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]> 
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM210 WHERE DELI_NO = #{deliNo}
+          
+           <![CDATA[UPDATE CCM200 SET DELI_QN = DELI_QN  - #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo}
+             AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]> 
+        </if>
+	 </insert>
+	 
+	 <insert id="prcsWorkDeliverySEtc" parameterType="OrderDeliveryVO">
+	    <if test="cudKey == 'INSERT'">         
+        <![CDATA[ INSERT INTO CCM210 (DELI_NO, DELI_DT, DELI_SEQ, DELI_SUB_SEQ, SITE_CD, MR_NO, INQ_NO, PO_NO, CUST_CD, COST_ID, 
+                             ITEM_CD, ITEM_QN, ITEM_UP, ITEM_AM, DELIVERY_DT, DELI_QTY,OUT_CID,OUT_CDT,DELI_SEQ_F, SQ_NO,
+                             ETC_UP,ETC_AM,ETC_KIND, ETC_REQ_NO, ETC_CD)
+                     VALUES(#{deliDt}+#{deliSeq}+#{deliSubSeq}, #{deliDt}, #{deliSeq},#{deliSubSeq}, #{siteCd}, #{mrNo},#{inqNo}, #{poNo}, #{custCd}, #{costId}, 
+                             #{etcCd},#{itemQn}, #{itemUp},#{itemAm}, #{deliveryDt}, #{deliQty},#{id},GETDATE(),#{deliSeqF}, #{sqNo},
+                             #{etcUp},#{etcAm},#{etcKind},#{etcReqNo},#{itemCd})        
+            
+            UPDATE CCM200 SET DELI_QN = DELI_QN + #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]>                             
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM210  SET  DELI_QTY = #{deliQty},ETC_UP = #{etcUp}, ETC_AM = #{etcAm}, OUT_MID = #{id}, OUT_MDT = GETDATE() WHERE DELI_NO = #{deliNo}
+          
+          <![CDATA[UPDATE CCM200 SET DELI_QN = (DELI_QN - #{oldDeliQty}) + #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]> 
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM210 WHERE DELI_NO = #{deliNo}
+          
+           <![CDATA[UPDATE CCM200 SET DELI_QN = DELI_QN  - #{deliQty} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo}
+             AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeqF}  ]]> 
+        </if>
+	 </insert>
+	 
+	 <select id="selWorkDeliveryR" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	 <![CDATA[
+	   SELECT T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ, T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP,
+              T.ITEM_AM, T.DELIVERY_DT, T.DELI_QTY, T.MI_DELI_QTY, 
+              T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT,
+              T.SITE_DS, T.DELI_SEQ_F, T.SQ_NO, T.BAL_ASGN_QTY,
+              T.ETC_UP, T.ETC_AM, T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO, T.ETC_CD
+        FROM(SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		            C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO , D.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ETC_CD
+		       FROM CCM210 A, BMF400 B, CMZ100 C, CCM200 D
+		      WHERE A.ITEM_CD = B.ITEM_CD AND A.SITE_CD = C.SITE_CD
+		        AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO
+		        AND A.SQ_NO = D.SQ_NO AND A.CUST_CD = D.CUST_CD AND A.COST_ID = D.COST_ID AND A.DELI_SEQ_F = D.DELI_SEQ
+                AND A.ETC_KIND = 'COM'
+             UNION ALL
+             SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ETC_CD AS ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.ETC_NM AS KITEM_DS, B.ETC_SZ AS ITEM_SZ, B.ETC_UT AS ITEM_UT,
+		            C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO , D.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ITEM_CD AS ETC_CD
+		      FROM CCM210 A, CCM600 B, CMZ100 C, CCM200 D
+		     WHERE A.ETC_CD = B.ETC_CD AND B.USE_YN = '1' AND A.SITE_CD = C.SITE_CD
+		       AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO
+		       AND A.SQ_NO = D.SQ_NO AND A.CUST_CD = D.CUST_CD AND A.COST_ID = D.COST_ID AND A.DELI_SEQ_F = D.DELI_SEQ
+               AND A.ETC_KIND = 'ETC'
+          ) T WHERE  T.DELI_DT BETWEEN #{stBalDt} AND #{edBalDt}  AND T.SITE_CD = #{siteCd} AND T.CUST_CD = #{custCd}
+		         ORDER BY T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ  
+		         ]]>
+	 </select>
+	 
+	 <select id="selWorkDeliveryRPrint" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	 <![CDATA[
+	   SELECT T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ, T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP,
+              T.ITEM_AM, T.DELIVERY_DT, T.DELI_QTY, T.MI_DELI_QTY, 
+              T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT,
+              T.SITE_DS, T.DELI_SEQ_F, T.SQ_NO, T.BAL_ASGN_QTY,
+              T.ETC_UP, T.ETC_AM, T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO, T.ETC_CD, B.CEO_NM, DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',B.BIZ_NO,'') AS BIZ_NO, B.BIZ_TYPE, B.PRT_NM, B.ADDR1, B.BIZ_KIND,
+              DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',D.BIZ_NO,'') AS COMP_NO, C.CO_BNM, C.CEO_NM AS COMP_CEO_NM, C.ADDR, D.BIZ_TYPE AS COMP_BIZ_TYPE, 
+              D.BIZ_KIND AS COMP_BIZ_KIND
+        FROM(SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		            C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO , D.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ETC_CD
+		       FROM CCM210 A, BMF400 B, CMZ100 C, CCM200 D
+		      WHERE A.ITEM_CD = B.ITEM_CD AND A.SITE_CD = C.SITE_CD
+		        AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO
+		        AND A.SQ_NO = D.SQ_NO AND A.CUST_CD = D.CUST_CD AND A.COST_ID = D.COST_ID AND A.DELI_SEQ_F = D.DELI_SEQ
+                AND A.ETC_KIND = 'COM'
+             UNION ALL
+             SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ETC_CD AS ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		            A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY,
+		            B.ETC_NM AS KITEM_DS, B.ETC_SZ AS ITEM_SZ, B.ETC_UT AS ITEM_UT,
+		            C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO , D.BAL_ASGN_QTY,
+                    A.ETC_UP, A.ETC_AM, A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO, A.ITEM_CD AS ETC_CD
+		      FROM CCM210 A, CCM600 B, CMZ100 C, CCM200 D
+		     WHERE A.ETC_CD = B.ETC_CD AND B.USE_YN = '1' AND A.SITE_CD = C.SITE_CD
+		       AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO
+		       AND A.SQ_NO = D.SQ_NO AND A.CUST_CD = D.CUST_CD AND A.COST_ID = D.COST_ID AND A.DELI_SEQ_F = D.DELI_SEQ
+               AND A.ETC_KIND = 'ETC'
+          ) T 
+              /* 20181128 쿼리수정 */
+              /* LEFT OUTER JOIN BCV100 B ON (T.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',B.BIZ_NO,'')) */
+              LEFT OUTER JOIN BCV100 C ON (DBO.SAFEDB_ENC('SAFEDB.POLICY', 'ARIA256', A.CUST_CD, '1') = C.BIZ_NO)
+              LEFT OUTER JOIN BCC100 C ON(C.CO_CD = '01')
+              LEFT OUTER JOIN BCV100 D ON(C.CUST_CD = D.CUST_CD)
+          WHERE  T.DELI_DT BETWEEN #{stBalDt} AND #{edBalDt}  AND T.SITE_CD = #{siteCd} AND T.CUST_CD = #{custCd}
+		         ORDER BY T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ  
+		         ]]>
+	 </select>
+	 
+	 <!-- 납품등록 RFID   -->
+	 	 <select id="selRemiconRMst" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+ <![CDATA[    SELECT A.SITEIN_CD AS SITE_CD, G.SITE_DS, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, A.CUST_CD, H.CUST_NM AS CUST_DS, B.SQ_NO, B.ITEM_CD, C.KITEM_DS, C.ITEM_SZ, 
+	          D.TITLE AS ITEM_UT, E.TITLE AS ITEM_UC, ISNULL(B.ITEM_QN,0) AS ITEM_QN,
+	          CASE ISNULL(B.ITEM_QN,0) WHEN 0 THEN 0 ELSE ISNULL(B.ITEM_AM,0) / ISNULL(B.ITEM_QN,0) END AS ITEM_UP,
+	          ISNULL(B.ITEM_VAT,0) AS ITEM_VAT, ISNULL(B.ITEM_SUM,0) AS ITEM_SUM, F.COST_CD, F.ITEM_DS,
+	          ISNULL(B.INPUT_BC,'BMC1101') AS INPUT_BC, '' AS END_YN,
+	          CASE WHEN ISNULL(B.INPUT_BC,'BMC1101') = 'BMC1101' THEN '접수대기' WHEN B.INPUT_BC = 'BMC1102' THEN '접수취소' ELSE '접수완료' END AS INPUT_NM,
+	          A.INVOICE_DT, I.ITEM_QN AS INPUT_QN,'0' as SCM_YN, 0 AS DELI_SEQ, 0 AS COST_ID, A.ACCOUNT_DT AS ACCOUNT_DT
+	   FROM  BMC100 A INNER JOIN BMC110 B ON (A.INVOICE_NO = B.INVOICE_NO)
+	                  LEFT OUTER JOIN BMF400 C ON (B.ITEM_CD = C.ITEM_CD)
+	                  LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM700') D ON (C.ITEM_UT = D.BASE_CD)
+                      LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM710') E ON (B.ITEM_BC = E.BASE_CD)
+	                  LEFT OUTER JOIN CMA210 F ON (F.SITE_CD = A.SITEIN_CD AND B.COST_ID = F.COST_ID AND F.SQ_SN = (SELECT MAX(SQ_SN) FROM CMA210 WHERE SITE_CD = A.SITEIN_CD))
+	                  LEFT OUTER JOIN CMZ100 G ON (A.SITEIN_CD = G.SITE_CD)
+	                  LEFT OUTER JOIN BCV100 H ON (A.CUST_CD = H.CUST_CD)
+                      LEFT OUTER JOIN (SELECT sitein_cd,invoice_no,item_cd,invoice_dt ,output_dt ,cust_cd , po_no,mr_no , inq_no, sum(item_qn) as item_qn  
+                                         FROM BMG100 with(nolock)
+                                        WHERE 1=1 AND SCM_YN = '0' AND OUTPUT_DT BETWEEN  #{stInvoiceDt} AND #{edInvoiceDt}
+                                        group by sitein_cd,invoice_no,item_cd ,cust_cd , po_no,mr_no , inq_no,invoice_dt,output_dt) I
+                                   ON  A.SITEIN_CD = I.SITEIN_CD AND B.ITEM_CD = I.ITEM_CD AND A.CUST_CD = I.CUST_CD AND A.PO_NO = I.PO_NO 
+                                   AND A.MR_NO = I.MR_NO AND A.INQ_NO = I.INQ_NO AND A.INVOICE_NO = I.INVOICE_NO                   
+      WHERE 1=1
+        AND B.INPUT_YN = '1'
+        AND A.INVOICEDEL_NO IS NULL
+        AND B.DELI_NO IS NULL
+        AND A.SITEIN_CD IN (SELECT A.SITE_FAC_CD
+							FROM   CCM101 A INNER JOIN CCM100 C ON(A.ID = C.ID)
+							WHERE  A.ID = #{id} AND A.SITE_FAC_DIV = 'site' AND A.USE_YN = '1' AND C.USE_YN = '1' AND C.CONFIRM_YN = '1')
+        AND A.CUST_CD LIKE '%' + #{custCd} + '%' 
+        AND B.INPUT_BC LIKE '%' + #{inputBc} + '%'  
+        AND A.INVOICE_DT BETWEEN #{stInvoiceDt} AND #{edInvoiceDt}  ]]> 
+        <choose>
+           <when test="inputBc == '01'">
+              AND B.INPUT_BC = 'BMC1101'
+           </when>
+           <when test="inputBc == '02'">
+             AND B.INPUT_BC = 'BMC1102'
+           </when>
+           <when test="inputBc == '03'">
+            AND (B.INPUT_BC != 'BMC1101' OR B.INPUT_BC != 'BMC1102')
+           </when>
+          </choose> 
+
+  UNION ALL
+
+ <![CDATA[ 	   SELECT A.SITE_CD, G.SITE_DS, A.PO_NO, A.MR_NO, A.INQ_NO, '' AS INVOICE_NO, A.CUST_CD
+                    /* 20181128 쿼리 수정 */
+                    --, H.CUST_NM AS CUST_DS
+                    , CUST_DS = (SELECT CUST_NM FROM BCV100 WHERE DBO.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',A.CUST_CD,'1') = BIZ_NO)
+                    , A.SQ_NO, A.ITEM_CD, C.KITEM_DS,
+	          C.ITEM_SZ, D.TITLE AS ITEM_UT, E.TITLE AS ITEM_UC, ISNULL(A.BAL_ASGN_QTY,0) AS ITEM_QN, ISNULL(A.ITEM_UP, 0) as ITEM_UP,
+	          ((A.BAL_ASGN_QTY * A.ITEM_UP)*0.1) AS ITEM_VAT,
+	         ((A.BAL_ASGN_QTY * A.ITEM_UP)) + (((A.BAL_ASGN_QTY * A.ITEM_UP)*0.1)) AS ITEM_SUM,
+	          F.COST_CD, F.ITEM_DS,
+	          ISNULL(N.INPUT_BC,'BMC1101') AS INPUT_BC, A.END_YN,
+	          CASE WHEN A.END_YN = '1' THEN '접수마감'  when ISNULL(I.ITEM_QN,0) = 0 then '접수대기'
+             when ISNULL(I.ITEM_QN,0) > 0 and a.cancel_yn = '1' then '접수취소'
+             else '접수완료' end as INPUT_NM,
+	          A.BAL_DT AS INVOICE_DT, I.ITEM_QN AS INPUT_QN ,'1' as SCM_YN, A.DELI_SEQ, A.COST_ID, A.BAL_DT AS ACCOUNT_DT
+        FROM CCM200 A LEFT OUTER JOIN BMF400 C ON (A.ITEM_CD = C.ITEM_CD)
+                      LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM700') D ON (C.ITEM_UT = D.BASE_CD)
+                      LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM710') E ON (A.ITEM_BC = E.BASE_CD)
+                      LEFT OUTER JOIN CMA210 F ON (F.SITE_CD = A.SITE_CD AND A.COST_ID = F.COST_ID AND F.SQ_SN = (SELECT MAX(SQ_SN) FROM CMA210 WHERE SITE_CD = A.SITE_CD))
+                      LEFT OUTER JOIN CMZ100 G ON (A.SITE_CD = G.SITE_CD)
+                      --LEFT OUTER JOIN BCV100 H ON (A.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',H.BIZ_NO,'')) /* 20181128 쿼리 수정 */
+                      LEFT OUTER JOIN (SELECT SITEIN_CD, ITEM_CD, CUST_CD, PO_NO, MR_NO, INQ_NO, SUM(ITEM_QN) AS ITEM_QN, SQ_NO, COST_ID, DELI_SEQ,
+                                              INVOICE_NO_SCM
+                                         FROM BMG100 with(nolock)
+                                         WHERE 1=1 AND SCM_YN = '1'
+                                         GROUP BY SITEIN_CD, ITEM_CD, CUST_CD, PO_NO, MR_NO, INQ_NO, SQ_NO, COST_ID, DELI_SEQ, INVOICE_NO_SCM) I
+                                   ON (A.SITE_CD = I.SITEIN_CD AND A.ITEM_CD = I.ITEM_CD AND A.CUST_CD = I.CUST_CD AND A.PO_NO = I.PO_NO
+                                  AND A.MR_NO = I.MR_NO AND A.INQ_NO = I.INQ_NO AND A.SQ_NO = I.SQ_NO AND A.COST_ID = I.COST_ID AND A.DELI_SEQ = I.DELI_SEQ)
+                      LEFT OUTER JOIN BMC100 M ON I.INVOICE_NO_SCM = M.INVOICE_NO LEFT OUTER JOIN BMC110 N ON (M.INVOICE_NO = N.INVOICE_NO)                   
+        WHERE 1=1
+          AND A.OUTS_CON = '1'
+          AND A.RFID_YN = '1'   
+          AND A.SITE_CD IN (SELECT A.SITE_FAC_CD
+							FROM   CCM101 A INNER JOIN CCM100 C ON(A.ID = C.ID)
+							WHERE  A.ID = #{id} AND A.SITE_FAC_DIV = 'site' AND A.USE_YN = '1' AND C.USE_YN = '1' AND C.CONFIRM_YN = '1')
+			]]>
+           <choose>
+           <when test="inputBc == '01'">
+             AND ISNULL(I.ITEM_QN,0) = 0
+           </when>
+           <when test="inputBc == '02'">
+             AND A.CANCEL_YN = '1'
+           </when>
+           <when test="inputBc == '03'">
+          <![CDATA[  AND  ISNULL(I.ITEM_QN,0) > 0 and a.cancel_yn != '1'  AND A.END_YN != '1']]>
+           </when>
+          </choose> 
+          AND A.CUST_CD LIKE '%' + #{custCd} + '%'
+          AND A.BAL_DT BETWEEN #{stInvoiceDt} AND #{edInvoiceDt}               
+          ORDER BY CUST_CD , ACCOUNT_DT           
+	 </select>
+	 
+	 <select id="selRemiconRSub" statementType="CALLABLE" parameterType="OrderDeliveryVO" resultMap="OrderDeliveryMap" resultType="ResultSet">
+	 <![CDATA[
+		 {call UP_REMICON_RFID_DETAIL_LIST(#{siteCd,jdbcType=VARCHAR},#{stInvoiceDt,jdbcType=VARCHAR},#{edInvoiceDt,jdbcType=VARCHAR},#{invoiceNo,jdbcType=VARCHAR},
+		 #{custCd,jdbcType=VARCHAR},#{poNo,jdbcType=VARCHAR},#{mrNo,jdbcType=VARCHAR},#{inqNo,jdbcType=VARCHAR},#{sqNo,jdbcType=INTEGER},#{costId,jdbcType=INTEGER},
+		 #{deliSeq})}
+		 ]]>	
+	</select>
+	
+	<select id="selRemiconSForm" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	  <if test="scmYn == 0">
+	  <![CDATA[
+	     SELECT A.SITEIN_CD AS SITE_CD, G.SITE_DS, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, A.CUST_CD, H.CUST_DS, H.TEL_NO, B.SQ_NO, B.ITEM_CD,
+	           C.KITEM_DS, C.ITEM_SZ, D.TITLE AS ITEM_UT, E.TITLE AS ITEM_UC, ISNULL(B.ITEM_QN,0) AS ITEM_QN,
+	           CASE ISNULL(B.ITEM_QN,0) WHEN 0 THEN 0 ELSE ISNULL(B.ITEM_AM,0) / ISNULL(B.ITEM_QN,0) END AS ITEM_UP,
+	           ISNULL(B.ITEM_VAT,0) AS ITEM_VAT, ISNULL(B.ITEM_SUM,0) AS ITEM_SUM, B.INPUT_BC, H.CHARGE_NM, H.CHARGETEL_NO,
+	           A.INVOICE_DT, I.LOCATION_AT, J.RFID_NO, J.OUTPUT_DT AS OUTPUT_DT, J.RMKS, B.COST_ID ,0 AS DELI_SEQ
+	     FROM BMC100 A INNER JOIN BMC110 B ON(A.INVOICE_NO = B.INVOICE_NO)
+	                   LEFT OUTER JOIN BMF400 C ON (B.ITEM_CD = C.ITEM_CD)
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM700') D ON (C.ITEM_UT = D.BASE_CD)
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM710') E ON (B.ITEM_BC = E.BASE_CD)
+	                   LEFT OUTER JOIN CMA210 F ON (F.SITE_CD = A.SITEIN_CD AND B.COST_ID = F.COST_ID AND F.SQ_SN = (SELECT MAX(SQ_SN) FROM CMA210 WHERE SITE_CD = A.SITEIN_CD))
+					   LEFT OUTER JOIN CMZ100 G ON (A.SITEIN_CD = G.SITE_CD)
+					   LEFT OUTER JOIN BME100 H ON (A.CUST_CD = H.CUST_CD)
+					   LEFT OUTER JOIN BMB500 I ON (A.PO_NO = I.PO_NO AND A.MR_NO = I.MR_NO)
+					   LEFT OUTER JOIN BMG100 J with(nolock) ON (A.SITEIN_CD = J.SITEIN_CD AND A.INVOICE_DT = J.INVOICE_DT AND B.ITEM_CD = J.ITEM_CD AND A.CUST_CD = J.CUST_CD
+					                                AND A.PO_NO = J.PO_NO AND A.MR_NO = J.MR_NO AND A.INQ_NO = J.INQ_NO AND A.INVOICE_NO = J.INVOICE_NO)	
+		WHERE 1=1
+		  AND B.INPUT_YN = '1'
+		  AND B.INPUT_BC IN ('BMC1101','BMC1102','BMC1103')
+		  AND A.INVOICEDEL_NO IS NULL
+		  AND B.DELI_NO IS NULL
+	      AND A.CUST_CD LIKE '%' + #{custCd} + '%'
+          AND A.INVOICE_NO = #{invoiceNo}
+          ]]>
+	  </if>
+	   <if test="scmYn == 1">
+	   <![CDATA[
+	    SELECT A.SITE_CD, G.SITE_DS, A.PO_NO, A.MR_NO, A.INQ_NO,ISNULL(J.INVOICE_NO_SCM, '') AS INVOICE_NO, A.CUST_CD, H.CUST_DS, H.TEL_NO, A.SQ_NO, A.ITEM_CD,
+	           C.KITEM_DS, C.ITEM_SZ, D.TITLE AS ITEM_UT, E.TITLE AS ITEM_UC, ISNULL(A.BAL_ASGN_QTY,0) AS ITEM_QN,
+	           ISNULL(A.ITEM_UP, 0) as ITEM_UP, ((A.BAL_ASGN_QTY * A.ITEM_UP)*0.1) AS ITEM_VAT, 
+	          ((A.BAL_ASGN_QTY * A.ITEM_UP)) + (((A.BAL_ASGN_QTY * A.ITEM_UP)*0.1)) AS ITEM_SUM, '' AS INPUT_BC, H.CHARGE_NM, H.CHARGETEL_NO,
+	           A.BAL_DT AS INVOICE_DT, I.LOCATION_AT, J.RFID_NO, J.OUTPUT_DT AS OUTPUT_DT, J.RMKS, A.COST_ID, A.DELI_SEQ
+	     FROM CCM200 A LEFT OUTER JOIN BMF400 C ON (A.ITEM_CD = C.ITEM_CD)
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM700') D ON (C.ITEM_UT = D.BASE_CD)
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM710') E ON (A.ITEM_BC = E.BASE_CD)
+	                   LEFT OUTER JOIN CMA210 F ON (F.SITE_CD = A.SITE_CD AND A.COST_ID = F.COST_ID AND F.SQ_SN = (SELECT MAX(SQ_SN) FROM CMA210 WHERE SITE_CD = A.SITE_CD))
+					   LEFT OUTER JOIN CMZ100 G ON (A.SITE_CD = G.SITE_CD)
+					   LEFT OUTER JOIN BME100 H ON (A.CUST_CD = H.CUST_CD)
+					   LEFT OUTER JOIN BMB500 I ON (A.PO_NO = I.PO_NO AND A.MR_NO = I.MR_NO)
+					   LEFT OUTER JOIN (SELECT SITEIN_CD, MR_NO, INQ_NO, PO_NO, SQ_NO, CUST_CD, COST_ID, DELI_SEQ, INVOICE_NO_SCM, RFID_NO, OUTPUT_DT,RMKS FROM BMG100 with(nolock)
+					                   WHERE 1=1 AND SCM_YN = '1'
+					                    GROUP BY SITEIN_CD, MR_NO, INQ_NO, PO_NO, SQ_NO, CUST_CD, COST_ID, DELI_SEQ, INVOICE_NO_SCM, RFID_NO, OUTPUT_DT, RMKS)J
+					                    ON A.SITE_CD = J.SITEIN_CD  AND A.CUST_CD = J.CUST_CD AND A.PO_NO = J.PO_NO AND A.DELI_SEQ = J.DELI_SEQ
+                                                    AND A.MR_NO = J.MR_NO AND A.INQ_NO = J.INQ_NO AND A.SQ_NO = J.SQ_NO AND A.COST_ID = J.COST_ID
+		WHERE 1=1
+		  AND A.OUTS_CON = '1'
+          AND A.RFID_YN = '1'
+          AND A.SITE_CD = #{siteCd}
+          AND A.MR_NO = #{mrNo}
+          AND A.INQ_NO = #{inqNo}
+          AND A.PO_NO = #{poNo}
+          AND A.SQ_NO = #{sqNo}
+          AND A.COST_ID = #{costId}
+          AND A.DELI_SEQ = #{deliSeq}
+	      AND A.CUST_CD LIKE '%' + #{custCd} + '%'
+	      ]]>
+	   </if>
+	</select>
+
+	
+	<select id="selRemiconSGrid" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	 <if test="scmYn == 0">
+	 <![CDATA[
+		SELECT A.SITEIN_CD AS SITE_CD, C.SITE_DS, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, B.CUST_NM AS CUST_DS, A.PO_NO, A.MR_NO, A.INQ_NO, A.RFIDSQ_NO,ISNULL(A.JUNGSAN_YN,0) AS JUNGSAN_YN,
+		       A.INVOICE_NO, A.RFID_NO, A.OUTPUT_DT, A.ORDER_QN, A.ITEM_QN, A.CAR_NO, A.RMKS, A.INPUTC_DT, A.OUTPUTC_DT, A.DELI_SEQ, A.SQ_NO, A.COST_ID,
+		       A.RFIDSQ_NO AS RFIDSQ_NO_OLD, A.RFID_NO AS RFID_NO_OLD, A.ITEM_QN AS OLD_ITEM_QN
+		 FROM  BMG100 A with(nolock) LEFT OUTER JOIN BCV100 B ON (A.CUST_CD = B.CUST_CD)
+		                LEFT OUTER JOIN CMZ100 C ON (A.SITEIN_CD = C.SITE_CD)             
+		WHERE A.PO_NO = #{poNo} 
+		  AND A.MR_NO = #{mrNo}
+		  AND A.INQ_NO = #{inqNo}
+		  AND A.INVOICE_NO = #{invoiceNo}
+		 ]]>     
+     </if>	
+     <if test="scmYn == 1">
+     <![CDATA[
+      SELECT A.SITEIN_CD AS SITE_CD, C.SITE_DS, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD
+           /* 20181128 쿼리 수정 */
+           --, B.CUST_NM AS CUST_DS
+           , CUST_DS = (SELECT CUST_NM FROM BCV100 WHERE DBO.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',A.CUST_CD,'1') = BIZ_NO)
+           , A.PO_NO, A.MR_NO, A.INQ_NO, A.RFIDSQ_NO, ISNULL(A.JUNGSAN_YN,0) AS JUNGSAN_YN,
+		       A.INVOICE_NO, A.RFID_NO, A.OUTPUT_DT, A.ORDER_QN, A.ITEM_QN, A.CAR_NO, A.RMKS, A.INPUTC_DT, A.OUTPUTC_DT, A.DELI_SEQ, A.SQ_NO, A.COST_ID,
+		       A.RFIDSQ_NO AS RFIDSQ_NO_OLD, A.RFID_NO AS RFID_NO_OLD, A.ITEM_QN AS OLD_ITEM_QN
+		 FROM  BMG100 A  with(nolock)
+		       /* 20181128 쿼리 수정 */ 
+		       --LEFT OUTER JOIN BCV100 B ON (A.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',B.BIZ_NO,''))
+		       LEFT OUTER JOIN CMZ100 C ON (A.SITEIN_CD = C.SITE_CD)             
+		WHERE A.PO_NO = #{poNo} 
+		  AND A.MR_NO = #{mrNo}
+		  AND A.INQ_NO = #{inqNo}
+		  AND A.SITEIN_CD = #{siteCd}
+		  AND A.CUST_CD = #{custCd}
+		  AND A.COST_ID = #{costId}
+		  AND A.DELI_SEQ = #{deliSeq}
+		  AND A.SQ_NO = #{sqNo}
+		  ]]>
+     </if>	                
+	</select>
+	
+	<select id="selRemiconSumItemQn" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	 <if test="scmYn == 0">
+		SELECT A.SITEIN_CD AS SITE_CD, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, SUM(A.ITEM_QN) AS ITEM_QN
+		 FROM  BMG100 A with(nolock)            
+		WHERE A.PO_NO = #{poNo} 
+		  AND A.MR_NO = #{mrNo}
+		  AND A.INQ_NO = #{inqNo}
+		  AND A.INVOICE_NO = #{invoiceNo}   
+		  GROUP BY A.SITEIN_CD , A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO
+     </if>	
+     <if test="scmYn == 1">
+      SELECT A.SITEIN_CD AS SITE_CD, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, SUM(A.ITEM_QN) AS ITEM_QN
+		 FROM  BMG100 A  with(nolock)              
+		WHERE A.PO_NO = #{poNo} 
+		  AND A.MR_NO = #{mrNo}
+		  AND A.INQ_NO = #{inqNo}
+		  AND A.SITEIN_CD = #{siteCd}
+		  AND A.CUST_CD = #{custCd}
+		  AND A.COST_ID = #{costId}
+		  AND A.DELI_SEQ = #{deliSeq}
+		  AND A.SQ_NO = #{sqNo}
+		  GROUP BY A.SITEIN_CD , A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO
+     </if>	                
+	</select>
+	
+	<select id="selRemiconSExists" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+		SELECT COUNT(*) AS CNT FROM BMG100 with(nolock) WHERE SITEIN_CD = #{siteCd} AND PO_NO = #{poNo} AND MR_NO = #{mrNo}
+		                                    AND INQ_NO = #{inqNo} AND INVOICE_NO = #{invoiceNo}
+		                                    AND INPUTC_DT IS NOT NULL
+	</select>
+	
+	<insert id="prcsRemiconS"  parameterType="OrderDeliveryVO">
+	  <if test="cudKey == 'INSERT'">
+	    INSERT INTO BMG100(SITEIN_CD, INVOICE_DT, ITEM_CD, CUST_CD, PO_NO, MR_NO, INQ_NO, INVOICE_NO, SQ_NO, COST_ID, RFID_NO,RFIDSQ_NO, 
+	                       ITEM_QN, CAR_NO, OUTPUT_DT, ORDER_QN, RMKS,DELI_SEQ,SCM_YN,OUT_CID,OUT_CDT)
+	    VALUES(#{siteCd},#{invoiceDt},#{itemCd},#{custCd},#{poNo},#{mrNo},#{inqNo},#{invoiceNo},#{sqNo},#{costId},#{rfidNo},#{rfidsqNo},
+	            #{itemQn},#{carNo},#{outputDt},#{orderQn},#{rmks},#{deliSeq},#{scmYn},#{id},GETDATE())      
+	  </if>
+	  <if test="cudKey == 'UPDATE'">
+	     UPDATE BMG100 SET RFID_NO = #{rfidNo},RFIDSQ_NO = #{rfidsqNo}, ITEM_QN = #{itemQn}, CAR_NO = #{carNo}, RMKS = #{rmks},
+	                       OUT_MID = #{id}, OUT_MDT = GETDATE()
+	      WHERE SITEIN_CD = #{siteCd} AND INVOICE_DT = #{invoiceDt} AND ITEM_CD = #{itemCd} AND CUST_CD = #{custCd} AND PO_NO = #{poNo} 
+	        AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND INVOICE_NO = #{invoiceNo} AND RFID_NO = #{rfidNoOld} AND RFIDSQ_NO = #{rfidsqNoOld} 
+	  </if>
+	  <if test="cudKey == 'DELETE'">
+	    DELETE BMG100 WHERE SITEIN_CD = #{siteCd} AND INVOICE_DT = #{invoiceDt} AND ITEM_CD = #{itemCd} AND CUST_CD = #{custCd} AND PO_NO = #{poNo} 
+	        AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND INVOICE_NO = #{invoiceNo} AND RFID_NO = #{rfidNo} AND RFIDSQ_NO = #{rfidsqNo} 
+	  </if>
+	</insert>
+	
+	<insert id="prcsRemiconSInputBc" statementType="CALLABLE" parameterType="OrderDeliveryVO"> 
+	  {call UP_REMICON_RFID_INPUT_BC(#{siteCd,jdbcType=VARCHAR},#{invoiceNo,jdbcType=VARCHAR},#{itemCd,jdbcType=VARCHAR},#{custCd,jdbcType=VARCHAR},
+		                             #{poNo,jdbcType=VARCHAR},#{mrNo,jdbcType=VARCHAR},#{inqNo,jdbcType=VARCHAR},#{orderQn,jdbcType=INTEGER})}	
+	</insert>
+	
+	<select id="selRemiconRfidSqNo" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	  SELECT right(convert(varchar, isnull(convert(int, max(RFIDSQ_NO)), 0) + 1), 1) AS RFIDSQ_NO FROM BMG100 with(nolock)
+          WHERE SITEIN_CD = #{siteCd} AND INVOICE_DT = #{invoiceDt} and RFID_NO = #{rfidNo}
+	</select>
+	
+	<insert id="prcsRemiconSScm"  parameterType="OrderDeliveryVO">
+	  <if test="cudKey == 'INSERT'">
+	    INSERT INTO BMG100(SITEIN_CD, INVOICE_DT, ITEM_CD, CUST_CD, PO_NO, MR_NO, INQ_NO, INVOICE_NO, SQ_NO, COST_ID, RFID_NO,RFIDSQ_NO, ITEM_QN, CAR_NO, 
+	                       OUTPUT_DT, ORDER_QN, RMKS,DELI_SEQ,SCM_YN,OUT_CID,OUT_CDT)
+	    VALUES(#{siteCd},#{invoiceDt},#{itemCd},#{custCd},#{poNo},#{mrNo},#{inqNo},#{invoiceNo},#{sqNo},#{costId},#{rfidNo},#{rfidsqNo},
+	            #{itemQn},#{carNo},#{outputDt},#{orderQn},#{rmks},#{deliSeq},#{scmYn},#{id},GETDATE())
+	            
+	      UPDATE CCM200 SET DELI_QN = DELI_QN + #{itemQn} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeq}        
+	  </if>
+	  <if test="cudKey == 'UPDATE'">
+	     UPDATE BMG100 SET RFID_NO = #{rfidNo},RFIDSQ_NO = #{rfidsqNo}, ITEM_QN = #{itemQn}, CAR_NO = #{carNo}, RMKS = #{rmks},
+	                       OUT_MID = #{id}, OUT_MDT = GETDATE()
+	      WHERE SITEIN_CD = #{siteCd} AND INVOICE_DT = #{invoiceDt} AND ITEM_CD = #{itemCd} AND CUST_CD = #{custCd} AND PO_NO = #{poNo} 
+	        AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND INVOICE_NO = #{invoiceNo} AND RFID_NO = #{rfidNoOld} AND RFIDSQ_NO = #{rfidsqNoOld} 
+	     
+	     UPDATE CCM200 SET DELI_QN = (DELI_QN-#{oldItemQn}) + #{itemQn} 
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeq}    
+	  </if>
+	  <if test="cudKey == 'DELETE'">  
+	    DELETE BMG100 WHERE SITEIN_CD = #{siteCd} AND INVOICE_DT = #{invoiceDt} AND ITEM_CD = #{itemCd} AND CUST_CD = #{custCd} AND PO_NO = #{poNo} 
+	        AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND INVOICE_NO = #{invoiceNo} AND RFID_NO = #{rfidNo} AND RFIDSQ_NO = #{rfidsqNo} 
+	        
+	        UPDATE CCM200 SET DELI_QN = DELI_QN  - #{itemQn}
+            WHERE SITE_CD = #{siteCd} AND MR_NO = #{mrNo} AND INQ_NO = #{inqNo} AND PO_NO = #{poNo} AND SQ_NO = #{sqNo} 
+            AND CUST_CD = #{custCd} AND COST_ID = #{costId} AND DELI_SEQ = #{deliSeq}  
+	  </if>
+	</insert>
+	
+	<select id="selInboundRPrint" parameterType="OrderDeliveryVO"  resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT A.INVOICE_NO, A.ACCOUNT_DT, A.INVOICE_DT, A.CUST_CD, A.SITEIN_CD AS SITE_CD, A.INVOICE_AM,
+	         B.DEPT_NM AS SITE_DS,C.CEO_NM,
+	         C.CUST_NM AS CUST_DS, DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',C.BIZ_NO,'') AS BIZ_NO, C.BIZ_TYPE, C.PRT_NM, C.ADDR1, C.biz_kind,
+           ISNULL(D.ITEM_QN,0) AS ITEM_QN,
+	         CASE ISNULL(D.ITEM_QN,0) WHEN 0 THEN 0 ELSE ISNULL(D.ITEM_AM,0) / ISNULL(D.ITEM_QN,0) END AS ITEM_UP,
+           D.ITEM_AM,
+           CASE WHEN D.ETC_CD  IS NULL OR D.ETC_CD = ''  THEN E.KITEM_DS ELSE  G.ETC_NM END AS KITEM_DS,
+           CASE WHEN D.ETC_CD  IS NULL OR D.ETC_CD = ''  THEN E.ITEM_SZ ELSE G.ETC_SZ END AS ITEM_SZ,
+           DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',I.BIZ_NO,'') AS COMP_NO, H.CO_BNM, H.CEO_NM AS COMP_CEO_NM, H.ADDR, I.BIZ_TYPE AS COMP_BIZ_TYPE, 
+           I.BIZ_KIND AS COMP_BIZ_KIND
+        FROM BMC100 A LEFT OUTER JOIN HRA200 B ON (A.SITEIN_CD = B.DEPT_CD)
+                      /* 20181128 쿼리수정 */
+                      --LEFT OUTER JOIN BCV100 C ON (A.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',C.BIZ_NO,''))
+                      LEFT OUTER JOIN BCV100 C ON (DBO.SAFEDB_ENC('SAFEDB.POLICY', 'ARIA256', A.CUST_CD, '1') = C.BIZ_NO)
+                      INNER JOIN BMC110 D ON(A.invoice_no = D.invoice_no)
+                      LEFT OUTER JOIN BMF400 E ON (D.ITEM_CD = E.ITEM_CD) 
+                      LEFT OUTER JOIN CCM600 G ON(D.ETC_CD = G.ETC_CD)  
+                      LEFT OUTER JOIN BCC100 H ON(H.CO_CD = '01')
+                      LEFT OUTER JOIN BCV100 I ON(H.CUST_CD = I.CUST_CD)
+       WHERE A.INVOICE_DT BETWEEN #{stInvoiceDt} AND #{edInvoiceDt}
+         AND A.SITEIN_CD = #{siteCd}
+         AND A.CUST_CD = #{custCd}
+         AND A.INVOICE_BC IN ('BM500GGP', 'BM500CXS')               
+	     AND ISNULL(A.INVOICEDEL_NO,'') = ''
+	     ORDER BY A.INVOICE_DT
+	     ]]>
+	</select>
+	
+	<select id="selInboundR" parameterType="OrderDeliveryVO"  resultType="OrderDeliveryVO">
+	<![CDATA[
+	  SELECT A.INVOICE_NO, A.ACCOUNT_DT, A.INVOICE_DT, A.CUST_CD, A.SITEIN_CD AS SITE_CD, A.INVOICE_AM,
+	         B.DEPT_NM AS SITE_DS,
+	         /* 20181128 쿼리 수정 */
+	         --C.CUST_NM AS CUST_DS, 
+	         CUST_DS = (SELECT CUST_NM FROM BCV100 WHERE DBO.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',A.CUST_CD,'1') = BIZ_NO),
+			 CASE ISNULL(A.SLIP_NO,'') WHEN '' THEN 'N' ELSE 'Y' END AS SLIP_YN
+        FROM BMC100 A LEFT OUTER JOIN HRA200 B ON (A.SITEIN_CD = B.DEPT_CD)
+                      --LEFT OUTER JOIN BCV100 C ON (A.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',C.BIZ_NO,''))) /* 20181128 쿼리 수정 */
+                      /* LEFT OUTER JOIN BMC110 D ON (A.INVOICE_NO = D.INVOICE_NO) */
+       WHERE A.INVOICE_DT BETWEEN #{stInvoiceDt} AND #{edInvoiceDt}
+         AND A.SITEIN_CD = #{siteCd}
+         AND A.CUST_CD = #{custCd}
+         AND A.INVOICE_BC IN ('BM500GGP', 'BM500CXS')               
+	     AND ISNULL(A.INVOICEDEL_NO,'') = ''
+	     /* 나중에 필요할수도 있음 AND D.INPUT_YN = '1'  AND ISNULL(D.INPUT_YN,'0') <> '1' */
+	     ]]>
+	</select>
+	
+	<select id="selInvoiceDelNo" parameterType="OrderDeliveryVO"  resultType="OrderDeliveryVO">
+	<![CDATA[
+	 SELECT INVOICEDEL_NO FROM BMC100 WHERE INVOICEDEL_NO = #{invoiceNo}
+	 ]]>
+	</select>
+	
+	<select id="selInvoiceDetailForm" parameterType="OrderDeliveryVO"  resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT A.INVOICE_BC, A.SITEIN_CD AS SITE_CD, A.SITEOUT_CD, A.PO_NO, A.INVOICE_DT, A.ACCOUNT_DT, A.SLIP_NO, A.INVOICEDEL_NO,
+	          B.TITLE AS INVOICE_NM,
+	          D.DEPT_NM AS SITE_DS,
+	          E.DEPT_NM AS SITEOUT_DS,
+	          CASE WHEN A.CUST_CD IS NULL THEN H.CUST_CD ELSE A.CUST_CD END AS CUST_CD,
+	          CASE WHEN C.CUST_DS IS NULL THEN I.CUST_DS ELSE C.CUST_DS END AS CUST_DS,
+	          F.ID, F.NM
+	    FROM BMC100 A LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM500') B ON (A.INVOICE_BC = B.BASE_CD)
+	                  LEFT OUTER JOIN BME100 C ON (A.CUST_CD = C.CUST_CD)
+	                  LEFT OUTER JOIN HRA200 D ON (A.SITEIN_CD = D.DEPT_CD)     
+					  LEFT OUTER JOIN HRA200 E ON (A.SITEOUT_CD = E.DEPT_CD)
+                      LEFT OUTER JOIN SCU100 F ON (A.CID = F.REG_ID)
+                      LEFT OUTER JOIN BMC100 H ON (A.INVOICE_NO = H.INVOICEREV_NO)
+                      LEFT OUTER JOIN BME100 I ON (H.CUST_CD = I.CUST_CD)
+                      ]]>
+          <where>
+             <choose>
+               <when test="invoicedelNo == null">a.invoice_no = #{invoiceNo}</when>
+               <otherwise>a.invoice_no = ''</otherwise>
+             </choose>
+         </where>
+	</select>
+	
+	<select id="selInvoiceDetailGrid" parameterType="OrderDeliveryVO"  resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT B.SQ_NO, B.ITEM_CD, ISNULL(B.ITEM_QN,0) AS ITEM_QN, ISNULL(B.ITEM_VAT,0) AS ITEM_VAT, ISNULL(B.ITEM_SUM,0) AS ITEM_SUM,
+	          CASE ISNULL(B.ITEM_QN,0) WHEN 0 THEN 0 ELSE ISNULL(B.ITEM_AM,0) / ISNULL(B.ITEM_QN,0) END AS ITEM_UP,B.ITEM_AM,
+	          C.KITEM_DS, C.ITEM_SZ, 
+	          D.TITLE AS ITEM_UT,
+	          E.TITLE AS ITEM_UC,
+	          F.COST_CD, F.ITEM_DS,
+	          B.ETC_CD,
+	          G.ETC_NM, G.ETC_SZ
+	     FROM BMC100 A INNER JOIN BMC110 B ON (A.INVOICE_NO = B.INVOICE_NO)
+	                   LEFT OUTER JOIN BMF400 C ON (B.ITEM_CD = C.ITEM_CD) 
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM700') D ON (C.ITEM_UT = D.BASE_CD)
+	                   LEFT OUTER JOIN (SELECT BASE_CD, TITLE FROM BCA200V WHERE MAIN_CD = 'BM710') E ON (B.ITEM_BC = E.BASE_CD)
+	   	               LEFT OUTER JOIN CMA210 F ON (F.SITE_CD = A.SITEIN_CD AND B.COST_ID = F.COST_ID 
+	   	                                            AND F.SQ_SN = (SELECT MAX(SQ_SN) FROM CMA210 WHERE SITE_CD = A.SITEIN_CD)) 
+	   	               LEFT OUTER JOIN CCM600 G ON(B.ETC_CD = G.ETC_CD)         
+	   	               ]]>                    
+          <where>
+             <choose>
+               <when test="invoicedelNo == null">a.invoice_no = #{invoiceNo}</when>
+               <otherwise>a.invoice_no = ''</otherwise>
+             </choose>
+         </where>
+	</select>
+	
+	<!-- 납품대비 입고현황 (일반/레미콘)  -->
+	<select id="selDeliInboundR" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	<![CDATA[
+	   SELECT T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ, T.SITE_CD, T.MR_NO, T.INQ_NO, T.PO_NO, T.CUST_CD, T.COST_ID, T.ITEM_CD, T.ITEM_QN, T.ITEM_UP,
+              T.ITEM_AM, T.DELIVERY_DT, T.DELI_QTY, T.MI_DELI_QTY, T.INVOICE_QN, T.MI_INVOICE_QN,
+              T.KITEM_DS, T.ITEM_SZ, T.ITEM_UT,
+              T.SITE_DS, T.DELI_SEQ_F, T.SQ_NO, T.BAL_ASGN_QTY,
+              T.END_YN, T.ETC_CD, T.ETC_KIND, T.ETC_KIND_NM, T.ETC_REQ_NO
+         FROM(SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		             A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY, A.INVOICE_QN, (A.DELI_QTY - A.INVOICE_QN) AS MI_INVOICE_QN,
+		             B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		             C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO, D.BAL_ASGN_QTY,
+		             CASE WHEN D.END_YN = '1' THEN '마감' ELSE '미마감' END AS END_YN,
+                     A.ETC_CD, A.ETC_KIND, '일반' AS ETC_KIND_NM, A.ETC_REQ_NO
+      		    FROM CCM210 A, BMF400 B, CMZ100 C, CCM200 D
+      		   WHERE A.ITEM_CD = B.ITEM_CD AND A.SITE_CD = C.SITE_CD
+      		     AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO AND A.SQ_NO = D.SQ_NO
+      		     AND A.COST_ID = D.COST_ID AND A.CUST_CD = D.CUST_CD AND A.DELI_SEQ_F = D.DELI_SEQ
+                 AND A.ETC_KIND = 'COM'
+              UNION ALL
+              SELECT A.DELI_NO, A.DELI_DT, A.DELI_SEQ, A.DELI_SUB_SEQ, A.SITE_CD, A.MR_NO, A.INQ_NO, A.PO_NO, A.CUST_CD, A.COST_ID, A.ETC_CD AS ITEM_CD, A.ITEM_QN, A.ITEM_UP, 
+		             A.ITEM_AM, A.DELIVERY_DT, A.DELI_QTY, A.ITEM_QN - A.DELI_QTY AS MI_DELI_QTY, A.INVOICE_QN, (A.DELI_QTY - A.INVOICE_QN) AS MI_INVOICE_QN,
+		             B.ETC_NM AS KITEM_DS,B.ETC_SZ AS ITEM_SZ,B.ETC_UT AS ITEM_UT,
+		             C.SITE_DS, A.DELI_SEQ_F, A.SQ_NO, D.BAL_ASGN_QTY,
+		             CASE WHEN D.END_YN = '1' THEN '마감' ELSE '미마감' END AS END_YN,
+                     A.ITEM_CD AS ETC_CD, A.ETC_KIND, '잡자재' AS ETC_KIND_NM, A.ETC_REQ_NO
+      		   FROM CCM210 A, CCM600 B, CMZ100 C, CCM200 D
+      		  WHERE A.ETC_CD = B.ETC_CD AND B.USE_YN = '1' AND A.SITE_CD = C.SITE_CD
+      		    AND A.SITE_CD = D.SITE_CD AND A.MR_NO = D.MR_NO AND A.INQ_NO = D.INQ_NO AND A.PO_NO = D.PO_NO AND A.SQ_NO = D.SQ_NO
+      		    AND A.COST_ID = D.COST_ID AND A.CUST_CD = D.CUST_CD AND A.DELI_SEQ_F = D.DELI_SEQ
+                AND A.ETC_KIND = 'ETC'
+            )T WHERE  T.DELI_DT BETWEEN #{stBalDt} AND #{edBalDt} AND T.CUST_CD = #{custCd} 
+            ]]>
+		      <if test="gubn == 'miIn'">
+		        AND (T.DELI_QTY - T.INVOICE_QN) > 0
+		      </if>
+		      <if test="gubn == 'in'">
+		        AND (T.DELI_QTY - T.INVOICE_QN) = 0
+		      </if>
+		      <if test="siteCd != ''">
+                AND T.SITE_CD = #{siteCd}
+              </if>
+              <![CDATA[
+		      ORDER BY T.DELI_NO, T.DELI_DT, T.DELI_SEQ, T.DELI_SUB_SEQ
+		      ]]>
+	</select>
+	
+	<select id="selRemiconInboundR" parameterType="OrderDeliveryVO" resultType="OrderDeliveryVO">
+	 <if test="gubn == 'miIn'">
+		 SELECT   A.SITEIN_CD AS SITE_CD, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, A.RFID_NO, A.RFIDSQ_NO, A.SQ_NO,
+	           A.COST_ID, A.ITEM_QN, A.CAR_NO, A.OUTPUTC_DT, A.OUTPUTC_DT, A.JUNGSAN_YN, 0 AS INVOICE_QN, A.ITEM_QN AS MI_INVOICE_QN,  
+		       B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		       C.SITE_DS, D.CUST_DS, E.BAL_ASGN_QTY,
+		       CASE WHEN E.END_YN = '1' THEN '마감' ELSE '미마감' END AS END_YN
+		FROM BMG100 A LEFT OUTER JOIN BME100 D ON (A.CUST_CD = D.CUST_CD), BMF400 B, CMZ100 C, CCM200 E
+		WHERE A.ITEM_CD = B.ITEM_CD AND A.SITEIN_CD = C.SITE_CD
+		  AND A.SITEIN_CD = E.SITE_CD AND A.MR_NO = E.MR_NO AND A.INQ_NO = E.INQ_NO AND A.PO_NO = E.PO_NO AND A.SQ_NO = E.SQ_NO
+		  AND A.COST_ID = E.COST_ID AND A.CUST_CD = E.CUST_CD AND A.DELI_SEQ = E.DELI_SEQ
+		  AND A.INVOICE_DT BETWEEN #{stBalDt} AND #{edBalDt}
+          AND (A.JUNGSAN_YN IS NULL OR A.JUNGSAN_YN = '0')
+          AND A.OUTPUTC_DT IS NULL
+          AND E.CANCEL_YN = '0'
+          AND A.CUST_CD = #{custCd}
+          <if test="siteCd != ''">
+           AND A.SITEIN_CD = #{siteCd}
+          </if>
+	 </if>
+	 <if test="gubn == 'in'">
+		SELECT   A.SITEIN_CD AS SITE_CD, A.INVOICE_DT, A.ITEM_CD, A.CUST_CD, A.PO_NO, A.MR_NO, A.INQ_NO, A.INVOICE_NO, A.RFID_NO, A.RFIDSQ_NO, A.SQ_NO,
+	           A.COST_ID, A.ITEM_QN, A.CAR_NO, A.OUTPUTC_DT, A.OUTPUTC_DT, A.JUNGSAN_YN, A.ITEM_QN AS INVOICE_QN, 0 AS MI_INVOICE_QN,  
+		       B.KITEM_DS, B.ITEM_SZ, B.ITEM_UT,
+		       C.SITE_DS,D.CUST_DS,E.BAL_ASGN_QTY,
+		       CASE WHEN E.END_YN = '1' THEN '마감' ELSE '미마감' END AS END_YN
+		FROM BMG100 A LEFT OUTER JOIN BME100 D ON (A.CUST_CD = D.CUST_CD), BMF400 B, CMZ100 C, CCM200 E
+		WHERE A.ITEM_CD = B.ITEM_CD AND A.SITEIN_CD = C.SITE_CD
+		  AND A.SITEIN_CD = E.SITE_CD AND A.MR_NO = E.MR_NO AND A.INQ_NO = E.INQ_NO AND A.PO_NO = E.PO_NO AND A.SQ_NO = E.SQ_NO
+		  AND A.COST_ID = E.COST_ID AND A.CUST_CD = E.CUST_CD AND A.DELI_SEQ = E.DELI_SEQ
+		  AND A.INVOICE_DT BETWEEN #{stBalDt} AND #{edBalDt}
+          AND A.JUNGSAN_YN = '1'
+          AND A.OUTPUTC_DT IS NOT NULL
+          AND A.CUST_CD = #{custCd}
+          <if test="siteCd != ''">
+           AND A.SITEIN_CD = #{siteCd}
+          </if>
+	 </if>
+	 
+	</select>
+</mapper>

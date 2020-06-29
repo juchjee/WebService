@@ -1,0 +1,87 @@
+[
+	{"menucd":"000000001","pmenucd":"0","menuname":"E-SCM(공사)","exegbn":"0","uri":null,"scrnParm":null},
+		{"menucd":"0000000001","pmenucd":"000000001","menuname":"IS동서","exegbn":"0","uri":null,"scrnParm":null},
+			{"menucd":"2000000000","pmenucd":"0000000001","menuname":"협력업체관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"2000000001","pmenucd":"2000000000","menuname":"사용승인등록","exegbn":"1","uri":"erp/scm/work/isds/partners/useAuthS","scrnParm":null},	
+			
+			{"menucd":"3000000000","pmenucd":"0000000001","menuname":"발주관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"3000000001","pmenucd":"3000000000","menuname":"구매청구등록","exegbn":"1","uri":"erp/scm/work/isds/order/purcClaimS","scrnParm":null},
+				{"menucd":"3000000002","pmenucd":"3000000000","menuname":"구매청구현황","exegbn":"1","uri":"erp/scm/work/isds/order/purcClaimR","scrnParm":null},
+				{"menucd":"3000000003","pmenucd":"3000000000","menuname":"발주등록","exegbn":"1","uri":"erp/scm/work/isds/order/orderS","scrnParm":null},
+				{"menucd":"3000000004","pmenucd":"3000000000","menuname":"발주현황","exegbn":"1","uri":"erp/scm/work/isds/order/orderR","scrnParm":null},
+				{"menucd":"3000000005","pmenucd":"3000000000","menuname":"발주대비미마감현황","exegbn":"1","uri":"erp/scm/work/isds/order/orderNotDlineR","scrnParm":null},
+				
+			{"menucd":"4000000000","pmenucd":"0000000001","menuname":"입고관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"4000000001","pmenucd":"4000000000","menuname":"입고등록","exegbn":"1","uri":"erp/scm/work/isds/inbound/inboundS","scrnParm":null},
+				{"menucd":"4000000002","pmenucd":"4000000000","menuname":"입고현황","exegbn":"1","uri":"erp/scm/work/isds/inbound/inboundR","scrnParm":null},
+				{"menucd":"4000000003","pmenucd":"4000000000","menuname":"입고마감등록","exegbn":"1","uri":"erp/scm/work/isds/inbound/inboundCloseS","scrnParm":null},
+				{"menucd":"4000000004","pmenucd":"4000000000","menuname":"입고마감현황","exegbn":"1","uri":"erp/scm/work/isds/inbound/inboundCloseR","scrnParm":null},
+
+			
+			{"menucd":"5000000000","pmenucd":"0000000001","menuname":"기성관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"5000000001","pmenucd":"5000000000","menuname":"기성청구확정","exegbn":"1","uri":"erp/scm/work/isds/instPayment/billingR","scrnParm":null},
+				
+			{"menucd":"6000000000","pmenucd":"0000000001","menuname":"공사일보관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"6000000001","pmenucd":"6000000000","menuname":"공사일보확인","exegbn":"1","uri":"erp/scm/work/isds/dailyWork/constructionR1","scrnParm":null},
+				{"menucd":"6000000002","pmenucd":"6000000000","menuname":"공사일보현황","exegbn":"1","uri":"erp/scm/work/isds/dailyWork/constructionR2","scrnParm":null},
+
+			
+		{"menucd":"0000000002","pmenucd":"000000001","menuname":"하도업체","exegbn":"0","uri":null,"scrnParm":null},
+
+			{"menucd":"8000000000","pmenucd":"0000000002","menuname":"수주/납품관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"8000000001","pmenucd":"8000000000","menuname":"발주확인등록","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/orderChkS","scrnParm":null},
+				{"menucd":"8000000002","pmenucd":"8000000000","menuname":"발주확인현황","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/orderChkR","scrnParm":null},
+				{"menucd":"8000000003","pmenucd":"8000000000","menuname":"납품등록","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/deliveryS","scrnParm":null},
+				{"menucd":"8000000004","pmenucd":"8000000000","menuname":"납품현황","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/deliveryR","scrnParm":null},
+				{"menucd":"8000000005","pmenucd":"8000000000","menuname":"수주대비미마감현황","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/orderNotDlineR","scrnParm":null},
+				{"menucd":"8000000006","pmenucd":"8000000000","menuname":"입고마감현황","exegbn":"1","uri":"erp/scm/work/partners/orderDelivery/inboundCloseR","scrnParm":null},
+				{"menucd":"8000000007","pmenucd":"8000000000","menuname":"납품현황(RFID)","exegbn":"1","uri":"erp/scm/work/partners/remicon/remiconR","scrnParm":null},
+			
+			{"menucd":"9000000000","pmenucd":"0000000002","menuname":"기성관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"9000000001","pmenucd":"9000000000","menuname":"기성청구등록","exegbn":"1","uri":"erp/scm/work/partners/instPayment/billingS","scrnParm":null},
+				{"menucd":"9000000002","pmenucd":"9000000000","menuname":"기성청구확인","exegbn":"1","uri":"erp/scm/work/partners/instPayment/billingR","scrnParm":null},
+				
+			{"menucd":"1000000000","pmenucd":"0000000002","menuname":"공사일보관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1000000001","pmenucd":"1000000000","menuname":"공사정보등록","exegbn":"1","uri":null,"scrnParm":null},
+				{"menucd":"1000000002","pmenucd":"1000000000","menuname":"근무자등록","exegbn":"1","uri":"erp/scm/work/partners/dailyWork/workerS","scrnParm":null},
+				{"menucd":"1000000003","pmenucd":"1000000000","menuname":"일일근태등록","exegbn":"1","uri":"erp/scm/work/partners/dailyWork/dayByDiliS","scrnParm":null},
+				{"menucd":"1000000006","pmenucd":"1000000000","menuname":"일일근태현황","exegbn":"1","uri":"erp/scm/work/partners/dailyWork/dayByDiliR","scrnParm":null},
+				{"menucd":"1000000007","pmenucd":"1000000000","menuname":"월근태집계","exegbn":"1","uri":"erp/scm/work/partners/dailyWork/monthByDiliR","scrnParm":null},
+				{"menucd":"1000000008","pmenucd":"1000000000","menuname":"공사일보등록","exegbn":"1","uri":"erp/scm/work/partners/dailyWork/constructionS","scrnParm":null},
+			
+			{"menucd":"1100000000","pmenucd":"0000000002","menuname":"결제관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1100000001","pmenucd":"1100000000","menuname":"결제내역","exegbn":"1","uri":"erp/scm/work/partners/payment/paymentR","scrnParm":null},
+
+			
+	{"menucd":"000000002","pmenucd":"0","menuname":"E-SCM(제조)","exegbn":"0","uri":null,"scrnParm":null},
+		{"menucd":"0000000003","pmenucd":"000000002","menuname":"IS동서","exegbn":"0","uri":null,"scrnParm":null},
+			{"menucd":"1200000000","pmenucd":"0000000003","menuname":"협력업체관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1200000001","pmenucd":"1200000000","menuname":"사용승인등록","exegbn":"1","uri":"erp/scm/work/isds/partners/useAuthS","scrnParm":null},
+				
+			{"menucd":"1300000000","pmenucd":"0000000003","menuname":"발주관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1300000001","pmenucd":"1300000000","menuname":"발주등록","exegbn":"1","uri":"erp/scm/manufacture/isds/order/orderS","scrnParm":null},
+				{"menucd":"1300000002","pmenucd":"1300000000","menuname":"발주현황","exegbn":"1","uri":"erp/scm/manufacture/isds/order/orderR","scrnParm":null},
+				{"menucd":"1300000003","pmenucd":"1300000000","menuname":"발주대비미마감현황","exegbn":"1","uri":"erp/scm/manufacture/isds/order/orderNotDlineR","scrnParm":null},
+				
+			{"menucd":"1400000000","pmenucd":"0000000003","menuname":"입고관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1400000001","pmenucd":"1400000000","menuname":"입고등록","exegbn":"1","uri":"erp/scm/manufacture/isds/inbound/inboundS","scrnParm":null},
+				{"menucd":"1400000002","pmenucd":"1400000000","menuname":"입고현황","exegbn":"1","uri":"erp/scm/manufacture/isds/inbound/inboundR","scrnParm":null},
+				{"menucd":"1400000003","pmenucd":"1400000000","menuname":"입고마감등록","exegbn":"1","uri":"erp/scm/manufacture/isds/inbound/inboundCloseS","scrnParm":null},
+				{"menucd":"1400000004","pmenucd":"1400000000","menuname":"입고마감현황","exegbn":"1","uri":"erp/scm/manufacture/isds/inbound/inboundCloseR","scrnParm":null},
+				
+		{"menucd":"0000000004","pmenucd":"000000002","menuname":"협력업체","exegbn":"0","uri":null,"scrnParm":null},
+			{"menucd":"1500000000","pmenucd":"0000000004","menuname":"기준정보","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1500000001","pmenucd":"1500000000","menuname":"사용신청등록","exegbn":"1","uri":null,"scrnParm":null},
+				
+			{"menucd":"1600000000","pmenucd":"0000000004","menuname":"수주/납품관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1600000001","pmenucd":"1600000000","menuname":"발주확인등록","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/orderChkS","scrnParm":null},
+				{"menucd":"1600000003","pmenucd":"1600000000","menuname":"발주확인현황","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/orderChkR","scrnParm":null},
+				{"menucd":"1600000004","pmenucd":"1600000000","menuname":"납품등록","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/deliveryS","scrnParm":null},
+				{"menucd":"1600000005","pmenucd":"1600000000","menuname":"납품현황","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/deliveryR","scrnParm":null},
+				{"menucd":"1600000006","pmenucd":"1600000000","menuname":"수주대비미마감현황","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/orderNotDlineR","scrnParm":null},
+				{"menucd":"1600000007","pmenucd":"1600000000","menuname":"입고마감현황","exegbn":"1","uri":"erp/scm/manufacture/partners/orderDelivery/inboundCloseR","scrnParm":null},				
+				
+			{"menucd":"1700000000","pmenucd":"0000000004","menuname":"결제관리","exegbn":"0","uri":null,"scrnParm":null},
+				{"menucd":"1700000001","pmenucd":"1700000000","menuname":"결제내역","exegbn":"1","uri":"erp/scm/manufacture/partners/payment/paymentR","scrnParm":null}
+
+]

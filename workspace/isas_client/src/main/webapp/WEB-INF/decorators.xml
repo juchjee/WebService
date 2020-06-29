@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/WEB-INF/jsp/general">
+
+	<!-- sitemesh를 사용하지 않을 패턴을 지정한다 -->
+	<excludes>
+		<pattern>*/*.action</pattern>
+		<pattern>*/popup/**</pattern>
+	</excludes>
+	<!-- /sitemesh를 사용하지 않을 패턴을 지정한다 -->
+
+	<decorator name="header" page="head.jsp"/>
+	<decorator name="gnb" page="gnb.jsp"/>
+	<decorator name="null" />
+
+	<decorator name="front_layout" title="ISDS" page="site.jsp">
+		<pattern>/*</pattern>
+	</decorator>
+
+</decorators>

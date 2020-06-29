@@ -1,0 +1,18 @@
+@charset "utf-8";
+
+/*페이징*/
+.paging{margin-top:40px;margin-bottom:40px;text-align:center}
+.paging *{vertical-align:middle;font-weight:bold}
+.paging a{display:inline-block;margin:0 8px;padding-bottom:3px;color:#3e3d3b;border-bottom:1px solid #3e3d3b;}
+.paging a:hover,
+.paging a:focus{color:#00a8cb}
+.paging .current{color:#00a8cb;border-bottom:none;}
+.paging span{display:inline-block;width:27px;height:20px;overflow:hidden;background:url('../img/sub/bg_arrow.png') no-repeat}
+.paging span a{display:block;text-indent:-9999px;width:100%;height:100%;margin:0;padding:0;border:0 none}/*2017-07-26 수정*/
+.paging span a:hover,
+.paging span a:focus{background:0 none;border:0 none}
+.paging span.first{background-position:0 3px}
+.paging span.prev{margin-right:0;background-position:0 -13px}
+.paging span.next{margin-left:0;background-position:-12px -13px}
+.paging span.last{background-position:-12px 3px}
+.paging span.last{background-position:-12px 3px}

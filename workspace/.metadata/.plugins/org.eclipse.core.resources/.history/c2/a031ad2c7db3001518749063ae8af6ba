@@ -1,0 +1,431 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="java.util.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript">
+var layout, toolbar, subLayout
+var PscrnParm = parent.scrnParm;
+var mainTabbar = parent.mainTabbar;
+var ActTabId = parent.ActTabId;    
+$(document).ready(function(){
+	Ubi.setContainer(3,[1,2,3,4],"1C"); //회의비 사용신청서 등록
+	
+	layout = Ubi.getLayout();
+    toolbar = Ubi.getToolbar();
+    subLayout = Ubi.getSubLayout(); 
+    
+    layout.cells("b").attachObject("bootContainer");
+	
+    subLayout.cells("a").attachObject("bootContainer2");
+    
+    gfn_payPayment_comboLoad("decideYn2","C26");
+    gfn_payPayment_comboLoad("decideYn3","C26");
+    gfn_payPayment_comboLoad("decideYn4","C26");
+    gfn_payPaymentSub_comboLoad("decideYn1","C26","0","1","","","");
+    
+    $('#searchBtn').click(function(e){
+    	if(e.target.id == 'searchBtn'){
+    		gfn_load_pop('w1','meetAmt/meetAmtPOP',[{},"","searchData"]);
+    	}
+    });
+    
+    $('#decideBtn2,#decideBtn3,#decideBtn4,#searchSubject').click(function(e){
+    	if(btnFlag == 1){
+    		if(e.target.id == 'decideBtn2'){
+    			gfn_load_pop('w1', 'comm/empPOP', ['','2','decideYn2'])
+    		}
+    		if(e.target.id == 'decideBtn3'){
+    			gfn_load_pop('w1', 'comm/empPOP', ['','2','decideYn3'])
+    		}
+    		if(e.target.id == 'decideBtn4'){
+    			gfn_load_pop('w1', 'comm/empPOP', ['','2','decideYn4'])
+    		}
+    		if(e.target.id == 'searchSubject'){
+    			gfn_load_pop('w1', 'comm/estimateSubjectPOP', ['','','subject']);
+        	}
+    	}else{
+    		return true;
+    	}
+    });
+    
+    $( "#decideYn2,#decideYn3,#decideYn4" ).change(function(e) {
+      	 if(e.target.id == "decideYn2"){
+      		 if($('#decideYn2').val() == '3'){
+      			 $('#empName2').val('없음');
+      			 $('#decideEmp2').val('');
+      			 $('#decideYn2').attr("disabled",true);
+      		 }
+      	 }
+   		if(e.target.id == "decideYn3"){
+   			if($('#decideYn3').val() == '3'){
+     			 $('#empName3').val('없음');
+     			 $('#decideEmp3').val('');
+     			 $('#decideYn3').attr("disabled",true);
+     		    }		 
+   		 }
+   		if(e.target.id == "decideYn4"){
+   			if($('#decideYn4').val() == '3'){
+     			 $('#empName4').val('없음');
+     			 $('#decideEmp4').val('');
+     			 $('#decideYn4').attr("disabled",true);
+     		   } 
+   		 }
+      });
+
+    fn_search();
+});
+function selectSetting(){
+	  var empName2 = $('#empName2').val();
+	  var empName3 = $('#empName3').val();
+	  var empName4 = $('#empName4').val();
+	  if(empName2 == '없음'){
+		  $('#decideYn2').attr("disabled",true);
+		  $("#decideYn2 option:eq(3)").attr("selected", "selected"); 
+	  }else{
+		  $('#decideYn2').attr("disabled",false);
+		 gfn_payPaymentSub_comboLoad("decideYn2","C26","0","3","","","");
+	  }
+	  if(empName3 == '없음'){
+		  $('#decideYn3').attr("disabled",true);
+		  $("#decideYn3 option:eq(3)").attr("selected", "selected"); 
+	  }else{
+		  $('#decideYn3').attr("disabled",false);
+		 gfn_payPaymentSub_comboLoad("decideYn3","C26","0","3","","","");
+	  }
+	  if(empName4 == '없음'){
+		  $('#decideYn4').attr("disabled",true);
+		  $("#decideYn4 option:eq(3)").attr("selected", "selected"); 
+	  }else{
+		  $('#decideYn4').attr("disabled",false);
+		 gfn_payPaymentSub_comboLoad("decideYn4","C26","0","3","","","");
+	  }
+};
+
+function fn_search(){
+	var obj = {};
+	  obj.setDate = searchDate($('#setDate').val());
+	  obj.setSeq = $('#setSeq').val();
+	  gfn_callAjaxForForm("frmMain", obj, "formSearch",fn_searchCB);
+	  gfn_callAjaxForForm("frmSearch", obj, "formSearch");
+};
+
+function fn_searchCB(data){
+	if(data != ''){
+		$('#cudKey').val('U');
+		btnFlag = 2;
+		 var input = $('#frmMain').find(':input').get();
+		 var textArea = $('#frmMain').find('textArea').get();
+		 var select = $('#frmMain,#frmSearch').find('select').get();
+		 $.each(input, function() {
+				$('#'+this.name).attr("readonly",true);
+		  });
+		 $.each(textArea, function() {
+				$('#'+this.name).attr("readonly",true);
+		  });
+		 $.each(select, function() {
+				$('#'+this.name).attr("disabled",true);
+		  });
+		 $('#calpicker2').attr("disabled",true);
+	}else{
+		byId("frmMain").reset();
+		byId("frmSearch").reset();
+		var t = dateformat(new Date());
+		byId("setDate").value = t; 
+		byId("regDate").value = t;  
+		$('#calpicker2').attr("disabled",false);
+		btnFlag = 1;
+		 var input = $('#frmMain').find(':input').get();
+		 var textArea = $('#frmMain').find('textArea').get();
+		 var select = $('#frmMain,#frmSearch').find('select').get();
+		 $.each(input, function() {
+				 $('#'+this.name).attr("readonly",false); 
+		  });
+		 $.each(textArea, function() {
+				$('#'+this.name).attr("readonly",false);
+		  });
+		 $.each(select, function() {
+				$('#'+this.name).attr("disabled",false);
+		  });
+		 $('#subjectCode').attr("readonly",true);
+		 $('#subjectName').attr("readonly",true);
+		 $('#empNo').attr("readonly",true);
+		 $('#empName').attr("readonly",true);
+		 $('#yearEstimateJan').attr("readonly",true);
+		 selectSetting();
+		 $('#cudKey').val('I');
+	}
+};
+
+function fn_new(){
+	location.replace(location.pathname);	
+};
+
+function fn_save(){
+	if($("#setSeq").val()==null || $("#setSeq").val()==""){
+		fn_getSeqReturn();
+	}
+	var cudKey = $('#cudKey').val();
+	var jsonData = formToJson(cudKey);
+	
+	$("#jsonData").val(jsonData);
+	console.log(jsonData);
+	var formData = new FormData();
+	formData.append("jsonData",$("#jsonData").val());
+	
+	  $.ajax({
+        url: "/erp/payment/meetAmtS/formSave",
+        type: "POST",
+        data: formData,
+        dataType: "text",
+        processData: false,
+        contentType: false,
+        success: function(data) {
+        	MsgManager.alertMsg("INF001");
+            fn_search();
+        }
+    });	
+};
+
+function formToJson(cudKey){
+	var jsonData = {};
+    jsonData = {
+   	  cudKey : cudKey, 
+   	  setDate : $("#setDate").val().split("/").join(""),
+   	  setSeq : $('#setSeq').val(),
+      empNo : $('#empNo').val(),
+      regDate : $("#regDate").val().split("/").join(""),
+   	  meetDate : $('#meetDate').val(),
+   	  place : $("#place").val(),
+   	  purpose : $('#purpose').val(),
+   	  range : $('#range').val(),
+   	  amt : $("#amt").val().split(",").join(""),
+      useContent : $("#useContent").val(),
+      subjectCode : $("#subjectCode").val(),
+   	  decideEmp1 : $('#empNo').val(),
+   	  decideYn1 : $("select[name=decideYn1]").val(),
+   	  decideEmp2 : $('#decideEmp2').val(),
+   	  decideYn2 : $("select[name=decideYn2]").val(),
+   	  decideEmp3 : $('#decideEmp3').val(),
+   	  decideYn3 : $("select[name=decideYn3]").val(),
+   	  decideEmp4 : $('#decideEmp4').val(),
+   	  decideYn4 : $("select[name=decideYn4]").val()
+    }
+    
+   return JSON.stringify(jsonData);		
+};
+
+function fn_getSeqReturn() {
+    var obj = {};
+    obj.setDate = searchDate($('#setDate').val());
+   gfn_callAjax(obj,"selSeq", fn_seqReturnCB);
+}
+
+function fn_seqReturnCB(data){
+	 $('#setSeq').val(data.setSeq);
+};
+
+function fn_remove(){
+	if(MsgManager.confirmMsg("WRN015")){
+		fn_rmoveAction();
+	}else{
+		return true;
+	}	
+};
+
+function fn_rmoveAction(){
+	var decideYn2 = $('#decideYn2').val();
+	var decideYn3 = $('#decideYn3').val();
+	var decideYn4 = $('#decideYn4').val();
+	if(decideYn2 == '1' || decideYn3 == '1' || decideYn4 == '1'){
+		dhtmlx.alert("결재된 내역은 삭제하실수 없습니다.");
+		return true;
+	}else{
+		var obj = {};
+		obj.setDate = searchDate($('#setDate').val());
+		obj.setSeq = $('#setSeq').val();
+		gfn_callAjaxComm(obj, "formDel", fn_search);
+	}
+};
+
+function fn_onClosePop(pName,data){
+	 if(pName == "searchData"){
+		 $('#setDate').val(data[0].setDate);
+		 $('#setSeq').val(data[0].setSeq);
+		 fn_search();
+	 }
+	 if(pName == 'decideYn2'){
+		 $('#decideEmp2').val(data.empNo);
+		$('#empName2').val(data.empName);
+		selectSetting();
+	 }
+	 if(pName == 'decideYn3'){
+		 $('#decideEmp3').val(data.empNo);
+		$('#empName3').val(data.empName);
+		selectSetting();
+	 }
+	 if(pName == 'decideYn4'){
+		 $('#decideEmp4').val(data.empNo);
+		$('#empName4').val(data.empName);
+		selectSetting();
+	 }
+	 if(pName == 'subject'){
+		 $('#subjectCode').val(data.subjectCode);
+		 $('#subjectName').val(data.subjectName);
+		 $('#yearEstimateJan').val(data.yearEstimateJan);
+	 }
+};
+
+function fn_exit(){
+	mainTabbar.tabs(ActTabId).close();
+};
+</script>
+<form id="pForm" name="pForm">
+    <input type="hidden" name="jsonData" id="jsonData">
+</form>
+<div id="bootContainer">
+    <form id="frmSearch" name="frmSearch">
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml30">
+			   <img src="/images/button/dhtmlx/search.gif" id="searchBtn" name="searchBtn" style="border: 1px solid;">
+				<label class="title0">등록일자</label>
+				<input name="setDate" id="setDate" type="text" value="" class="searchDate format_date" >
+				<input type="button" id="calpicker1" name="calpicker1" class="calicon inputCal">
+			</div>
+		</div>
+		<div class="left">
+			<div class="mlZero">
+				<input name="setSeq" id="setSeq" type="text" value="" class="inputSeq" readonly="readonly">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml10">
+				<label class="title0">결제</label>
+			</div>
+		</div>
+		<div class="left">
+			<div class="mlZero">
+				<table border="1" title="결제">
+				  <tr>
+				    <td>대리</td>
+				    <td><select name="decideYn2" id="decideYn2" class="selectbox0"></select></td>
+				    <td><input name="empName2" id="empName2" class=inputSeq value="없음" type="text" readonly="readonly">
+				        <input name="decideEmp2" id="decideEmp2" class=inputSeq value="" type="hidden">
+				    </td>
+				    <td><img src="/images/button/dhtmlx/search.gif" id="decideBtn2"></td> 
+				   </tr>
+				  <tr>
+				    <td>팀장</td>
+				    <td><select name="decideYn3" id="decideYn3" class="selectbox0"></select></td>
+				    <td><input name="empName3" id="empName3" class=inputSeq value="없음" type="text" readonly="readonly">
+				        <input name="decideEmp3" id="decideEmp3" class=inputSeq value="" type="hidden">
+				    </td>
+				    <td><img src="/images/button/dhtmlx/search.gif" id="decideBtn3"></td>
+				   </tr>
+				   <tr>
+				    <td>대표이사</td>
+				    <td><select name="decideYn4" id="decideYn4" class="selectbox0"></select></td>
+				    <td><input name="empName4" id="empName4" class=inputSeq value="없음" type="text" readonly="readonly">
+				        <input name="decideEmp4" id="decideEmp4" class=inputSeq value="" type="hidden">
+				    </td>
+				    <td><img src="/images/button/dhtmlx/search.gif" id="decideBtn4"></td>
+				   </tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	</form>			
+</div>
+<div id="bootContainer2" class="dtlContainer">
+  <form name="frmMain" id="frmMain">
+   <input type="hidden" name="cudKey" id="cudKey" value="">
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">신청자</label>
+				<input name="empNo" id="empNo" type="text" value="${empNo}" class="inputbox0" readonly="readonly">
+				<input name="empName" id="empName" type="text" value="${nameKor}" class="inputbox0" readonly="readonly">
+			</div>
+		</div>
+	    <div class="left">
+			<div class="ml30">
+				<label class="title1">신청일</label>
+				<input name="regDate" id="regDate" type="text" value="" placeholder="" class="searchDate format_date" >
+				<input type="button" id="calpicker2" name="calpicker2" class="calicon inputCal">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">신청인확인</label>
+				<select name="decideYn1" id="decideYn1" class="selectbox0"></select>
+				<input type="hidden" name="decideEmp1" id="decideEmp1">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">일시</label>
+				<input name="meetDate" id="meetDate" type="text" value="" class="inputbox5">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">장소</label>
+				<input name="place" id="plcae" type="text" value="" class="inputbox5">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">목적</label>
+				<input name="purpose" id="purpose" type="text" value="" class="inputbox5">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">참석범위</label>
+				<input name="range" id="range" type="text" value="" class="inputbox5">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">금액</label>
+				<input name="amt" id="amt" type="text" value="0" class="inputbox2 format_int" style="text-align: right;">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">사용내역</label>
+				<input name="useContent" id="useContent" type="text" value="" class="inputbox5">
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+	   <div class="left">
+			<div class="ml30">
+				<label class="title1">예산과목</label>
+				<input name="subjectCode" id="subjectCode" type="text" value="" class="inputbox0" readonly="readonly">
+				<input name="subjectName" id="subjectName" type="text" value="" class="inputbox0" readonly="readonly">
+				<img src="/images/button/dhtmlx/search.gif" id="searchSubject"  style="border: 1px solid;">
+			</div>
+		</div>
+		<div class="left">
+			<div class="ml20">
+				<label class="title1">예산잔액</label>
+				<input name="yearEstimateJan" id="yearEstimateJan" type="text" value="0" class="inputbox0 format_int" readonly="readonly" style="text-align: right;">
+			</div>
+		</div>
+	</div>
+  </form>	
+</div>
+<div id="container"></div>

@@ -1,0 +1,144 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="java.util.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript">
+var layout, toolbar, subLayout
+var gridMain,gridSub,gridSub1;
+var calMain;
+var toolbar01,toolbar02,toolbar03;
+var PscrnParm = parent.scrnParm;
+var mainTabbar = parent.mainTabbar;
+var ActTabId = parent.ActTabId;    
+$(document).ready(function(){
+	Ubi.setContainer(3,[1,2],"3E"); //공사일보 등록
+	
+	layout = Ubi.getLayout();
+    toolbar = Ubi.getToolbar();
+    subLayout = Ubi.getSubLayout(); 
+    
+    layout.cells("b").attachObject("bootContainer");
+	
+    subLayout.cells("a").showHeader();
+	subLayout.cells("a").setText("출력인원등록");
+    gridMain = new dxGrid(subLayout.cells("a"),false);
+    gridMain.addHeader({name:"No",       colId:"", width:"50",  align:"center", type:"cntr"});
+    gridMain.addHeader({name:"공정코드", colId:"", width:"100", align:"center", type:"combo"});
+    gridMain.addHeader({name:"세부공정", colId:"", width:"80",  align:"left",   type:"ed"});
+    gridMain.addHeader({name:"작업인원", colId:"", width:"80",  align:"right",  type:"ron"});
+    gridMain.addHeader({name:"작업내용", colId:"", width:"300", align:"left",   type:"ed"});
+    gridMain.setUserData("","pk","");
+    gridMain.init();
+    var tbrlayout01 = subLayout.cells("a");
+	toolbar01 = subToolbar(toolbar01,tbrlayout01,[3,4,5,6]);
+	toolbar01.attachEvent("onClick",gridMainOnClick);
+    
+    subLayout.cells("b").showHeader();
+	subLayout.cells("b").setText("사용장비등록");
+    gridSub = new dxGrid(subLayout.cells("b"),false);
+    gridSub.addHeader({name:"No",       colId:"", width:"50",  align:"center", type:"cntr"});
+    gridSub.addHeader({name:"장비명",   colId:"", width:"100", align:"left",   type:"ed"});
+    gridSub.addHeader({name:"규격",     colId:"", width:"100", align:"left",   type:"ed"});
+    gridSub.addHeader({name:"단위",     colId:"", width:"100", align:"center", type:"combo"});
+    gridSub.addHeader({name:"수량",     colId:"", width:"80",  align:"right",  type:"edn"});
+    gridSub.addHeader({name:"작업내용", colId:"", width:"300", align:"left",   type:"ed"});
+    gridSub.setUserData("","pk","");
+    gridSub.init();
+    var tbrlayout02 = subLayout.cells("b");
+	toolbar02 = subToolbar(toolbar02,tbrlayout02,[3,4,5,6]);
+	toolbar02.attachEvent("onClick",gridSubOnClick);
+
+});
+function gridMainOnClick(id){
+	if(id == "btn3"){
+	}
+	if(id == "btn4"){
+		fn_grid_remove('main'); 
+	}
+	if(id == "btn5"){
+		fn_grid_add('main'); 
+	}
+	if(id == "btn6"){
+		fn_grid_delete('main'); 
+	}
+}
+function gridSubOnClick(id){
+	if(id == "btn3"){
+	}
+	if(id == "btn4"){
+		fn_grid_remove('sub'); 
+	}
+	if(id == "btn5"){
+		fn_grid_add('sub'); 
+	}
+	if(id == "btn6"){
+		fn_grid_delete('sub'); 
+	}	
+}
+
+function fn_grid_remove(flag){
+	if(flag == 'main'){
+		gridMain.clearAll();
+	}else if(flag == 'sub'){
+		gridSub.clearAll();
+	}
+}
+
+function fn_grid_add(flag){
+	if(flag == 'main'){
+	  var totalRowNum = gridMain.getRowsNum();
+	  var totalColNum = gridMain.getColumnCount();
+   	  var data = new Array(totalColNum);
+   	  gridMain.addRow(data, totalRowNum);
+   	  gridMain.selectRow(totalRowNum);
+	}else if(flag == 'sub'){
+	  var totalRowNum = gridSub.getRowsNum();
+	  var totalColNum = gridSub.getColumnCount();
+	  var data = new Array(totalColNum);
+	  gridSub.addRow(data, totalRowNum);
+	  gridSub.selectRow(totalRowNum);
+	}
+};
+
+function fn_grid_delete(flag){
+	if(flag == 'main'){
+		var rodid = gridMain.getSelectedRowId();
+		gridMain.cs_deleteRow(rodid); 
+	}else if(flag == 'sub'){
+		var rodid = gridSub.getSelectedRowId();
+		gridSub.cs_deleteRow(rodid); 
+	}
+};
+</script>
+<div id="bootContainer">
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml50">
+				<label class="title1">일자</label>
+				<input name="workDt" id="workDt" type="text" value="" placeholder="" class="inputbox1 format_date" readonly="readonly">
+				<img id="calpicker" alt="달력" src="/images/calendar/Calendar-icon.png" title="달력">
+			</div>
+			<div class="ml10">
+				<input name="workSeq" id="workSeq" type="text" value="" class="inputSeq" readonly="readonly">
+			</div>
+			<div class="ml20">
+               <button name="consBtn" id="consBtn"  class="btn3">공사일보</button>
+			</div>
+		</div>
+	</div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml50">
+				<label class="title1">날씨</label>
+				<input name="weatherBc" id="weatherBc" type="text" value="" placeholder="" class="inputbox1">
+			</div>
+		</div>		
+	</div>
+	<div class="listHeader">
+		<div class="left">
+			<div class="ml50">
+				<label class="title1">공사구간</label>
+				<input name="conSec" id="conSec" type="text" value="" placeholder="" class="inputbox1">
+			</div>
+		</div>		
+	</div>		
+</div>
+<div id="container"></div>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM706DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM706DAO.amM706L" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_MST_CD
+			   , b.BOARD_TP_NM 
+			   , CASE WHEN b.BOARD_TP_STYLE = 'bbs' THEN '확장형프로그램' ELSE '단일프로그램' END as BOARD_TP_STYLE_NM
+			   , CASE WHEN a.ADM_MENU_CD = 'N/A' THEN '프론트전용' ELSE (SELECT ADM_MENU_NM FROM ASW_S_ADM_MENU b WHERE b.ADM_MENU_CD = a.ADM_MENU_CD ) END as ADM_MENU_NM
+        	   , BOARD_MST_NM
+			   , (CASE BOARD_STATUS_YN
+		         WHEN 'Y' THEN '사용중'
+		         WHEN 'N' THEN '정지'
+		         ELSE ''END) as BOARD_STATUS_YN
+		FROM ASW_BOARD_MST a WITH(NOLOCK) LEFT JOIN ASW_BOARD_TP b WITH(NOLOCK) ON b.BOARD_TP_CD = a.BOARD_TP_CD
+        <dynamic prepend="WHERE">
+			<isNotEmpty  property="ADM_MENU_CD" prepend="AND">
+				a.ADM_MENU_CD = #ADM_MENU_CD#
+			</isNotEmpty>
+			<isNotEmpty  property="BOARD_STATUS_YN" prepend="AND">
+				a.BOARD_STATUS_YN = #BOARD_STATUS_YN#
+			</isNotEmpty>
+			<isNotEmpty  property="BOARD_TP_STYLE" prepend="AND">
+				b.BOARD_TP_STYLE = #BOARD_TP_STYLE#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<select id="AmM706DAO.amM706TL" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_TP_CD
+			   , BOARD_TP_NM
+		FROM ASW_BOARD_TP  WITH(NOLOCK)
+        <dynamic prepend="WHERE">
+			<isNotEmpty  property="BOARD_TP_STYLE" prepend="AND">
+				BOARD_TP_STYLE = #BOARD_TP_STYLE#
+			</isNotEmpty>
+		</dynamic>
+		 
+	</select>
+
+	<select id="AmM706DAO.amM706SL" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_FUNC_CD
+			   , BOARD_FUNC_NM
+		FROM ASW_BOARD_FUNC WITH(NOLOCK)
+	</select>
+
+	<select id="AmM706DAO.amM706Count"  parameterClass="map" resultClass="int">
+		SELECT count(*)+1 FROM ASW_BOARD_MST WITH(NOLOCK)
+	</select>
+
+	<select id="AmM706DAO.amM706BD" parameterClass="map" resultClass="camelMap">
+		SELECT a.BOARD_MST_CD
+			   , a.BOARD_MST_NM
+			   , a.BOARD_TP_CD
+			   , a.BOARD_STATUS_YN
+			   , a.ADM_MENU_CD
+			   , (SELECT b.BOARD_TP_STYLE FROM ASW_BOARD_TP b WITH(NOLOCK) where b.BOARD_TP_CD = a.BOARD_TP_CD) as BOARD_TP_STYLE
+		FROM ASW_BOARD_MST a WITH(NOLOCK) 
+		WHERE BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+
+	<select id="AmM706DAO.amM706SML" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_FUNC_CD
+			   , BOARD_MST_CD
+		FROM ASW_BOARD_FUNC_MPG WITH(NOLOCK)
+		WHERE BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+
+	<select id="AmM706DAO.amM706CC"  parameterClass="map" resultClass="int">
+		SELECT count(*)+1 FROM ASW_BOARD_CATE WITH(NOLOCK)
+		WHERE BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+
+	<select id="AmM706DAO.amM706CL" parameterClass="map" resultClass="camelMap">
+		SELECT BOARD_CATE_SEQ
+			   , BOARD_CATE_NM
+			   , BOARD_MST_CD
+		FROM ASW_BOARD_CATE WITH(NOLOCK)
+		WHERE BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+	
+	<select id="AmM706DAO.admMenuList" resultClass="camelMap">
+	 <![CDATA[
+		  SELECT ADM_MENU_CD, ADM_MENU_NM FROM ASW_S_ADM_MENU WHERE ADM_MENU_GROUP = 'root' AND ADM_MENU_CD <> 'AM_M7' ORDER BY ADM_SORT
+	]]>
+	</select>
+	
+
+</sqlMap>

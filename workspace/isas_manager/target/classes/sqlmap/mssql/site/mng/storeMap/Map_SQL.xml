@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+
+<sqlMap namespace="MapDAO">
+
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+	<typeAlias  alias="map" type="java.util.Map"/>
+
+	<select id="MapDAO.selectMapList" parameterClass="map" resultClass="camelMap">
+		
+			SELECT distinct * FROM (
+			SELECT a.MAP_STORE_ID,
+			       a.MAP_STORE_TITLE,
+			       STUFF(
+			       ( SELECT ',' +
+			               (select B.BOARD_CATE_NM
+			               from    dbo.ASW_BOARD_CATE b
+			               where   b.BOARD_CATE_SEQ = p.BOARD_CATE_SEQ
+			               )
+			       FROM    ASW_M_STORE_CATE_MPG p WITH(NOLOCK)
+			       WHERE   (
+			                       p.MAP_STORE_ID = a.MAP_STORE_ID
+			               )
+			               FOR XML PATH ('')
+			       )
+			       ,1,1,'') AS MAP_STORE_ITEM,
+			       STUFF(
+			       ( SELECT ',' + s.ADDRESS_LEV_1+' '+s.ADDRESS_LEV_2
+			       FROM    dbo.ASW_M_STORE_ZC_MPG s WITH(NOLOCK)
+			       WHERE   (
+			                       s.MAP_STORE_ID = a.MAP_STORE_ID
+			               )
+			               FOR XML PATH ('')
+			       )
+			       ,1,1,'') AS ZC_ADDRESS,
+			       a.MAP_STORE_PHONE,
+			       a.MAP_STORE_ADDR,
+			       a.MAP_ETC,
+			       a.POINT_X,
+			       a.POINT_Y,
+			       a.REG_DT,
+			       a.REG_ID,
+			       a.BOARD_MST_CD
+			FROM   ASW_M_STORE_MAP a WITH(NOLOCK) 
+				<isNotEmpty property="MAP_STORE_ITEM" prepend="right join ASW_M_STORE_CATE_MPG b  WITH(NOLOCK) on a.MAP_STORE_ID = b.MAP_STORE_ID ">
+				 <iterate open="and b.BOARD_CATE_SEQ IN (" close=")" conjunction="," property="MAP_STORE_ITEM">
+						#MAP_STORE_ITEM[]#
+					</iterate>
+				 
+				
+				</isNotEmpty>
+			) zz
+			WHERE zz.BOARD_MST_CD = #BOARD_MST_CD#
+			<isNotEmpty  property="ADDRESS_LEV1" prepend="AND">
+				REPLACE(zz.ZC_ADDRESS,' ','') like #ADDRESS_LEV1#+#ADDRESS_LEV2#+'%'
+			</isNotEmpty>
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+				zz.MAP_STORE_TITLE like '%' + #SEARCH_TXT# +'%'
+			</isEqual>
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+				zz.MAP_STORE_ADDR like '%' + #SEARCH_TXT# +'%'
+			</isEqual>
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+				REPLACE(zz.MAP_STORE_PHONE,'-','') like '%' + REPLACE(#SEARCH_TXT#,'-','') +'%'
+			</isEqual>
+			
+<!-- 		<dynamic prepend="WHERE"> -->
+<!--           	<isNotEmpty prepend="AND" property="TXT_SEARCH"> -->
+<!-- 					(MAP_STORE_NAME like '%' + #TXT_SEARCH# +'%') -->
+<!-- 					OR -->
+<!-- 					(MAP_STORE_ADDR like '%' + #TXT_SEARCH# +'%') -->
+<!-- 					OR -->
+<!-- 					(MAP_STORE_PHONE like '%' + #TXT_SEARCH# +'%') -->
+<!-- 					OR -->
+<!-- 					(MAP_ETC like '%' + #TXT_SEARCH# +'%') -->
+<!-- 			</isNotEmpty> -->
+<!--           </dynamic> -->
+	</select>
+
+	<select id="MapDAO.selectMapObj" parameterClass="map" resultClass="camelMap">
+		
+			SELECT * FROM (
+			SELECT a.MAP_STORE_ID,
+			       a.MAP_STORE_TITLE,
+			       a.MAP_STORE_PHONE,
+			       a.MAP_STORE_ADDR,
+			       a.MAP_ETC,
+			       a.POINT_X,
+			       a.POINT_Y,
+			       a.REG_DT,
+			       a.REG_ID,
+			       a.BOARD_MST_CD
+			FROM   ASW_M_STORE_MAP a WITH(NOLOCK)
+			) zz
+			WHERE zz.BOARD_MST_CD = #BOARD_MST_CD#
+			  AND zz.MAP_STORE_ID = #MAP_STORE_ID#
+
+	</select>
+
+
+	<select id="zipcodeSearchLev1"  resultClass="camelMap">
+		SELECT DISTINCT
+       			 ADDRESS_LEV_1
+		FROM ASW_M_STORE_ZIPCODE  WITH(NOLOCK)
+	</select>
+
+	<select id="zipcodeSearchLev2" parameterClass="map" resultClass="camelMap">
+		SELECT DISTINCT
+       			 ADDRESS_LEV_2
+		FROM ASW_M_STORE_ZIPCODE  WITH(NOLOCK)
+		WHERE ADDRESS_LEV_1 like '%'+#ADDRESS_LEV1#+'%'
+	</select>
+	
+	
+	<select id="addressmpgList" parameterClass="map" resultClass="camelMap">
+		    SELECT a.ADDRESS_LEV_1,
+			       a.ADDRESS_LEV_2
+			 FROM ASW_M_STORE_ZC_MPG a
+			WHERE a.MAP_STORE_ID = #MAP_STORE_ID#
+	</select>
+	
+	<select id="storeCateList" parameterClass="map" resultClass="camelMap">
+			SELECT a.BOARD_CATE_SEQ
+			  FROM ASW_M_STORE_CATE_MPG a
+			 WHERE a.MAP_STORE_ID = #MAP_STORE_ID#
+	</select>
+
+</sqlMap>

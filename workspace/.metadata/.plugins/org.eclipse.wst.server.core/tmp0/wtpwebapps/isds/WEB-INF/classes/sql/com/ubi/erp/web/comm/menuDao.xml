@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.comm.dao.MenuDao">
+	<resultMap type="MenuVO" id="MenuMap" />
+	 
+	<select id="selMenuList" statementType="CALLABLE" parameterType="MenuVO" resultMap="MenuMap" resultType="ResultSet">
+		 {call UP_MENU_AUTHORITY_LIST(#{id,jdbcType=VARCHAR},#{kind,jdbcType=VARCHAR})}	
+	</select>
+	
+	<select id="selMenuList1" parameterType="map" resultType="MenuVO">
+	<![CDATA[
+	  SELECT A.MENUCD
+		     , A.MENUGBN
+			 , A.PMENUCD
+			 , A.MENUNAME
+			 , URI = CASE WHEN A.URI IS NULL THEN 'mobile/scm/main/main' ELSE A.URI END
+			 , A.SCRN_PARM
+			 , A.SEQ
+			FROM   CCM102 A 
+			INNER JOIN (SELECT C.MENUCD, '1' AS AUTH 
+						  FROM CCM100 A INNER JOIN CCM106 B ON A.GR_ID = B.GR_ID 
+										INNER JOIN CCM107 C ON B.GR_ID = C.GR_ID 
+						 WHERE A.ID = #{id} 
+						   AND C.KIND = #{kind}
+					   ) E ON A.MENUCD = E.MENUCD 
+					      AND A.MENUCD <> '0000000000' 
+						  AND A.KIND = #{kind}
+						  --AND A.MENUGBN = '0' -- 폴더는 조회 안됨
+			ORDER BY A.MENUCD, A.SEQ
+	]]>
+  	</select> 
+	
+	<!-- 현재 권한 설정 쿼리 -->
+	<select id="getPermission" parameterType="map" resultType="MenuVO">
+	<![CDATA[	
+	  SELECT A.MENUCD, A.PMENUCD, A.MENUNAME,A.URI,B.AUTH,B.ID
+        FROM CCM102 A INNER JOIN (SELECT C.MENUCD, '1' AS AUTH, A.ID 
+                                  FROM   CCM100 A INNER JOIN CCM106 B ON A.GR_ID = B.GR_ID 
+                                                  INNER JOIN CCM107 C ON B.GR_ID = C.GR_ID ) B ON A.MENUCD = B.MENUCD
+       WHERE B.ID = #{id} AND B.AUTH = '1'
+         AND A.URI = #{uri}
+         ]]>
+  	</select> 
+	
+	<!-- 예전 권한 설정 쿼리 -->
+	<!-- <select id="getPermission" parameterType="map" resultType="MenuVO">
+	  SELECT A.MENUCD, A.PMENUCD, A.MENUNAME,A.URI,B.AUTH,B.ID
+	    FROM CCM102 A INNER JOIN CCM104 B ON A.MENUCD = B.MENUCD
+	   WHERE B.ID = #{id} AND B.AUTH = '1'
+	   AND A.URI = #{uri}
+  	</select> -->
+  	
+</mapper>
+
+
+	
+	
+	

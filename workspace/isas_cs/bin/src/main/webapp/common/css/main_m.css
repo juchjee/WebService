@@ -1,0 +1,30 @@
+@charset "utf-8";
+
+.visual_bx,
+.visual_bx img{height:203px;}
+
+/* Reser_bx  */
+.reser_bx{position:relative;display:table;width:100%;border-top:1px solid #e1e1e1;border-bottom:1px solid #e1e1e1;}
+.reser_bx li{display:table-cell;width:50%;}
+.reser_bx li a{display:block;text-align:center;height:85px;}
+.reser_bx li a em{font-style:normal;font-family:'nbgB';font-size:14px;color:#fff;display:inline-block;padding:38px 0 33px 55px;}
+.reser_bx .callAd{background:#65C7D2;}
+.reser_bx .callAd:active{background:#54bcc8;}
+.reser_bx .callAd em{background:url(../img_m/call_advice_icon.png) no-repeat 0 50%;background-size:48px 46px;}
+.reser_bx .tripSv{background:#02A5C8;}
+.reser_bx .tripSv:active{background:#0098bf;}
+.reser_bx .tripSv em{background:url(../img_m/business_trip_icon.png) no-repeat 0 50%;background-size:45px 46px;}
+
+/* Quick Menu */
+.quick_bx{overflow:hidden;}
+.quick_bx ul li{width:33.3%;height:100px;margin-top:-1px;float:left;border:1px solid #aaa;box-sizing:border-box;}
+.quick_bx ul li a{color:#333;font-size:13px;line-height:1.2;font-family:'nbgB';display:block;}
+.quick_bx ul li.mq01 a{background:#fff url(../img_m/quick_icon_01.png) no-repeat 50% 20px;background-size:36px 36px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq02 a{background:#fff url(../img_m/quick_icon_02.png) no-repeat 50% 25px;background-size:36px 31px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq03 a{background:#fff url(../img_m/quick_icon_03.png) no-repeat 50% 24px;background-size:36px 31px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq04 a{background:#fff url(../img_m/quick_icon_04.png) no-repeat 50% 22px;background-size:43px 34px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq05 a{background:#fff url(../img_m/quick_icon_05.png) no-repeat 50% 25px;background-size:38px 31px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq06 a{background:#fff url(../img_m/quick_icon_06.png) no-repeat 50% 25px;background-size:40px 33px;height:28px;padding-top:70px;}
+.quick_bx ul li.mq02,.quick_bx ul li.mq05{border-right:0;border-left:0;width:33.4%;}
+.quick_bx ul li a:active{background-color:#eee;}
+.quick_bx .txt{display:block;text-align:center;}

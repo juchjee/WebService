@@ -1,0 +1,1202 @@
+@charset "utf-8";
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_month_cont {
+  background-color: #e0e0e0;
+  background: linear-gradient(#e0e0e0, #d9d9d9);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e0e0e0, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+  border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_month_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_month_hdr span.dhtmlxcalendar_month_label_month,
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_month_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_month_hdr span.dhtmlxcalendar_month_label_year {
+  color: #333333;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_days_cont {
+  border-left: 1px solid #c3c3c3;
+  border-right: 1px solid #c3c3c3;
+  border-bottom: 1px solid #eaded3;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_days_cont ul.dhtmlxcalendar_line li {
+  width: 29px;
+  background-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont {
+  border-left: 1px solid #c3c3c3;
+  border-right: 1px solid #c3c3c3;
+  border-bottom: 1px solid #c3c3c3;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li {
+  width: 27px;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month {
+  background-color: #e6e6e6;
+  border-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_date {
+  background-color: #ffc341;
+  border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_holiday {
+  background-color: #e6e6e6;
+  border-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_date_holiday
+	{
+	color: red;
+	background-color: #e6e6e6;
+	border-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_hover
+	{
+	color: black;
+	background-color: #ffce65;
+	border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_date_hover
+	{
+	color: black;
+	background-color: #ffe9bb;
+	border-color: #ffe9bb;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_holiday_hover
+	{
+	background-color: #ffce65;
+	border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_dates_cont ul.dhtmlxcalendar_line li.dhtmlxcalendar_cell.dhtmlxcalendar_cell_month_date_holiday_hover
+	{
+	background-color: #ffce65;
+	border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_time_cont {
+  border-left: 1px solid #c3c3c3;
+  border-right: 1px solid #c3c3c3;
+  border-bottom: 1px solid #c3c3c3;
+  background-color: #e0e0e0;
+  background: linear-gradient(#e0e0e0, #d9d9d9);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e0e0e0, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_time_cont ul.dhtmlxcalendar_line li
+	{
+	color: #333333;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table td.dhtmlxcalendar_selector_cell_left
+	{
+	background-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table td.dhtmlxcalendar_selector_cell_right
+	{
+	background-color: #e6e6e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table td.dhtmlxcalendar_selector_cell_middle ul li
+	{
+	
+  background-color: #e3e5e6;
+  border: 1px solid #e3e5e6;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table td.dhtmlxcalendar_selector_cell_middle ul li.dhtmlxcalendar_selector_cell_active
+	{
+  background-color: #ffc341;
+  border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj table.dhtmlxcalendar_selector_table td.dhtmlxcalendar_selector_cell_middle ul li.dhtmlxcalendar_selector_cell_hover
+	{
+	background-color: #ffce65;
+  border-color: #ffc341;
+}
+
+.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj.dhtmlxcalendar_selector_hours table.dhtmlxcalendar_selector_table,
+	.dhtmlxcalendar_dhx_skyblue div.dhtmlxcalendar_selector_obj.dhtmlxcalendar_selector_minutes table.dhtmlxcalendar_selector_table
+	{
+	border-top: 1px solid #c3c3c3;
+}
+
+div.dhxcombo_dhx_skyblue {
+	border: 1px solid #c3c3c3;
+}
+
+div.dhxcombo_dhx_skyblue div.dhxcombo_select_button {
+  border: 1px solid #c3c3c3;
+  background-color: #e0e0e0;
+  background: linear-gradient(#e0e0e0, #d9d9d9);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e0e0e0, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.dhxcombolist_dhx_skyblue {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+div.dhxcombolist_dhx_skyblue div.dhxcombo_option {
+	border-top: 1px solid #e3e3e3;
+	border-bottom: 1px solid #e3e3e3;
+}
+
+div.dhxcombolist_dhx_skyblue div.dhxcombo_option.dhxcombo_option_selected
+	{
+	background-color: #ffc341 !important;
+  border-top: 1px solid #ffc341 !important;
+  border-bottom: 1px solid #ffc341 !important;
+}
+
+div.dhxcombolist_dhx_skyblue.dhxcombolist_hdr {
+	height: 28px;
+   background-color: #e0e0e0;
+  background: linear-gradient(#e0e0e0, #d9d9d9);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e0e0e0, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.dhxcombolist_dhx_skyblue.dhxcombolist_hdr div.dhxcombo_hdrtext div.dhxcombo_hdrcell,
+	div.dhxcombolist_dhx_skyblue.dhxcombolist_hdr div.dhxcombo_hdrtext div.dhxcombo_hdrcell_first
+	{
+	border-left: 1px solid #c3c3c3;
+}
+
+div.dhxcombolist_dhx_skyblue.dhxcombolist_multicolumn div.dhxcombo_option
+	{
+	border-top: 1px solid #d9d9d9;
+	border-bottom: 1px solid #d9d9d9;
+}
+
+div.dhxcombolist_dhx_skyblue.dhxcombolist_multicolumn div.dhxcombo_option div.dhxcombo_cell,
+	div.dhxcombolist_dhx_skyblue.dhxcombolist_multicolumn div.dhxcombo_option div.dhxcombo_cell_first
+	{
+	border-left: 1px solid #d9d9d9;
+}
+
+div.dhxcombolist_dhx_skyblue.dhxcombolist_multicolumn div.dhxcombo_option.dhxcombo_option_selected div.dhxcombo_cell
+	{
+	border-left-color: #d9d9d9;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_g_area {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_sub_area {
+	background-color: #e3e3e3;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_color_selector {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_contrast_area {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_value_color {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_value {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue input.dhxcp_input_hsl, .dhtmlxcp_dhx_skyblue input.dhxcp_input_rgb
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue button {
+	border: 1px solid #c3c3c3;
+    background-color: #e0e0e0;
+    background: linear-gradient(#e0e0e0, #d9d9d9);
+    filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e0e0e0, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxcp_dhx_skyblue button:hover {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxcp_dhx_skyblue button:active {
+  background-color: #d9d9d9;
+  background: linear-gradient(#d9d9d9, #d9d9d9);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#d9d9d9, endColorStr=#d9d9d9) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+  box-shadow: 0 0 3px #ccc inset;
+}
+
+.dhtmlxcp_dhx_skyblue .dhxcp_memory_el {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxcp_dhx_skyblue.dhtmlxcp_in_form .dhxcp_g_area {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxslider_dhx_skyblue .dhxsl_runner {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxslider_dhx_skyblue .dhxsl_runner.dhxsl_runner_actv {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxslider_dhx_skyblue .dhxsl_track {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxslider_dhx_skyblue .dhxsl_track div.dhxsl_track_bg {
+	background-color: #e8e8e8;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area td.dhx_popup_td {
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhx_popup_sep td.dhx_popup_sep div.dhx_popup_sep
+	{
+	border-top: 1px solid #c3c3c3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr:hover td.dhx_popup_td {
+	background-color: #e3e3e3;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhxnode:hover td.dhx_popup_td
+	{
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhxnode td.dhx_popup_td div.dhxeditor_dhx_skyblue
+	{
+	border: 1px solid #c3c3c3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhxnode td.dhx_popup_td div.dhtmlxcp_dhx_skyblue div.dhxcp_g_area
+	{
+	background-color: #e3e3e3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhxnode td.dhx_popup_td div.dhtmlxcp_dhx_skyblue div.dhxcp_g_area div.dhxcp_sub_area
+	{
+	background: #e3e3e3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area tr.dhxnode td.dhx_popup_td div.dhxcarousel_cont
+	{
+	background-color: #e3e3e3;
+}
+
+div.dhx_popup_dhx_skyblue div.dhx_popup_area.dhx_popup_area_ie tr.tr_hover td.dhx_popup_td
+	{
+	background-color: #e3e3e3;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_TopLevel_Item_Selected {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_Polygon {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_Polygon table.dhtmlxMebu_SubLevelArea_Tbl td
+	{
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_Polygon table.dhtmlxMebu_SubLevelArea_Tbl tr.sub_item_selected td
+	{
+	background-color: #e3e3e3;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_Polygon div.sub_sep {
+	border-top: 1px solid #c3c3c3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowUp, div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowUp_Over,
+	div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowUp_Disabled {
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowDown, div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowDown_Over,
+	div.dhtmlxMenu_dhx_skyblue_SubLevelArea_ArrowDown_Disabled {
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhtmlxribbon_dhx_skyblue.dhxrb_without_tabbar {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxribbon_dhx_skyblue {
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_background_area {
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue div.dhx_cell_tabbar {
+	background-color: #e3e3e3 !important;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_block_base {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_block_base .dhxrb_block_label {
+	color: #e3e3e3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_big_button {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_3rows_button {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_in_row {
+	border: 1px solid #c3c3c3;
+	background-color: #e3e3e3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_input {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_highlight0 {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_highlight1 {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: progid:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_group .dhxrb_highlight0 {
+	border: 1px solid #c3c3c3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_group .dhxrb_highlight1 {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_3rows_block .dhxrb_group {
+	border: 1px solid #c3c3c3;
+	background: #e8e8e8;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_block_row .dhxrb_group {
+	border: 1px solid #c3c3c3;
+	background: #e8e8e8;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_separator_groupp {
+	border-left: 1px solid #c3c3c3;
+}
+
+.dhtmlxribbon_dhx_skyblue .dhxrb_checkbox {
+	border: 1px solid #c3c3c3;
+}
+
+.dhx_toolbar_dhx_skyblue {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_btn.dhxtoolbar_btn_over,
+	.dhx_toolbar_dhx_skyblue div.dhx_toolbar_arw.dhxtoolbar_btn_over {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_btn.dhxtoolbar_btn_pres,
+	.dhx_toolbar_dhx_skyblue div.dhx_toolbar_arw.dhxtoolbar_btn_pres {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_btn.dhxtoolbar_btn_pres_dis {
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_btn .dhxtoolbar_input {
+	border: 1px solid #c3c3c3;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_btn .dhxtoolbar_input:disabled
+	{
+	background-color: #e8e8e8;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhx_toolbar_sep {
+	border-left: 1px solid #c3c3c3;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_bg_l,
+	.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_bg_m,
+	.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_bg_r {
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_bg_l {
+	border-left: 1px solid #c3c3c3;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_bg_r {
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_pen, .dhx_toolbar_dhx_skyblue div.dhxtoolbar_sl_pen.dhxtoolbar_over
+	{
+  border: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+iv.dhx_toolbar_poly_dhx_skyblue {
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+div.dhx_toolbar_poly_dhx_skyblue td {
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhx_toolbar_poly_dhx_skyblue .tr_btn_over td, div.dhx_toolbar_poly_dhx_skyblue .tr_btn_selected td
+	{
+	background-color: #e8e8e8;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.dhx_toolbar_poly_dhx_skyblue div.btn_sep {
+	border-top: 1px solid #c3c3c3;
+}
+
+div.dhx_toolbar_slider_label_dhx_skyblue {
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_stb {
+  border-bottom: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxwins_vp_dhx_skyblue div.dhx_cell_cont_wins div.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_stb,
+	.dhxwins_vp_dhx_skyblue div.dhx_cell_cont_wins div.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_toolbar_def div.dhx_toolbar_dhx_skyblue
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhx_cell_cont_wins div.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_cont_editor
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhx_drag_zone {
+	border: 1px solid #c3c3c3;
+}
+
+.dhx_dataview .dhx_dataview_default_item, .dhx_dataview .dhx_dataview_default_item_selected
+	{
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px dotted #c3c3c3;
+}
+
+.dhx_dataview_default_item_selected {
+	background-color: #e8e8e8;
+	color: #e8e8e8;
+	border-color: #c3c3c3;
+}
+
+.dhxtree_dhx_skyblue .selectedTreeRow_lor, .dhxtree_dhx_skyblue .selectedTreeRow
+	{
+	background-color: #ffc341;
+	border: 1px solid #ffc341;
+}
+
+div.gridboxgridbox_dhx_skyblue div.ftr td {
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.gridbox_dhx_skyblue.gridbox .ftr, div.gridbox_dhx_skyblue.gridbox .xhdr
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.gridbox_dhx_skyblue.isModern table.hdr tr td {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.gridbox_dhx_skyblue.isIE table.hdr tr {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.gridbox_dhx_skyblue.gridbox table.hdr td {
+	text-align:center;
+	vertical-align:middle;
+	border-color: #e3e3e3 #c3c3c3 #c3c3c3 #e3e3e3;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.hdr td div.hdrcell {
+  padding-left: 0px;
+}
+
+div.gridbox_dhx_skyblue.gridbox {
+	border: 1px solid #c3c3c3;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr.rowselected {
+	background-color: #ffc341;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr.rowselected td {
+	background-color: #ffc341;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr.rowselected td, div.gridbox_dhx_skyblue.gridbox table.obj tr.odd_dhx_skyblue.rowselected td
+	{
+	background-color: #ffc341;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr td.cellselected {
+	background-color: #ffc341;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr.odd_dhx_skyblue {
+	background: #e8e8e8;
+	border-top: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr.odd_dhx_skyblue {
+	background: #e8e8e8;
+}
+
+div.dhx_page_active_skyblue {
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+div.dhx_page_active_skyblue div.dhx_page_active_skyblue {
+	border: 0 solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue .dhxform_textarea {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue div.disabled .dhxform_textarea {
+	color: #b2b2b2;
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue .dhxform_select {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue div.disabled .dhxform_select {
+	color: #b2b2b2;
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue fieldset.dhxform_fs {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue div.disabled fieldset.dhxform_fs {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue fieldset.dhxform_fs legend.fs_legend {
+	color: #9d9d9d;
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_txt_label2 {
+	color: #9d9d9d;
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_btn {
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_btn.dhxform_btn_over {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_btn.dhxform_btn_pressed {
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxform_obj_dhx_skyblue div.disabled .dhx_combo_box.dhx_skyblue {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_item_template.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_stb
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxform_obj_dhx_skyblue div.dhxform_item_template.dhxeditor_dhx_skyblue div.dhx_cell_editor div.dhx_cell_cont_editor
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_cont_acc
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_hdr
+	{
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc.acc_cell_dragged
+	{
+	box-shadow: 0 0 5px #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_menu_def
+	{
+	border-color: #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_statusbar_def
+	{
+	background-color: #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-bottom: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue .dhxacc_cont div.dhx_cell_acc div.dhx_cell_progress_img
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxacc_base_dhx_skyblue div.dhxcelltop_statusbar div.dhxcont_statusbar
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_layout div.dhx_cell_cont_layout
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_layout div.dhx_cell_hdr
+	{
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_layout.dhxlayout_collapsed_v div.dhx_cell_hdr
+	{
+	background: -moz-linear-gradient(left,#e8e8e8, #e0e0e0);
+	background: -webkit-linear-gradient(left, #e8e8e8, #e0e0e0);
+	background: -o-linear-gradient(left,#e8e8e8, #e0e0e0);
+	background: -ms-linear-gradient(left, #e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhxlayout_resize_area {
+	background-color: #e8e8e8;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhxlayout_resize_sep {
+	background-color: #e8e8e8;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_menu_def {
+	border-color: #e8e8e8;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_statusbar_def {
+	background-color: #e8e8e8;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-bottom: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxlayout_base_dhx_skyblue .dhxlayout_cont div.dhx_cell_progress_img {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxlayout_base_dhx_skyblue div.dhxcelltop_statusbar div.dhxcont_statusbar
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs {
+  border-color: #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tabs_base div.dhxtabbar_tabs_line
+	{
+	border-top: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tabs_ar_left
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tabs_ar_left div.dhxtabbar_arrow_img
+	{
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tabs_ar_right
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tabs_ar_right div.dhxtabbar_arrow_img
+	{
+	border-left: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhx_cell_tabbar div.dhx_cell_cont_tabbar
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab {
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab.dhxtabbar_tab_dis
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab div.dhxtabbar_tab_close
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab.dhxtabbar_tab_actv div.dhxtabbar_tab_close
+	{
+	border: 0px solid #a4bed4 !important;
+    background-position: -12px 0 !important;
+	border: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab.dhxtabbar_tab_dis div.dhxtabbar_tab_close,
+	.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs div.dhxtabbar_tab.dhxtabbar_tab_actv_dis div.dhxtabbar_tab_close
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs_bottom div.dhx_cell_tabbar div.dhx_cell_cont_tabbar
+	{
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs_bottom div.dhxtabbar_tabs div.dhxtabbar_tabs_base div.dhxtabbar_tabs_line
+	{
+	border-bottom: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhx_cell_tabbar div.dhx_cell_menu_def {
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs_bottom div.dhx_cell_tabbar div.dhx_cell_menu_def
+	{
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhx_cell_tabbar div.dhx_cell_statusbar_def
+	{
+	background-color: #e8e8e8;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhx_cell_tabbar div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-bottom: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxtabbar_tabs_bottom div.dhx_cell_tabbar div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxtabbar_base_dhx_skyblue div.dhxcelltop_statusbar div.dhxcont_statusbar
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_side {
+	background-color: #f5f5f5;
+	border-color: #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_side div.dhxsidebar_side_items div.dhxsidebar_item:hover
+	{
+	background-color: #e8e8e8;
+	border-color: #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_side div.dhxsidebar_side_items div.dhxsidebar_item.dhxsidebar_item_selected
+	{
+	border-color: #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_side div.dhxsidebar_side_items div.dhxsidebar_item:hover div.dhxsidebar_bubble
+	{
+	border-color: #e8e8e8;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_side.dhxsidebar_touch div.dhxsidebar_side_items div.dhxsidebar_item.dhxsidebar_item_selected
+	{
+	border-color: #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhx_cell_sidebar div.dhx_cell_cont_sidebar
+	{
+	border-left: 0 solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+	border-top: 1px solid #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhx_cell_sidebar div.dhx_cell_menu_def
+	{
+	border-color: #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhx_cell_sidebar div.dhx_cell_statusbar_def
+	{
+	background-color: #e8e8e8;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhx_cell_sidebar div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-bottom: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhx_cell_sidebar div.dhx_cell_progress_img
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_arrows {
+	border-color: #c3c3c3;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_arrows div.dhxsidebar_arrow
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_arrows div.dhxsidebar_arrow.dhxsidebar_arrow_left
+	{
+	left: 0;
+	border-right: 1px solid #c3c3c3;
+	z-index: 2;
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxsidebar_cont div.dhxsidebar_arrows div.dhxsidebar_arrow:active
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxsidebar_base_dhx_skyblue div.dhxcelltop_statusbar div.dhxcont_statusbar
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhxcarousel_area div.dhx_cell_carousel div.dhx_cell_cont_carousel
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhxcarousel_area div.dhx_cell_carousel div.dhx_cell_statusbar_def
+	{
+	background-color: #e8e8e8;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhxcarousel_area div.dhx_cell_carousel div.dhx_cell_statusbar_def div.dhx_cell_statusbar_text
+	{
+	border-bottom: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhxcarousel_area div.dhx_cell_carousel div.dhx_cell_progress_img
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls
+	{
+  border-top: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_btn
+	{
+  border-top: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_btn.dhx_carousel_btn_prev:hover,
+	.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_btn.dhx_carousel_btn_next:hover
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_btn.dhx_carousel_btn_prev:active,
+	.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_btn.dhx_carousel_btn_next:active
+	{
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_bars div.dhx_carousel_onebar
+	{
+	border: 1px solid #c3c3c3;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls div.dhx_carousel_bars div.dhx_carousel_onebar.dhx_carousel_baractv div.dhx_carousel_barcore
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+.dhxcarousel_base_dhx_skyblue div.dhxcelltop_statusbar div.dhxcont_statusbar
+	{
+	border: 1px solid #c3c3c3;
+	background-color: #e8e8e8;
+}
+
+div.dhx_popup_dhx_skyblue td.dhx_popup_td div.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls,
+	.dhxwins_vp_dhx_skyblue div.dhxwin_active div.dhx_cell_wins div.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls,
+	.dhxwins_vp_dhx_skyblue div.dhxwin_inactive div.dhx_cell_wins div.dhxcarousel_base_dhx_skyblue div.dhxcarousel_cont div.dhx_carousel_controls
+	{
+	border-bottom: 1px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_active {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_inactive {
+	border: 1px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_brd {
+	border-left: 5px solid #c3c3c3;
+	border-right: 5px solid #c3c3c3;
+	border-bottom: 5px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_brd.dhxwin_hdr_hidden {
+	border-top: 5px solid #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_hdr {
+	border-top: 1px solid #c3c3c3;
+	border-left: 1px solid #c3c3c3;
+	border-right: 1px solid #c3c3c3;
+  background-color: #e8e8e8;
+  background: linear-gradient(#e8e8e8, #e0e0e0);
+  filter: prog id:DXImageTransform.Microsoft.Gradient(gradientType=0, startColorStr=#e8e8e8, endColorStr=#e0e0e0) progid:DXImageTransform.Microsoft.Alpha(opacity=100);
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_hdr div.dhxwin_btns div.dhxwin_button.dhxwin_button_sticked
+	{
+	background-color: #c3c3c3 !important;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_active.dhxwin_dnd_touch {
+	border-color: #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_resize {
+	background-color: #c3c3c3;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwins_mcover {
+	background-color: #e8e8e8;
+}
+
+.dhxwins_vp_dhx_skyblue div.dhxwin_active div.dhx_cell_wins div.dhx_cell_statusbar_def,
+	.dhxwins_vp_dhx_skyblue div.dhxwin_inactive div.dhx_cell_wins div.dhx_cell_statusbar_def
+	{
+	background-color: #e8e8e8;
+}
+
+.dhxtree_dhx_skyblue {
+  background-color: #f9f9f8;
+  color: #000000;
+}
+
+.dhtmlxcalendar_cell dhtmlxcalendar_month_hdr{
+	background-color: #e8e8e8;
+}
+
+div.gridbox_dhx_skyblue.gridbox table.obj tr td {
+	padding-top: 1px;
+	padding-bottom: 1px;
+	border-right: 1px solid #c3c3c3;
+	border-bottom: 1px solid #c3c3c3;
+}

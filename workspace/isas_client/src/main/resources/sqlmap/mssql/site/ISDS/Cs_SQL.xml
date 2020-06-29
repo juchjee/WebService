@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CsDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="calendarList" parameterClass="map" resultClass="camelMap">
+		SELECT
+	        bs_cd,
+	        CONVERT(VARCHAR(2), work_dt, 106) AS work_dd,
+	        day_nm,
+	        dt_bc,
+	        work_yn,
+	        rmks,
+	        cid,
+	        cdt,
+	        mid,
+	        mdt,
+	        mon,
+	        wek
+		FROM GAZ500_MB
+		WHERE dt_bc = 'GA120400'
+		<isNotEmpty prepend="AND" property="CALENDAR_DT" >
+			CONVERT(VARCHAR(6), work_dt, 112)  = #CALENDAR_DT#
+		</isNotEmpty>
+	</select>
+
+
+	<select id="ascodeList" parameterClass="map" resultClass="camelMap">
+
+		/*대분류 ㅡm1 도기/수선/비데  m2 이누스바스 m3 블렌더*/
+		select	 a.base_cd as value, a.title as label
+		from	BCA200V a
+		<isEqual  property="CODE_TP" compareValue="L" >
+			where 	a.main_cd = 'AS202'
+			  and $LVALUE$ = '1'
+			order by a.ord_sq, a.sub_cd
+		</isEqual>
+
+		<isEqual  property="CODE_TP" compareValue="M" >
+			where 	a.main_cd = 'AS203'
+			  and m1 = #LVALUE#
+			order by a.ord_sq, a.sub_cd
+		</isEqual>
+
+	</select>
+
+	<select id="modelList"  parameterClass="map" resultClass="camelMap">
+		select DISTINCT a.itm_pid as value, b.itm_nm as label
+		  from asz200 a
+		  join dma100 b on a.itm_pid = b.itm_id
+		 where 1=1
+		   and a.bs_cd='01'
+		   and (b.itm_cd like '' +'%' or   b.itm_nm like '%' + '' + '%')
+
+	</select>
+
+	<select id="mbrDiSearchForAsa010" parameterClass="map" resultClass="String">
+		SELECT cs_no from asa010
+			<isNotEmpty  property="MBR_ID" >
+				where mbr_di = (SELECT MBR_DI from ASW_M_MBR_LOGIN WHERE MBR_ID = #MBR_ID#)
+			</isNotEmpty>
+
+			<isNotEmpty  property="MBR_DI" >
+				where mbr_di = #MBR_DI#
+			</isNotEmpty>
+	</select>
+
+
+	<select id="asa050SeqSearch" parameterClass="String" resultClass="String">
+		SELECT isnull(max(seq+1),1) as seq from asa050 where cs_no = #csNo#
+	</select>
+
+	<select id="csTimeTableList"  resultClass="camelMap">
+		SELECT a.CS_TIME_SEQ,
+		       a.CS_TIME_VALUE,
+		       a.CS_TIME_TP
+		FROM   ASW_CS_TIME_TABLE a
+		ORDER BY CS_TIME_ORDER
+	</select>
+
+
+	<select id="csTimeMpgList"  parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		SELECT   a.CS_TIME_SEQ,
+		         a.CS_TIME_VALUE,
+		         case
+		                  when a.CS_TIME_LIMIT > count(b.CS_TIME_SEQ)
+		                  then 'Y'
+		                  else 'N'
+		         END as CS_TIME_LIMIT
+		FROM     ASW_CS_TIME_TABLE a
+		         LEFT JOIN ASW_CS_MST b
+		         ON  a.CS_TIME_SEQ                           = b.CS_TIME_SEQ
+		         and CONVERT(VARCHAR(10), b.BOOKING_DT, 120) = #BOOKING_DT#
+				 and b.STAT_BC <> 'AS204900'
+		GROUP BY a.CS_TIME_SEQ,
+		         a.CS_TIME_VALUE,
+		         a.CS_TIME_LIMIT
+	]]>
+	</select>
+
+	<select id="csInfo"  parameterClass="map" resultClass="camelMap">
+		SELECT a.AS_TEMP_NO,
+		       a.CS_NO,
+		       a.MODEL,
+		       (select title as label from BCA200V where base_cd = a.ASCODE_LEV1) as ASCODE_LEV1_NM,
+		       (select title as label from BCA200V where base_cd = a.ASCODE_LEV2) as ASCODE_LEV2_NM,
+		       a.COMMENT,
+		       CONVERT(VARCHAR(10), a.BOOKING_DT, 120) as BOOKING_DT,
+		       a.STAT_BC,
+		       CONVERT(VARCHAR(10), a.REG_DT, 120) as REG_DT,
+		       case when a.CS_TYPE = 'TEL' then '전화상담' else '출장서비스' end as CS_TYPE_NM,
+		       (select CS_TIME_VALUE from ASW_CS_TIME_TABLE where CS_TIME_SEQ = a.CS_TIME_SEQ) as CS_TIME_VALUE,
+			   b.T_NM,
+			   b.T_HP,
+			   b.T_TEL,
+			   b.T_ZIP_CD,
+			   b.T_ADDR,
+			   b.T_ADDR2
+		FROM   ASW_CS_MST a left join ASA050 b on b.cs_no = a.cs_no and b.seq  = a.ASA050SEQ
+       WHERE   a.AS_TEMP_NO = #AS_TEMP_NO#
+
+	</select>
+
+	<select id="csInfoList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REG_DT desc ) AS NUM,
+		       a.AS_TEMP_NO,
+		       a.CS_NO,
+		       a.MODEL,
+		       (select title as label from BCA200V where base_cd = a.ASCODE_LEV1) as ASCODE_LEV1_NM,
+		       (select title as label from BCA200V where base_cd = a.ASCODE_LEV2) as ASCODE_LEV2_NM,
+		       a.COMMENT,
+		       CONVERT(VARCHAR(10), a.BOOKING_DT, 120) as BOOKING_DT,
+		       a.STAT_BC,
+		       CONVERT(VARCHAR(10), a.REG_DT, 120) as REG_DT,
+		       case when a.CS_TYPE = 'TEL' then '전화상담' else '출장서비스' end as CS_TYPE_NM,
+		       (select CS_TIME_VALUE from ASW_CS_TIME_TABLE where CS_TIME_SEQ = a.CS_TIME_SEQ) as CS_TIME_VALUE,
+			   b.T_NM,
+			   b.T_HP,
+			   b.T_TEL,
+			   b.T_ZIP_CD,
+			   b.T_ADDR,
+			   b.T_ADDR2
+		FROM   ASW_CS_MST a left join ASA050 b on b.cs_no = a.cs_no and b.seq  = a.ASA050SEQ
+			<isNotEmpty  property="MBR_ID" >
+				 WHERE a.CS_NO        = (SELECT cs_no
+							        FROM    asa010
+							        WHERE   mbr_di =
+							                ( SELECT MBR_DI
+							                FROM    ASW_M_MBR_LOGIN
+							                WHERE   MBR_ID = #MBR_ID#
+							                )
+							        )
+			</isNotEmpty>
+
+			<isNotEmpty  property="MBR_DI" >
+				 WHERE a.CS_NO = (SELECT cs_no FROM asa010 WHERE   mbr_di = #MBR_DI#)
+			</isNotEmpty>
+
+
+									) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+
+	</select>
+
+
+	<select id="csInfoListCount"  parameterClass="map" resultClass="int">
+		SELECT count(*)
+		FROM   ASW_CS_MST a
+      	<isNotEmpty  property="MBR_ID" >
+				 WHERE a.CS_NO        = (SELECT cs_no
+							        FROM    asa010
+							        WHERE   mbr_di =
+							                ( SELECT MBR_DI
+							                FROM    ASW_M_MBR_LOGIN
+							                WHERE   MBR_ID = #MBR_ID#
+							                )
+							        )
+			</isNotEmpty>
+
+			<isNotEmpty  property="MBR_DI" >
+				 WHERE a.CS_NO = (SELECT cs_no FROM asa010 WHERE   mbr_di = #MBR_DI#)
+			</isNotEmpty>
+	</select>
+
+	<select id="csFileList"  parameterClass="map" resultClass="camelMap">
+		 SELECT a.AS_TEMP_NO
+		       , a.ATTCH_CD
+		       , b.ATTCH_FILE_NM AS ATTCH_FILE_NM
+	   		   , b.ATTCH_FILE_PATH AS ATTCH_FILE_PATH
+	   		   , b.ATTCH_REAL_ABSOLUTE_PATH AS ATTCH_REAL_ABSOLUTE_PATH
+	   		   , b.ATTCH_ID
+		FROM ASW_CS_ATTCH a WITH(NOLOCK)
+		LEFT OUTER JOIN ASW_G_ATTCH b
+		ON b.ATTCH_CD = a.ATTCH_CD
+		WHERE a.AS_TEMP_NO = #AS_TEMP_NO#
+	</select>
+
+</sqlMap>

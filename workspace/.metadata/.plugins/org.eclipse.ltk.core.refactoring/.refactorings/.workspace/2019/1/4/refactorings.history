@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;isas_manager&apos;" deleteContents="false" description="Delete resource &apos;isas_manager&apos;" element1="/isas_manager" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1548388544126"/>&#x0A;<refactoring comment="Delete resource &apos;isas_client&apos;" deleteContents="false" description="Delete resource &apos;isas_client&apos;" element1="/isas_client" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1548388548875"/>
+</session>

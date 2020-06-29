@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM105DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM105DAO.amM105" parameterClass="map" resultClass="camelMap">
+		SELECT PT_CD
+			   , PT_NM
+			   , PT_SCORE
+			   , PT_RFCT_YN
+			   , PT_RFCT_EX
+			   , PT_RFCT_REG_DT
+			   , PT_RFCT_REG_ID
+		FROM ASW_M_MBR_PT_PLC  WITH(NOLOCK)
+		ORDER BY PT_RFCT_YN DESC, PT_NM
+	</select>
+
+</sqlMap>

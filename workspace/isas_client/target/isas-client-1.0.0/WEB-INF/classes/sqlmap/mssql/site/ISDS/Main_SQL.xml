@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MainDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="MainDAO.selectAuthorList" parameterClass="map" resultClass="camelMap">
+		<![CDATA[
+			SELECT ROW_DATA.* FROM(
+			SELECT TOP 10 ROW_NUMBER() OVER(ORDER BY ID DESC) ROW,
+				ID, NAME, DESCRIPTION, USE_YN, REG_USER
+			FROM SAMPLE
+			) ROW_DATA
+		]]>
+	</select>
+
+
+	<select id="MainDAO.popupList"  resultClass="camelMap">
+		<![CDATA[
+		SELECT EPP.*
+  		 FROM ASW_POPUP EPP
+			 WHERE GETDATE() BETWEEN EPP.POPUP_START_DT
+			     AND ISNULL(EPP.POPUP_END_DT,GETDATE())
+			     AND EPP.POPUP_STATUS_YN = 'Y'
+		]]>
+			<isNotEmpty prepend="AND" property="POPUP_SEQ">
+				EPP.POPUP_SEQ = #POPUP_SEQ#
+			</isNotEmpty>
+	</select>
+
+		<select id="MainDAO.popupView"  resultClass="camelMap">
+		SELECT EPP.POPUP_TITLE
+			       ,EPP.POPUP_REG_TP_FE
+			       ,(SELECT ATT.ATTCH_FILE_PATH from ASW_G_ATTCH ATT where ATT.ATTCH_CD = EPP.ATTCH_CD) as ATTCH_FILE_PATH
+			       ,EPP.POPUP_CONT
+			       ,EPP.POPUP_OPEN_TP_WLM
+			       ,EPP.POPUP_WIN_WIDTH
+			       ,EPP.POPUP_WIN_HEIGHT
+			       ,EPP.POPUP_CENTER_YES_NO
+			       ,EPP.POPUP_CLOSE_DAY
+			       ,EPP.POPUP_CLOSE_COLOR
+			       ,EPP.POPUP_CLOSE_SIZE
+			  FROM ASW_POPUP EPP
+			WHERE EPP.POPUP_SEQ = #POPUP_SEQ#
+	</select>
+
+	<select id="AmM406DAO.eBannerList" resultClass="camelMap">
+		SELECT EBL.BANNER_CD,
+		       EBL.BANNER_TITLE,
+		       EBL.BANNER_LOCAL_CD,
+		       GA.ATTCH_FILE_PATH,
+		       ISNULL(MGA.ATTCH_FILE_PATH, GA.ATTCH_FILE_PATH) AS ATTCH_MOBILE_FILE_PATH,
+		       EBL.BANNER_LINK,
+		       EBL.BACKG_ROUND_COLOR
+		  FROM ASW_BANNER_LIST EBL
+		   LEFT OUTER JOIN ASW_G_ATTCH GA ON EBL.ATTCH_CD = GA.ATTCH_CD
+		   LEFT OUTER JOIN ASW_G_ATTCH MGA ON EBL.ATTCH_MOBILE_CD = MGA.ATTCH_CD
+		 WHERE EBL.BANNER_STATUS = 'Y'
+		 <![CDATA[
+			 AND EBL.BANNER_START_DT <= GETDATE()
+			 AND (EBL.BANNER_END_DT IS NULL OR EBL.BANNER_END_DT >= GETDATE())
+		 ]]>
+		ORDER BY EBL.BANNER_LOCAL_CD, EBL.BANNER_TITLE ASC, REG_DT DESC
+	</select>
+
+	<!-- 메인 롤링 공지글 노출 -->
+	<select id="MainDAO.getMainNoticeList"  resultClass="camelMap">
+		SELECT	TOP 1 A.BOARD_MST_CD
+				, A.BOARD_SEQ
+				, A.BOARD_FIRST_YN
+				, A.BOARD_CATE_SEQ
+				, CASE WHEN A.BOARD_CATE_SEQ != '58' THEN '공지'
+					   ELSE B.BOARD_CATE_NM
+				  END AS BOARD_CATE_NM
+				, A.BOARD_TITLE
+				, A.BOARD_HIT
+				, A.BOARD_STATUS_YN
+				, A.DATA_USER_TP_MA
+				, CONVERT(VARCHAR(10),REG_DT,102) AS REG_DT
+		FROM	ASW_BOARD_BASE A, ASW_BOARD_CATE B
+		WHERE	A.BOARD_CATE_SEQ	= B.BOARD_CATE_SEQ
+		AND		A.BOARD_MST_CD		= 'BBM00067'
+		AND		A.BOARD_STATUS_YN	= 'Y'
+<!-- 		AND		A.BOARD_FIRST_YN	= 'N' -->
+		ORDER BY A.BOARD_FIRST_YN desc, A.REG_DT DESC
+	</select>
+
+	<!-- 메인 롤링 Faq 노출 -->
+	<select id="MainDAO.getMainFaqList"  resultClass="camelMap">
+		SELECT	TOP 1 A.BOARD_MST_CD
+				, A.BOARD_SEQ
+				, A.BOARD_FIRST_YN
+				, A.BOARD_CATE_SEQ
+				, CASE WHEN A.BOARD_CATE_SEQ != '58' THEN '공지'
+					   ELSE B.BOARD_CATE_NM
+				  END AS BOARD_CATE_NM
+				, A.BOARD_TITLE
+				, A.BOARD_HIT
+				, A.BOARD_STATUS_YN
+				, A.DATA_USER_TP_MA
+				, CONVERT(VARCHAR(10),REG_DT,102) AS REG_DT
+		FROM	ASW_BOARD_BASE A, ASW_BOARD_CATE B
+		WHERE	A.BOARD_CATE_SEQ	= B.BOARD_CATE_SEQ
+		AND		A.BOARD_MST_CD		= 'BBM00004'
+		AND		A.BOARD_STATUS_YN	= 'Y'
+		AND		A.BOARD_FIRST_YN	= 'N'
+		ORDER BY A.BOARD_SEQ DESC, A.REG_DT DESC
+	</select>
+
+	<select id="MainDAO.getWorkCount"  parameterClass="String" resultClass="camelMap">
+		select a.TODAY_AS_COUNT,
+		       b.READY_AS_COUNT
+		from   (SELECT count(*) as TODAY_AS_COUNT
+		       FROM    dbo.ASA200 a
+		       where   CONVERT(VARCHAR(10),a.rec_dt,102) = convert(VARCHAR(10), getdate(), 102)
+	  			 and a.stat_bc in ( 'AS204100','AS204200' )
+				 and a.cust_cd = #CUST_CD#
+		       )
+		       a,
+		       (SELECT count(*) as READY_AS_COUNT
+		       FROM    dbo.ASA200 a
+		       where   a.stat_bc in ('AS204100','AS204200')
+		  		 and a.cust_cd = #CUST_CD#
+		       )
+		       b
+	</select>
+
+</sqlMap>

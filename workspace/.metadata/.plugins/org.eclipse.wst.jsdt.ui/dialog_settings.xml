@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item value="filter_imports;" key="filters_last_used"/>
+	<item value="false" key="delegateUpdating"/>
+	<section name="completion_proposal_size">
+	</section>
+	<section name="JavaElementSearchActions">
+	</section>
+	<section name="BuildPathsPropertyPage">
+		<item value="1" key="pageIndex"/>
+	</section>
+	<section name="JavaSearchPage">
+		<item value="false" key="CASE_SENSITIVE"/>
+		<item value="11" key="INCLUDE_MASK"/>
+		<item value="6" key="HISTORY_SIZE"/>
+		<section name="HISTORY2">
+			<item value="11" key="includeMask"/>
+			<item value="3" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="fnGridOptionLoding" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="13" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY3">
+			<item value="11" key="includeMask"/>
+			<item value="2" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="fnGridOption" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="1" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY0">
+			<item value="11" key="includeMask"/>
+			<item value="2" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="saleCodePOP" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="12" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY1">
+			<item value="11" key="includeMask"/>
+			<item value="2" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="site.js" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="12" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY5">
+			<item value="11" key="includeMask"/>
+			<item value="2" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="facCertification" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="12" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY4">
+			<item value="11" key="includeMask"/>
+			<item value="2" key="limitTo"/>
+			<item value="1" key="scope"/>
+			<item value="inboundR" key="pattern"/>
+			<item value="" key="javaElement"/>
+			<item value="12" key="searchFor"/>
+			<item value="false" key="isCaseSensitive"/>
+			<list key="workingSets">
+			</list>
+		</section>
+	</section>
+</section>

@@ -1,0 +1,1014 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="RepairDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+
+		<select id="getPartItemList" parameterClass="map" resultClass="camelMap">
+			select a.itm_cid,
+			       b.itm_cd,
+			       b.itm_nm,
+			       b.spec,
+			       b.um_bc,
+			       convert(INT,isnull(c.cs_up,0)) as cs_up,
+			       convert(INT,isnull(c.up,0)) as up
+			       from     asz210 a
+			                join dma100 b
+			                on       a.itm_cid = b.itm_id
+							left join asz220 c on c.itm_id = b.itm_id
+											 and   c.bs_cd  =  a.bs_cd
+											 and   c.oem_bc  = a.oem_bc
+											 and   c.fr_dt  =
+													(select max(fr_dt)
+													from    asz220
+													where   itm_id = c.itm_id
+													  and   bs_cd  = c.bs_cd
+													  and   oem_bc = c.oem_bc
+													)
+						       where a.bs_cd            ='01'
+				     and a.itm_pid = #ITM_ID#
+			       order by b.itm_cd desc
+		</select>
+
+	<select id="totalListCount"  parameterClass="map" resultClass="int">
+		SELECT	count(*) as READY_AS_COUNT
+	    FROM 	ASA200 a
+	    where   a.stat_bc in ( 'AS204100','AS204200' )
+	      and   a.cust_cd  = #CUST_CD# 
+	       <isEmpty property="DATE_FLAG" prepend="AND" >
+	       <![CDATA[
+	      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+					AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+		   ]]>
+		   </isEmpty>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+				   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+	</select>
+
+
+	<!-- 20190503 asa200의 itm_id를 itm_id_j로 변경 -->
+	<select id="repairStateList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REC_DT desc ) AS NUM,
+		       a.AS_NO,
+		       a.CS_NO_NEW,
+		       /* a.ITM_ID, */
+			   /* isnull((select spec from Dma100 where itm_id = a.itm_id),'none') as model, */
+			   a.itm_id as ori_itm_id,
+			   a.itm_id_j as itm_id,
+			   isnull((select spec from Dma100 where itm_id = a.itm_id_j),'none') as model,
+		       (select  case when acm.MODEL_ITEM_CD = '0' then '비데'
+		            when acm.MODEL_ITEM_CD = '1' then '위생도기'
+		            when acm.MODEL_ITEM_CD = '2' then '수전'
+		            when acm.MODEL_ITEM_CD = '3' then '블렌더'
+		            when acm.MODEL_ITEM_CD = '4' then '이누스바스' end as MODEL_ITEM_NM from ASW_CS_MST acm where acm.AS_NO = a.AS_NO) as  MODEL_ITEM_CD,
+		       (select title as label from BCA200V where base_cd = a.re_bc) as RE_BC_NM,
+		       (select title as label from BCA200V where base_cd = a.re2_bc) as RE2_BC_NM,
+		       a.RE_NM,
+		       CONVERT(VARCHAR(10), a.ACT_DT, 120) as ACT_DT,
+		       a.STAT_BC,
+		       case when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'
+		            when a.STAT_BC = 'AS204900' then '취소'end as STAT_BC_NM,
+		       CONVERT(VARCHAR(10), a.REC_DT, 120) as REC_DT,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2
+		FROM   ASA200 a
+	     where   a.stat_bc in ( 'AS204100',
+	                             'AS204200' )
+	       and   a.cust_cd  = #CUST_CD#
+	       <isEmpty property="DATE_FLAG" prepend="AND" >
+	       <![CDATA[
+	      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+					AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+		   ]]>
+		   </isEmpty>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+				   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+									) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+	</select>
+
+	<!-- 20190503 asa200의 itm_id를 itm_id_j로 변경 -->
+	<!-- 20190503 품목코드 칸에 규격, 품목명 칸에 품목명 - 주응선대리님 요청 -->
+	<select id="repairStateView"  parameterClass="map" resultClass="camelMap">
+		<![CDATA[
+		SELECT a.AS_NO,
+		       a.CS_NO_NEW,
+		       a.RE_NM,
+		       /* a.ITM_ID,  */
+		       a.itm_id as ori_itm_id, /* 20190509 수리내역등록으로 넘어갈때는 품목코드로 넘어가도록 값 넘겨주기 */
+		       a.itm_id_j as itm_id,
+		       a.ITM_GUBUN,
+		       /* isnull((select top 1 itm_cd from dma100 where itm_id = a.ITM_ID),'none') as ITM_CD, */
+		       /* isnull((select top 1 spec from dma100 where itm_id = a.ITM_ID),'none') as ITM_NM, */
+		       isnull((select top 1 spec from dma100 where itm_id = a.itm_id_j),'none') as ITM_CD, /* 품목코드 칸에 규격 */
+		       isnull((select top 1 itm_nm from dma100 where itm_id = a.itm_id_j),'none') as ITM_NM, /* 품목명 칸에 품목명 */
+		       (select  case when acm.MODEL_ITEM_CD = '0' then '비데'
+		            when acm.MODEL_ITEM_CD = '1' then '위생도기'
+		            when acm.MODEL_ITEM_CD = '2' then '수전'
+		            when acm.MODEL_ITEM_CD = '3' then '블렌더'
+		            when acm.MODEL_ITEM_CD = '4' then '이누스바스' end as MODEL_ITEM_NM from ASW_CS_MST acm where acm.AS_NO = a.AS_NO) as  MODEL_ITEM_CD,
+		       (select title as label from BCA200V where base_cd = a.re_bc) as RE_BC_NM,
+		       (select title as label from BCA200V where base_cd = a.re2_bc) as RE2_BC_NM,
+		       a.RE_NM,
+		       CONVERT(VARCHAR(10), a.ACT_DT, 120) as ACT_DT,
+		       a.STAT_BC,
+		       case when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'
+		            when a.STAT_BC = 'AS204900' then '취소'end as STAT_BC_NM,
+		       CONVERT(VARCHAR(10), a.REC_DT, 120) as REC_DT,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2,
+			   isnull(a.ZIP_CD +'&nbsp;', '') + a.ADDR +'&nbsp;' +isnull(a.ADDR2,'') as T_ADDR_NM,
+			   c.LOT_NO,
+			   c.AMT_TY AS AMT_TY_CD,
+			   convert(varchar(7),c.BUY_DT,121) as BUY_DT,
+			   (select top 1 title from bca200V where main_cd = 'AS206' and  base_cd = c.AS_TY) as AS_TY,
+			   (select top 1 title from bca200V where base_cd = c.AS1_BC) as AS1_BC,
+			   (select top 1 title from bca200V where base_cd = c.AS2_BC ) as AS2_BC,
+			   (select top 1 title from bca200V where main_cd = 'AS207' and  base_cd = c.ACT_BC ) as ACT_BC,
+			   (select top 1 title from bca200V where main_cd = 'AS215' and  base_cd = c.AMT_TY ) as AMT_TY,
+			   convert(INT,c.BT_AMT) as BT_AMT ,
+			   convert(INT,c.REP_AMT) as REP_AMT ,
+			   convert(INT,c.INS_AMT) as INS_AMT ,
+			   convert(INT,c.REG_AMT) as REG_AMT ,
+			   convert(INT,(SELECT sum(cust_amt) FROM ASA220 WHERE AS_NO = a.AS_NO AND OEM_BC = a.OEM_BC)) as CUST_AMT,
+			   CONVERT(VARCHAR(10), c.REQ_DT, 120) as REQ_DT,
+			   c.RMKS
+		FROM   ASA200 a
+		         left join ASA210 c on c.as_no = a.as_no and c.oem_bc  = a.oem_bc
+	     where a.cust_cd  = #CUST_CD#
+	       and a.AS_NO = #AS_NO#
+	   	]]>
+<!-- 	       <isEqual property="VIEW_TP" prepend="AND" compareValue="1"> -->
+<!-- 	          a.stat_bc in ( 'AS204100', 'AS204200' ) -->
+<!-- 	       </isEqual> -->
+<!-- 	       <isEqual property="VIEW_TP" prepend="AND" compareValue="2"> -->
+<!-- 	          a.stat_bc not in ( 'AS204100', 'AS204200' ) -->
+<!-- 	       </isEqual> -->
+	</select>
+
+	<!--20190507 사용중인 코드만 get -->
+	<select id="getCodeInfo"  parameterClass="map" resultClass="camelMap">
+		select base_cd, title 
+		  from bca200V 
+		 where isnull(use_yn,'0') = '1'
+		   and main_cd = #MAIN_CD#
+			<isNotEmpty  property="SUB_CD" >
+				and m1 = #SUB_CD#
+			</isNotEmpty>
+	</select>
+
+	<select id="ascodeList" parameterClass="map" resultClass="camelMap">
+
+		<isEmpty  property="SUB_CD" >
+			select  a.pcd as base_cd,  b.title as title
+		  from  asz160 a
+		  join  bca200v  b  on a.pcd = b.base_cd
+	  	 where  itm_gubun = (SELECT itm_gubun from asa200 where as_no = #AS_NO# )
+	  	   and  as_bc = #AS_BC#
+		</isEmpty>
+		<isNotEmpty  property="SUB_CD" >
+			select   a.ccd as base_cd,   b.title as title
+				from    asz170  a
+				        join  bca200v  b  on a.ccd = b.base_cd
+				where   a.itm_gubun =  (SELECT itm_gubun from asa200 where as_no = #AS_NO# )
+				and     as_bc = #AS_BC#
+				and     pcd       = #SUB_CD#
+		</isNotEmpty>
+	</select>
+
+	<select id="repairStateFinishListCount"  parameterClass="map" resultClass="int">
+		SELECT	count(*) as READY_AS_COUNT
+		FROM 	ASA200 a
+		WHERE	a.stat_bc in ( 'AS204300')
+         AND   	a.cust_cd  = #CUST_CD#
+       <isEmpty property="DATE_FLAG" prepend="AND" >
+       <![CDATA[
+      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+				AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+	   ]]>
+	   </isEmpty>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	   ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+  		   <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+	   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+			   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+			   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+			   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+		</isNotEmpty>
+	</select>
+
+	<select id="repairStateFinishList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REC_DT desc ) AS NUM,
+		       a.AS_NO,
+		       a.CS_NO_NEW,
+		       a.ITM_ID,
+				isnull((select spec from Dma100 where itm_id = a.itm_id),'none') as model,
+		       (select  case when acm.MODEL_ITEM_CD = '0' then '비데'
+		            when acm.MODEL_ITEM_CD = '1' then '위생도기'
+		            when acm.MODEL_ITEM_CD = '2' then '수전'
+		            when acm.MODEL_ITEM_CD = '3' then '블렌더'
+		            when acm.MODEL_ITEM_CD = '4' then '이누스바스' end as MODEL_ITEM_NM from ASW_CS_MST acm where acm.AS_NO = a.AS_NO) as  MODEL_ITEM_CD,
+		       (select title as label from BCA200V where base_cd = a.re_bc) as RE_BC_NM,
+		       (select title as label from BCA200V where base_cd = a.re2_bc) as RE2_BC_NM,
+		       a.RE_NM,
+		       CONVERT(VARCHAR(10), a.ACT_DT, 120) as ACT_DT,
+		       a.STAT_BC,
+		       case when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'
+		            when a.STAT_BC = 'AS204900' then '취소'end as STAT_BC_NM,
+
+		       CONVERT(VARCHAR(10), a.REC_DT, 120) as REC_DT,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2
+		FROM   ASA200 a
+	     where   a.stat_bc in ( 'AS204300' )
+	       and     a.cust_cd  = #CUST_CD#
+	       <isEmpty property="DATE_FLAG" prepend="AND" >
+	       <![CDATA[
+	      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+					AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+		   ]]>
+		   </isEmpty>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+			   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+									) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+	</select>
+
+	<select id="handlingListCount"  parameterClass="map" resultClass="int">
+		SELECT count(*) as READY_AS_COUNT
+        FROM   ASA200 a
+       	where  a.cust_cd  = #CUST_CD#
+       <isEmpty property="DATE_FLAG" prepend="AND" >
+       <![CDATA[
+      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+				AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+	   ]]>
+	   </isEmpty>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	   ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+  		   <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+	   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+			   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+		   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+			   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+		</isNotEmpty>
+		<isNotEmpty property="STAT_BC" prepend="AND">
+       		   a.STAT_BC IN(#STAT_BC#)
+       	</isNotEmpty>
+	</select>
+
+
+	<select id="handlingList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REC_DT desc ) AS NUM,
+		       a.AS_NO,
+		       a.CS_NO_NEW,
+		       a.ITM_ID,
+				isnull((select spec from Dma100 where itm_id = a.itm_id),'none') as model,
+		       (select  case when acm.MODEL_ITEM_CD = '0' then '비데'
+		            when acm.MODEL_ITEM_CD = '1' then '위생도기'
+		            when acm.MODEL_ITEM_CD = '2' then '수전'
+		            when acm.MODEL_ITEM_CD = '3' then '블렌더'
+		            when acm.MODEL_ITEM_CD = '4' then '이누스바스' end as MODEL_ITEM_NM from ASW_CS_MST acm where acm.AS_NO = a.AS_NO) as  MODEL_ITEM_CD,
+		       (select title as label from BCA200V where base_cd = a.re_bc) as RE_BC_NM,
+		       (select title as label from BCA200V where base_cd = a.re2_bc) as RE2_BC_NM,
+		       a.RE_NM,
+		       CONVERT(VARCHAR(10), a.ACT_DT, 120) as ACT_DT,
+		       a.STAT_BC,
+		       case when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'
+		            when a.STAT_BC = 'AS204900' then '취소'end as STAT_BC_NM,
+
+		       CONVERT(VARCHAR(10), a.REC_DT, 120) as REC_DT,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2
+		FROM   ASA200 a
+	     where     a.cust_cd  = #CUST_CD#
+	       <isEmpty property="DATE_FLAG" prepend="AND" >
+	       <![CDATA[
+	      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+					AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+		   ]]>
+		   </isEmpty>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+			   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.TEL, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR2 LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="STAT_BC" prepend="AND">
+	       		   a.STAT_BC IN(#STAT_BC#)
+	       	</isNotEmpty>
+									) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+	</select>
+
+
+	<select id="repairStateHistoyListCount"  parameterClass="map" resultClass="int">
+		SELECT	count(*) as READY_AS_COUNT
+		FROM 	ASA200 a
+		WHERE	a.cs_no_new = (select cs_no_new from ASA200 where as_no = #AS_NO#)
+       <isEmpty property="DATE_FLAG" prepend="AND" >
+       <![CDATA[
+      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+				AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+	   ]]>
+	   </isEmpty>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	   ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+  		   <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+       <![CDATA[
+       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+				AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+       ]]>
+       </isEqual>
+	   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+		<![CDATA[
+			   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+		]]>
+		</isNotEmpty>
+		<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+			   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+		</isNotEmpty>
+	</select>
+
+	<select id="repairStateHistoyList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REC_DT desc ) AS NUM,
+		       a.AS_NO,
+		       a.CS_NO_NEW,
+		       a.ITM_ID,
+				isnull((select spec from Dma100 where itm_id = a.itm_id),'none') as model,
+		       (select  case when acm.MODEL_ITEM_CD = '0' then '비데'
+		            when acm.MODEL_ITEM_CD = '1' then '위생도기'
+		            when acm.MODEL_ITEM_CD = '2' then '수전'
+		            when acm.MODEL_ITEM_CD = '3' then '블렌더'
+		            when acm.MODEL_ITEM_CD = '4' then '이누스바스' end as MODEL_ITEM_NM from ASW_CS_MST acm where acm.AS_NO = a.AS_NO) as  MODEL_ITEM_CD,
+		       (select title as label from BCA200V where base_cd = a.re_bc) as RE_BC_NM,
+		       (select title as label from BCA200V where base_cd = a.re2_bc) as RE2_BC_NM,
+		       a.RE_NM,
+		       CONVERT(VARCHAR(10), a.ACT_DT, 120) as ACT_DT,
+		       a.STAT_BC,
+		       case when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'
+		            when a.STAT_BC = 'AS204900' then '취소'end as STAT_BC_NM,
+
+		       CONVERT(VARCHAR(10), a.REC_DT, 120) as REC_DT,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2
+		FROM   ASA200 a
+	     where  a.cs_no_new = (select cs_no_new from ASA200 where as_no = #AS_NO#)
+	       <isEmpty property="DATE_FLAG" prepend="AND" >
+	       <![CDATA[
+	      			(a.REC_DT  >= CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(d,-day(GETDATE())+1,GETDATE()),126))
+					AND a.REC_DT  <=  CONVERT(DATETIME,CONVERT(CHAR(10),DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE())+1,0)),126)))
+		   ]]>
+		   </isEmpty>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.REC_DT  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.REC_DT  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.REC_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+									) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+	</select>
+
+
+
+	<select id="repairThisHistoyNm"  parameterClass="map" resultClass="String">
+		select cs_nm FROM ASA010 where cs_no = (select cs_no_new from ASA200 where as_no = #AS_NO#)
+	</select>
+
+	<select id="repairPartList"  parameterClass="map" resultClass="camelMap">
+   SELECT   A.SQ_NO
+		  , A.ITM_ID
+		  , b.ITM_CD
+		  , b.ITM_NM
+		  ,convert(INT,isnull(A.QTY,0)) as QTY
+		  ,convert(INT,isnull(A.CUST_AMT,0)) as CUST_AMT
+        FROM     ASA220 A  join dma100 b    on a.itm_id = b.itm_id WHERE A.AS_NO =  #AS_NO# AND a.OEM_BC = 'AS100100' order by SQ_NO asc
+	</select>
+
+
+	<select id="repairFileList"  parameterClass="map" resultClass="camelMap">
+		 SELECT a.AS_NO
+		       , a.ATTCH_CD
+		       , b.ATTCH_FILE_NM AS ATTCH_FILE_NM
+	   		   , b.ATTCH_FILE_PATH AS ATTCH_FILE_PATH
+	   		   , b.ATTCH_REAL_ABSOLUTE_PATH AS ATTCH_REAL_ABSOLUTE_PATH
+	   		   , b.ATTCH_ID
+		FROM ASW_AS_ATTCH a WITH(NOLOCK)
+		LEFT OUTER JOIN ASW_G_ATTCH b
+		ON b.ATTCH_CD = a.ATTCH_CD
+		WHERE a.AS_NO = #AS_NO#
+	</select>
+
+
+	<select id="asSign"  parameterClass="map" resultClass="camelMap">
+	select AS_SIGN from ASW_AS_SIGN where AS_NO = #AS_NO#
+	</select>
+
+
+
+	<select id="installAcceptListCount"  parameterClass="map" resultClass="int">
+		SELECT	count(*) as READY_AS_COUNT
+		FROM 	ASA415 a
+		WHERE a.cust_cd  = #CUST_CD#
+		  and a.drv_no = #DRV_NO#
+
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.ins_dt >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.ins_dt < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+			   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.PHONE, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR_S LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="INS_STATE_CD" prepend="AND">
+	       		   a.INS_STATE_CD IN(#INS_STATE_CD#)
+	       	</isNotEmpty>
+	</select>
+
+	<select id="installAcceptView"  parameterClass="map" resultClass="camelMap">
+		SELECT  a.ins_no,
+				a.cal_no,
+				a.bs_cd,
+				a.cs_no,
+				a.cs_no_new,
+				a.cs_nm,
+				a.oem_bc,
+				a.phone,
+			    a.hp,
+				   a.zip_cd,
+				   a.addr,
+				   a.addr_s,
+				   a.note,
+				   a.itm_id,
+				isnull((select itm_cd from Dma100 where itm_cd = a.itm_id),'none') as itm_cd,
+				isnull((select spec from Dma100 where itm_cd = a.itm_id),'none') as model,
+				   a.itm_nm,
+				   a.qty,
+				   a.ins_cd,
+				   a.ins_nm,
+				   a.cid,
+				   a.cdt,
+				   a.mid,
+				   a.mdt,
+				   a.ins_state_cd,
+				    case when a.ins_state_cd = 'AS410100' then '접수'
+		            when a.ins_state_cd = 'AS410200' then '대기'
+		            when a.ins_state_cd = 'AS410300' then '완료'
+		            when a.ins_state_cd = 'AS410400' then '취소'
+		            when a.ins_state_cd = 'AS410500' then '정산'
+		            when a.ins_state_cd = 'AS410600' then '취소(환경적)'end as ins_state_nm,
+
+		           CONVERT(VARCHAR(10), a.ins_dt, 120) as ins_dt,
+
+				   a.cust_cd,
+				   a.cust_nm,
+				   a.ins_amt,
+				   a.add_amt,
+				   a.tot_amt,
+				   a.ins_number,
+				   a.ins_ym,
+		           CONVERT(VARCHAR(10), a.ins_ymd, 120) as ins_ymd,
+				   a.rmks,
+				   a.drv_no,
+				   a.re_area,
+				   a.reg_id,
+				   a.sms_yn,
+				   a.ord_no,
+				   a.ord_sq,
+				   a.sign_img
+			FROM   dbo.ASA415 a
+	    WHERE a.ins_no = #INS_NO#
+	</select>
+	<select id="installAcceptList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		SELECT  ROW_NUMBER() OVER( ORDER BY A.ins_dt desc ) AS NUM,
+		 		a.ins_no,
+				a.cal_no,
+				a.bs_cd,
+				a.cs_no,
+				a.cs_no_new,
+				isnull((select spec from Dma100 where itm_cd = a.itm_id),'none') as model,
+				a.cs_nm,
+				a.oem_bc,
+				a.phone,
+			    a.hp,
+				   a.zip_cd,
+				   a.addr,
+				   a.addr_s,
+				   a.note,
+				   a.itm_id,
+				   a.itm_nm,
+				   a.qty,
+				   a.ins_cd,
+				   a.ins_nm,
+				   a.cid,
+				   a.cdt,
+				   a.mid,
+				   a.mdt,
+				   a.ins_state_cd,
+				    case when a.ins_state_cd = 'AS410100' then '접수'
+		            when a.ins_state_cd = 'AS410200' then '대기'
+		            when a.ins_state_cd = 'AS410300' then '완료'
+		            when a.ins_state_cd = 'AS410400' then '취소'
+		            when a.ins_state_cd = 'AS410500' then '정산'
+		            when a.ins_state_cd = 'AS410600' then '취소(환경적)'end as ins_state_nm,
+
+		           CONVERT(VARCHAR(10), a.ins_dt, 120) as ins_dt,
+
+				   a.cust_cd,
+				   a.cust_nm,
+				   a.ins_amt,
+				   a.add_amt,
+				   a.tot_amt,
+				   a.ins_number,
+				   a.ins_ym,
+				   a.ins_ymd,
+				   a.rmks,
+				   a.drv_no,
+				   a.re_area,
+				   a.reg_id,
+				   a.sms_yn,
+				   a.ord_no,
+				   a.ord_sq,
+				   a.sign_img
+			FROM   dbo.ASA415 a
+	    WHERE a.cust_cd  = #CUST_CD#
+		  and a.drv_no = #DRV_NO#
+
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate(),126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+		   ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-7,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+   		   <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-15,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+	       <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+	       <![CDATA[
+	       		   (a.ins_dt  >= CONVERT(DATETIME,CONVERT(char(10), GetDate()-30,126))
+					AND a.ins_dt  <= CONVERT(DATETIME,CONVERT(char(10), GetDate()+1,126)))
+	       ]]>
+	       </isEqual>
+		   <isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+			<![CDATA[
+				   a.ins_dt >= CONVERT(DATETIME, #TXT_FROM_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+			<![CDATA[
+				   a.ins_dt < DATEADD(DAY, 1, #TXT_TO_DT#)
+			]]>
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT" prepend="AND" >
+				   a.CS_NM LIKE '%' + #SEARCH_TXT# +'%'
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT2" prepend="AND" >
+			   ((REPLACE(a.HP, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%')OR(REPLACE(a.PHONE, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT2#, '-', '') +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="SEARCH_TXT3" prepend="AND" >
+				   ((a.ZIP_CD LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR LIKE '%' + #SEARCH_TXT3# +'%')OR(a.ADDR_S LIKE '%' + #SEARCH_TXT3# +'%'))
+			</isNotEmpty>
+			<isNotEmpty property="INS_STATE_CD" prepend="AND">
+	       		   a.INS_STATE_CD IN(#INS_STATE_CD#)
+	       	</isNotEmpty>
+		) x
+
+		        WHERE X.NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+		ORDER BY  x.NUM asc
+	</select>
+
+
+	<select id="getAsz120Pay"  parameterClass="map" resultClass="String">
+		select bt_amt from asz120 where oem_bc = 'AS100100' and bs_cd = '01' and re_area = (SELECT re_area from asa200 where as_no = #AS_NO#)
+	</select>
+
+
+	<select id="getActDt"  parameterClass="map" resultClass="String">
+		select CONVERT(varchar(10), act_dt,126) from asa200 where as_no = #AS_NO#
+	</select>
+
+
+	<!-- 20190503 품목구분이 기타[SDH0899]는 제외 / 종료된 것 제외 >> 20190507 주석처리 -->
+	<select id="modelList"  parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		   select  a.itm_pid as value, b.itm_cd, isnull(b.spec ,'') as label
+			 from asz200 a
+			  join dma100 b on a.itm_pid = b.itm_id
+			where 1=1
+			]]>
+			<isNotEmpty  property="AS_NO" >
+			and a.itm_gubun  = (select top 1 itm_gubun from asa200 where as_no = #AS_NO#)
+		    </isNotEmpty>
+			<isNotEmpty  property="ITM_GUBUN" >
+			and a.itm_gubun  = #ITM_GUBUN# /* A/S 접수현황등록시 사용 */
+		    </isNotEmpty>
+		    <![CDATA[
+			 and a.pl_bc <> 'AS900100'
+			/* and isnull(b.end_yn,'0') = '0' */
+			order by b.itm_cd
+	]]>
+	</select>
+
+	<select id="itmList"  parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		   select base_cd as value, title as label 
+		  from bca200V 
+		 where isnull(use_yn,'0') = '1'
+		   and main_cd = #MAIN_CD#
+		   and m1 = #SUB_CD#
+	]]>
+	</select>
+
+<!--
+	20200427 아이에스동서 > 이누스주식회사
+	{call SMS_SEND('01','$MBR_HP$','1588-8613','아이에스동서 AS처리완료','$MBR_NM$님 AS 처리 완료되었습니다.','LMS')} 
+ -->
+	<select id="smsSend"  parameterClass="map" resultClass="camelMap">
+		{call SMS_SEND('01','$MBR_HP$','1588-8613','이누스주식회사 AS처리완료','$MBR_NM$님 AS 처리 완료되었습니다.','LMS')}
+	</select>
+
+
+</sqlMap>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM404DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM404DAO.amM404" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+			      ,EMR.MSG_ROLE_NM
+			      ,(CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+			      ,EMR.MSG_DIV_RC
+			     , EM.MAIL_TITLE
+				 , EM.MAIL_CONT
+				 , (SELECT EMF.MAIL_FOOTER_CONT  FROM E_MAIL_FOOTER EMF WHERE EMF.MAIL_FOOTER_DT = (SELECT MAX(MAIL_FOOTER_DT) FROM E_MAIL_FOOTER  WITH(NOLOCK))) as MAIL_FOOTER_CONT
+  		    FROM E_MSG_ROLE EMR  WITH(NOLOCK)
+			   LEFT JOIN E_MAIL EM  ON EMR.MSG_ROLE_CD = EM.MSG_ROLE_CD
+			 WHERE EMR.MSG_ROLE_TP_ASM in ( 'A','M' )
+			   AND EMR.MSG_ROLE_YN = 'Y'
+			  <isNotEmpty  property="MSG_DIV_RC">
+			  AND EMR.MSG_DIV_RC = #MSG_DIV_RC#
+			  </isNotEmpty>
+			  <isNotEmpty  property="MSG_ROLE_CD">
+			  	AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+			  </isNotEmpty>
+	       order by EMR.MSG_ROLE_CD DESC
+	</select>
+
+</sqlMap>

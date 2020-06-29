@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+	<property name="LOG_FILE_HOME" value="/webdata/tabletdata2/logs/manager/" />
+	<property name="LOG_FILE_NAME" value="isas_manager" />
+	<property name="SQL_LOG_FILE_NAME" value="adminSqL" />
+    <property name="LOG_CONSOLE_PATTERN" value="[%d{HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - %msg %n"/>
+    <!-- <property name="LOG_LOGFILE_PATTERN" value="[%d{HH:mm:ss.SSS}] %-5level %logger{36} - %msg %n"/> -->
+    <property name="LOG_LOGFILE_PATTERN" value="[%d{HH:mm:ss.SSS}] %-4relative [%thread] %-5level %logger{36} - %msg %n"/>
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${LOG_CONSOLE_PATTERN}</pattern>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>TRACE</level>
+		</filter>
+	</appender>
+
+	<appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_FILE_HOME}${LOG_FILE_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			 <fileNamePattern>${LOG_FILE_HOME}${LOG_FILE_NAME}(%d{yyyy-MM-dd}).%i.log.zip</fileNamePattern>
+			 <timeBasedFileNamingAndTriggeringPolicy  class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+		    	<maxFileSize>100MB</maxFileSize>
+		     </timeBasedFileNamingAndTriggeringPolicy>
+			 <maxHistory>90</maxHistory>
+		 </rollingPolicy>
+       <encoder>
+            <Pattern>${LOG_LOGFILE_PATTERN}</Pattern>
+       </encoder>
+    </appender>
+
+	<appender name="SQLLOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_FILE_HOME}${SQL_LOG_FILE_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			 <fileNamePattern>${LOG_FILE_HOME}${SQL_LOG_FILE_NAME}(%d{yyyy-MM-dd}).%i.log.zip</fileNamePattern>
+			 <timeBasedFileNamingAndTriggeringPolicy  class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+		    	<maxFileSize>100MB</maxFileSize>
+		     </timeBasedFileNamingAndTriggeringPolicy>
+			 <maxHistory>90</maxHistory>
+		 </rollingPolicy>
+       <encoder>
+            <Pattern>${LOG_LOGFILE_PATTERN}</Pattern>
+       </encoder>
+    </appender>
+
+    <!-- OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL -->
+    <logger name="core.log.logger" additivity="false" >
+    	<level value="DEBUG" />
+    	<appender-ref ref="CONSOLE" />
+    	<appender-ref ref="SQLLOGFILE" />
+    </logger>
+    <logger name="site." additivity="false" >
+    	<level value="INFO" />
+    	<appender-ref ref="CONSOLE" />
+    	<appender-ref ref="LOGFILE" />
+    </logger>
+
+    <logger name="org.springframework.web.servlet.view.JstlView" additivity="false" >
+    	<level value="INFO" />
+    	<appender-ref ref="CONSOLE" />
+    	<appender-ref ref="LOGFILE" />
+    </logger>
+
+	<logger name="egovframework.cmmn.interceptor.IpObtainInterceptor" additivity="false" >
+    	<level value="DEBUG" />
+    	<appender-ref ref="CONSOLE" />
+    	<appender-ref ref="LOGFILE" />
+    </logger>
+
+    <logger name="egovframework.cmmn.HTMLSiteTagFilter" additivity="false" >
+    	<level value="INFO" />
+    	<appender-ref ref="CONSOLE" />
+    	<appender-ref ref="LOGFILE" />
+    </logger>
+
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="LOGFILE" />
+	</root>
+
+</configuration>

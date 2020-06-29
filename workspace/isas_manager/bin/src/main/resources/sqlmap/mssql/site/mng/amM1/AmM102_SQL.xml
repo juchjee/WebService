@@ -1,0 +1,1145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM102DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+
+	<!-- ********************************************** 개발하며 새로 생성한 쿼리 START ********************************************** -->
+	<select id="AmM102DAO.selectAmM102" parameterClass="map" resultClass="camelMap">
+		SELECT 
+				ROW_NUMBER() OVER(ORDER BY aa.MBR_SEQ DESC) AS ROW_NUM
+		,		aa.*
+		FROM(
+				SELECT 
+						A.MBR_ID
+				,		A.MBR_PW
+				,		A.MBR_LOGIN_STATUS_YHN
+				,		B.cs_no as MBR_SEQ
+				,		B.cs_nm as MBR_NM
+				,		B.e_mail as MBR_EMAIL
+				,		B.zip_cd as MBR_ZIPCODE
+				,		B.addr as MBR_ADDR
+				,		B.addr2 as MBR_ADDR_DTL
+				,		B.tel as MBR_PHONE
+				,		B.hp as MBR_MOBILE
+				,		B.cdt as MBR_JOIN_DT
+				,		GETDATE() AS MBR_LOGIN_DT
+				FROM	
+						ASW_M_MBR_LOGIN A WITH(NOLOCK) LEFT OUTER JOIN ASA010 B WITH(NOLOCK)
+				ON		A.MBR_DI = B.MBR_DI
+				WHERE
+						1 = 1
+				<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="1">		 
+						A.MBR_LOGIN_STATUS_YHN != 'N'
+				</isEqual>
+				<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="2">		 
+						A.MBR_LOGIN_STATUS_YHN == 'N'
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+					<isNotEmpty property="SEARCH_TXT">
+						A.MBR_ID LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+					<isNotEmpty property="SEARCH_TXT">
+						B.cs_nm LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+					<isNotEmpty property="SEARCH_TXT">
+						REPLACE(B.hp, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT#, '-', '') + '%'
+						<!-- B.hp LIKE '%' + #SEARCH_TXT# +'%' -->
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+					<isNotEmpty property="SEARCH_TXT">
+						B.e_mail LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+				<![CDATA[
+						B.cdt >= CONVERT(DATETIME, #TXT_FROM_DT#)
+				]]>
+				</isNotEmpty>
+				<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+				<![CDATA[
+						B.cdt < DATEADD(DAY, 1, #TXT_TO_DT#)
+				]]>
+				</isNotEmpty>
+			)aa
+	</select>
+	
+	<select id="AmM102DAO.selectCntAmM102" parameterClass="map" resultClass="int">
+		SELECT 
+				COUNT(*)
+		FROM(
+				SELECT 
+						A.MBR_ID
+				,		A.MBR_PW
+				,		A.MBR_LOGIN_STATUS_YHN
+				,		B.cs_no as MBR_SEQ
+				,		B.cs_nm as MBR_NM
+				,		B.e_mail as MBR_EMAIL
+				,		B.zip_cd as MBR_ZIPCODE
+				,		B.addr as MBR_ADDR
+				,		B.addr2 as MBR_ADDR_DTL
+				,		B.tel as MBR_PHONE
+				,		B.hp as MBR_MOBILE
+				,		B.cdt as MBR_JOIN_DT
+				,		GETDATE() AS MBR_LOGIN_DT
+				FROM	
+						ASW_M_MBR_LOGIN A WITH(NOLOCK) LEFT OUTER JOIN ASA010 B WITH(NOLOCK)
+				ON		A.MBR_DI = B.MBR_DI
+				WHERE
+						1 = 1
+				<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="1">		 
+						A.MBR_LOGIN_STATUS_YHN != 'N'
+				</isEqual>
+				<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="2">		 
+						A.MBR_LOGIN_STATUS_YHN == 'N'
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+					<isNotEmpty property="SEARCH_TXT">
+						A.MBR_ID LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+					<isNotEmpty property="SEARCH_TXT">
+						B.cs_nm LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+					<isNotEmpty property="SEARCH_TXT">
+						REPLACE(B.hp, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT#, '-', '') + '%'
+						<!-- B.hp LIKE '%' + #SEARCH_TXT# +'%' -->
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+					<isNotEmpty property="SEARCH_TXT">
+						B.e_mail LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+				<![CDATA[
+						B.cdt >= CONVERT(DATETIME, #TXT_FROM_DT#)
+				]]>
+				</isNotEmpty>
+				<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+				<![CDATA[
+						B.cdt < DATEADD(DAY, 1, #TXT_TO_DT#)
+				]]>
+				</isNotEmpty>
+			)aa
+	</select>
+	
+	<select id="AmM102DAO.selectMbrInfo" parameterClass="string" resultClass="camelMap">
+				SELECT 
+						A.MBR_ID
+				,		A.MBR_PW
+				,		A.MBR_LOGIN_STATUS_YHN
+				,		B.cs_no as MBR_SEQ
+				,		B.cs_nm as MBR_NM
+				,		B.e_mail as MBR_EMAIL
+				,		B.zip_cd as MBR_ZIPCODE
+				,		B.addr as MBR_ADDR
+				,		B.addr2 as MBR_ADDR_DTL
+				,		B.tel as MBR_PHONE
+				,		B.hp as MBR_MOBILE
+				,		CONVERT(VARCHAR(10), B.cdt, 120) as MBR_JOIN_DT
+				,		(SELECT	
+								TOP(1) CONVERT(VARCHAR(10), MBR_LOGIN_DT, 120) 
+						FROM	
+								ASW_M_MBR_LOGIN_HIS	WITH(NOLOCK)
+						WHERE	
+								MBR_ID = #mbrId#
+						ORDER BY MBR_LOGIN_DT DESC
+						)AS MBR_LOGIN_DT
+				FROM	
+						ASW_M_MBR_LOGIN A WITH(NOLOCK) LEFT OUTER JOIN ASA010 B WITH(NOLOCK)
+				ON		A.MBR_DI = B.MBR_DI
+				WHERE
+						A.MBR_ID = #mbrId#
+	</select>
+	
+	<select id="AmM102DAO.selectAmM102P9" parameterClass="map" resultClass="camelMap">
+		SELECT	
+				aa.*
+		FROM(
+				SELECT 
+						ROW_NUMBER() OVER(ORDER BY A.BOARD_SEQ DESC) AS NUM
+				,		A.BOARD_SEQ AS BOARD_SEQ
+				,		(SELECT B.BOARD_CATE_NM FROM ASW_BOARD_CATE B WHERE B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ) AS BOARD_CATE_NM
+				,		A.BOARD_TITLE
+				,		A.BOARD_MST_CD
+				,		(SELECT C.OPEN_YN FROM ASW_BOARD_TP_REPLY C WHERE C.BOARD_SEQ = A.BOARD_SEQ) AS OPEN_YN
+				,		A.REG_ID
+				,		CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+				,		(CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '답변완료' ELSE '처리중' END) AS BOARD_STATE
+				,		C.BOARD_REPLY
+				,		CASE
+								WHEN C.QUESTION_TP = '1' THEN 'A/S신청'
+								WHEN C.QUESTION_TP = '2' THEN '제품문의'
+								WHEN C.QUESTION_TP = '3' THEN '칭찬접수'
+								ELSE '기타'
+						END AS QUESTION_TP 
+				,		C.REP_ID
+				FROM
+						ASW_BOARD_BASE A LEFT OUTER JOIN ASW_BOARD_TP_REPLY C
+				ON 		C.BOARD_SEQ = A.BOARD_SEQ
+				WHERE	A.BOARD_MST_CD = 'BBM00003'
+				AND 	A.REG_ID = #MBR_ID#
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+					<isNotEmpty property="SEARCH_TXT">
+						A.BOARD_TITLE LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+					<isNotEmpty property="SEARCH_TXT">
+						A.BOARD_CONT LIKE '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+					<isNotEmpty property="SEARCH_TXT">
+						((A.BOARD_TITLE LIKE '%' + #SEARCH_TXT# +'%') OR
+						(A.BOARD_CONT LIKE '%' + #SEARCH_TXT# +'%'))
+					</isNotEmpty>
+				</isEqual>
+				<isNotEmpty property="SEARCH_TYPE2" prepend="AND">
+						C.QUESTION_TP = #SEARCH_TYPE2#
+				</isNotEmpty>
+				<isEqual property="SEARCH_TYPE3" prepend="AND" compareValue="1">
+						C.BOARD_REPLY IS NOT NULL AND C.BOARD_REPLY != ''
+				</isEqual>
+				<isEqual property="SEARCH_TYPE3" prepend="AND" compareValue="2">
+						(C.BOARD_REPLY IS NULL OR C.BOARD_REPLY = '')
+				</isEqual>
+				<isNotEmpty property="SEARCH_TYPE4" prepend="AND">
+						A.BOARD_CATE_SEQ = #SEARCH_TYPE4#
+				</isNotEmpty>
+				<isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+				<![CDATA[
+						A.REG_DT >= CONVERT(DATETIME, #TXT_FROM_DT#)
+				]]>
+				</isNotEmpty>
+				<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+				<![CDATA[
+						A.REG_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+				]]>
+				</isNotEmpty>
+		)aa
+	</select>
+	
+	<select id="AmM102DAO.selectCntAmM102P9" parameterClass="map" resultClass="int">
+		SELECT	
+				COUNT(*)
+		FROM(
+				SELECT 
+						ROW_NUMBER() OVER(ORDER BY A.BOARD_SEQ DESC) AS NUM
+				,		A.BOARD_SEQ AS BOARD_SEQ
+				,		(SELECT B.BOARD_CATE_NM FROM ASW_BOARD_CATE B WHERE B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ) AS BOARD_CATE_NM
+				,		A.BOARD_TITLE
+				,		A.BOARD_MST_CD
+				,		(SELECT C.OPEN_YN FROM ASW_BOARD_TP_REPLY C WHERE C.BOARD_SEQ = A.BOARD_SEQ) AS OPEN_YN
+				,		A.REG_ID
+				,		CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+				,		(CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '답변완료' ELSE '처리중' END) AS BOARD_STATE
+				,		C.BOARD_REPLY
+				,		CASE
+								WHEN C.QUESTION_TP = '1' THEN 'A/S신청'
+								WHEN C.QUESTION_TP = '2' THEN '제품문의'
+								WHEN C.QUESTION_TP = '3' THEN '칭찬접수'
+								ELSE '기타'
+						END AS QUESTION_TP 
+				FROM
+						ASW_BOARD_BASE A LEFT OUTER JOIN ASW_BOARD_TP_REPLY C
+				ON 		C.BOARD_SEQ = A.BOARD_SEQ
+				WHERE	A.BOARD_MST_CD = 'BBM00003'
+				AND 	A.REG_ID = #MBR_ID#
+		)aa
+	</select>
+	
+	<select id="AmM102DAO.selectDelayCntAmM102P9" parameterClass="map" resultClass="int">
+	SELECT 
+			COUNT(*)
+	FROM(
+			SELECT 
+					(CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '답변완료' ELSE '처리중' END) AS BOARD_STATE
+	
+			FROM
+					ASW_BOARD_BASE A LEFT OUTER JOIN ASW_BOARD_TP_REPLY C
+			ON 		C.BOARD_SEQ = A.BOARD_SEQ
+			WHERE	A.BOARD_MST_CD = 'BBM00003'
+			AND 	A.REG_ID = #MBR_ID#
+		)aa
+	WHERE
+			aa.BOARD_STATE = '처리중'
+	</select>
+	
+	
+	<select id="AmM102DAO.cateList" parameterClass="map" resultClass="camelMap">
+		SELECT a.BOARD_CATE_NM
+		       , a.BOARD_CATE_SEQ
+		       , (SELECT count(*) FROM ASW_BOARD_BASE b WHERE b.BOARD_CATE_SEQ = a.BOARD_CATE_SEQ AND b.BOARD_STATUS_YN = 'Y') as BOARD_CNT
+		FROM ASW_BOARD_CATE a
+		WHERE a.BOARD_MST_CD = #BOARD_MST_CD#
+		AND a.BOARD_CATE_USE_YN = 'Y'
+		ORDER BY a.BOARD_CATE_SORT
+	</select>
+	<!-- ********************************************** 이전에 되있던 쿼리 START ********************************************** -->
+	
+	<select id="AmM102DAO.selectTodayCntAmM102" parameterClass="map" resultClass="int">
+ 		SELECT 
+				COUNT(*)
+		FROM	
+				ASW_M_MBR_LOGIN A WITH(NOLOCK) LEFT OUTER JOIN ASA010 B WITH(NOLOCK)
+		ON		A.MBR_DI = B.MBR_DI
+		WHERE
+				B.cdt BETWEEN CONVERT(DATETIME, #MBR_JOIN_DT#) AND CONVERT(DATETIME, DATEADD(MS, -3, CONVERT(VARCHAR, DATEADD(DAY, 1, #MBR_JOIN_DT#), 112)))
+		<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="1">		 
+				A.MBR_LOGIN_STATUS_YHN != 'N'
+		</isEqual>
+		<isEqual property="MBR_LOGIN_STATUS_YHN" prepend="AND" compareValue="2">		 
+				A.MBR_LOGIN_STATUS_YHN == 'N'
+		</isEqual>
+	</select>
+
+
+	<select id="AmM102DAO.amM102" parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		SELECT ROW_NUMBER() OVER(ORDER BY B.MBR_JOIN_DT DESC) AS ROW_NUM,
+		       B.*
+		  FROM
+		       (SELECT A.MBR_ID,
+		              A.MBR_NM,
+		              (CASE WHEN A.MBR_SEX_MW = 'M' THEN '남자' WHEN A.MBR_SEX_MW = 'W' THEN '여자' ELSE '' END) AS MBR_SEX_MW,
+		              DATEDIFF(yy, CONVERT(datetime, A.MBR_BIRTHDT), GETDATE())+1 AS MBR_AGE,
+		              A.MBR_EMAIL,
+		              A.MBR_EMAIL_RCV_YN,
+		              ISNULL(A.MBR_MOBILE, A.MBR_PHONE) AS MBR_MOBILE,
+		              A.MBR_MOBILE_RCV_YN,
+		              A.MBR_SCORE,
+		              CONVERT(VARCHAR(10),A.MBR_JOIN_DT,121) as MBR_JOIN_DT,
+		              A.MBR_REG_ID,
+		              LI.MBR_LOGIN_STATUS_YHN,
+		              (CASE WHEN LI.MBR_TP_BTE = 'B' THEN '일반회원' WHEN LI.MBR_TP_BTE = 'T' THEN '전화회원' WHEN LI.MBR_TP_BTE = 'E' THEN '임직원' ELSE '' END) AS MBR_TP_BTE,
+	
+					
+		              (SELECT COUNT(*) FROM ASW_M_MBR_LOGIN_HIS WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID) AS LOGIN_CNT,
+		         FROM ASW_M_MBR A LEFT OUTER JOIN ASW_M_MBR_LOGIN LI WITH(NOLOCK) ON A.MBR_ID = LI.MBR_ID
+		         WHERE 1=1
+		         AND LI.MBR_LOGIN_STATUS_YHN = 'Y'
+		         ]]>
+		        <isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+		         	<isNotEmpty property="SEARCH_TXT">
+					A.MBR_NM like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+					<isNotEmpty property="SEARCH_TXT">
+					A.MBR_ID like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+					<isNotEmpty property="SEARCH_TXT">
+					REPLACE(A.MBR_MOBILE, '-', '') LIKE '%' + REPLACE(#SEARCH_TXT#, '-', '') + '%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+					<isNotEmpty property="SEARCH_TXT">
+					A.MBR_REC like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="5">
+					<isNotEmpty property="SEARCH_TXT">
+					A.MBR_EMAIL like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isNotEmpty property="TXT_FROM_DT" prepend="AND" >
+	 				<![CDATA[
+	 					A.MBR_JOIN_DT >= CONVERT(datetime, #TXT_FROM_DT#)
+	 				]]>
+	 			</isNotEmpty>
+	 			<isNotEmpty property="TXT_TO_DT" prepend="AND" >
+	 				<![CDATA[
+	 					A.MBR_JOIN_DT < DATEADD(DAY, 1, #TXT_TO_DT#)
+	 				]]>
+ 				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="MBR_TP_BTE" >
+		    		MBR_TP_BTE = #MBR_TP_BTE#
+				</isNotEmpty>
+			  	<isEqual property="MBR_SEX_MW" prepend="AND" compareValue="M">
+					A.MBR_SEX_MW = 'M'
+				</isEqual>
+				<isEqual property="MBR_SEX_MW" prepend="AND" compareValue="W">
+					A.MBR_SEX_MW = 'W'
+				</isEqual>
+		       ) B
+		       WHERE 1=1
+		       <isNotEmpty prepend="AND" property="MBR_LEV_CD" >
+		 			MBR_LEV_CD = #MBR_LEV_CD#
+			  	</isNotEmpty>
+		       <isEqual property="ORDER_CNT" prepend="AND" compareValue="1">
+			        ORDER_CNT <![CDATA[<>]]> 0
+			   </isEqual>
+			   <isEqual property="ORDER_CNT" prepend="AND" compareValue="2">
+				    ORDER_CNT = 0
+			   </isEqual>
+	</select>
+
+	<select id="AmM102DAO.amM102S"  parameterClass="map" resultClass="int">
+		SELECT count(*) FROM ASW_M_MBR WITH(NOLOCK)
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="MBR_SEARCH" >
+				(MBR_ID like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_NM like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_PHONE_RE like '%' + #MBR_SEARCH#)
+	 			OR (MBR_MOBILE_RE like '%' + #MBR_SEARCH#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="CALLER" >
+	 			(MBR_PHONE_RE = #CALLER#)
+	 			OR (MBR_MOBILE_RE = #CALLER#)
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="MBR_ID" >
+	 			MBR_ID = #MBR_ID#
+		  	</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<select id="AmM102DAO.amM102SS"  parameterClass="map" resultClass="String">
+		SELECT MBR_ID FROM ASW_M_MBR WITH(NOLOCK)
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="MBR_SEARCH" >
+				(MBR_ID like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_NM like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_PHONE_RE like '%' + #MBR_SEARCH#)
+	 			OR (MBR_MOBILE_RE like '%' + #MBR_SEARCH#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="CALLER" >
+	 			(MBR_PHONE_RE = #CALLER#)
+	 			OR (MBR_MOBILE_RE = #CALLER#)
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="MBR_ID" >
+	 			MBR_ID = #MBR_ID#
+		  	</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<select id="AmM102DAO.amM102PLA" parameterClass="map" resultClass="camelMap">
+		SELECT MBR_ID
+			   , MBR_NM
+			   , MBR_ADDR
+			   , MBR_PHONE
+			   , MBR_MOBILE
+		FROM ASW_M_MBR WITH(NOLOCK)
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="MBR_SEARCH" >
+				(MBR_ID like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_NM like '%' + #MBR_SEARCH# +'%')
+				OR (MBR_PHONE_RE like '%' + #MBR_SEARCH#)
+	 			OR (MBR_MOBILE_RE like '%' + #MBR_SEARCH#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="CALLER" >
+	 			(MBR_PHONE_RE = #CALLER#)
+	 			OR (MBR_MOBILE_RE = #CALLER#)
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="MBR_ID" >
+	 			MBR_ID = #MBR_ID#
+		  	</isNotEmpty>
+		</dynamic>
+	</select>
+
+
+	<select id="AmM102DAO.totalCount"  parameterClass="map" resultClass="int">
+	  SELECT
+        count(*)
+    FROM
+        ASW_M_MBR A WITH(NOLOCK)
+    LEFT OUTER JOIN
+        ASW_M_MBR_LOGIN L
+            ON L.MBR_ID = A.MBR_ID
+    WHERE
+        L.MBR_LOGIN_STATUS_YHN = 'Y'
+
+	</select>
+
+	<select id="AmM102DAO.nowCount"  parameterClass="map" resultClass="int">
+		  SELECT
+			        count(*)
+			    FROM
+			        ASW_M_MBR A WITH(NOLOCK)
+			    LEFT OUTER JOIN
+			        ASW_M_MBR_LOGIN L
+			            ON L.MBR_ID = A.MBR_ID
+			   	WHERE
+			        L.MBR_LOGIN_STATUS_YHN = 'Y'
+		AND A.MBR_JOIN_DT BETWEEN CONVERT(DATETIME, #MBR_JOIN_DT#) AND CONVERT(DATETIME, DATEADD(MS, -3, CONVERT(VARCHAR, DATEADD(DAY, 1, #MBR_JOIN_DT#), 112)))
+	</select>
+
+	<select id="AmM102DAO.mbrTotalInfo" parameterClass="string" resultClass="camelMap">
+	<![CDATA[
+		SELECT UI.*
+     , (dbo.FN_MBR_NEXT_LEV_AMOT( UI.MBR_ID )) AS NEXT_ORDER_AMT
+     , (dbo.FN_MBR_COPN_COUNT( UI.MBR_ID ))                   AS MBR_COPN_COUNT
+  FROM
+       (SELECT A.MBR_NM
+            , A.MBR_ID
+            , A.MBR_SEX_MW
+            ,
+              (
+                  CASE
+                      WHEN A.MBR_SEX_MW = 'M'
+                      THEN '남자'
+                      WHEN A.MBR_SEX_MW = 'W'
+                      THEN '여자'
+                      ELSE '미확인'
+                  END
+              ) AS MBR_SEX_MW_NM
+            ,
+              (
+                  CASE
+                      WHEN A.MBR_BIRTHDT_TYPE_GL = 'L'
+                      THEN '음력'
+                      WHEN A.MBR_BIRTHDT_TYPE_GL = 'G'
+                      THEN '양력'
+                      ELSE '미확인'
+                  END
+              ) AS MBR_BIRTHDT_TYPE_GL
+            , CONVERT ( VARCHAR (10), A.MBR_BIRTHDT, 120 ) AS MBR_BIRTHDT
+            
+                           , D.MBR_TP_BTE
+                           , D.MBR_LOGIN_STATUS_YHN
+                           , A.MBR_REC
+                           , A.MBR_MOBILE
+                           , A.MBR_PHONE
+                           , A.MBR_EMAIL
+                           , A.MBR_ZIPCODE
+                           , A.MBR_SCORE
+                           , A.MBR_ADDR
+                           , A.MBR_ADDR_DTL
+                           , A.MBR_ADDR + ' ' + A.MBR_ADDR_DTL AS MBR_FULL_ADDR
+                           , A.MBR_EMAIL_RCV_YN
+                           , A.MBR_MOBILE_RCV_YN
+                           , A.MBR_MEMO
+                           , CONVERT ( VARCHAR (10), A.MBR_JOIN_DT, 120 ) AS MBR_JOIN_DT
+                           , CONVERT ( VARCHAR (10),
+                             (SELECT MAX (MBR_LOGIN_DT)
+                               FROM ASW_M_MBR_LOGIN_HIS WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID )
+                                , 120 ) AS MBR_LOGIN_DT
+                              ,
+                                (SELECT COUNT (*)
+                                  FROM ASW_M_MBR_LOGIN_HIS WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID ) AS MBR_LOGIN_COUNT
+                                 , C.RESV_FUND
+                                
+                                       ,
+                                         (SELECT COUNT (*)
+                                           FROM O_ORDER ASW_S_O
+                                         WITH
+                                                (
+                                                    NOLOCK
+                                                )
+                                            LEFT JOIN O_ORDER_SEND S
+                                                ON S.ORDER_NO = ASW_S_O.ORDER_NO
+                                                AND ASW_S_O.CLAIM_YN = 'N'
+                                          WHERE ASW_S_O.MBR_ID = A.MBR_ID
+                                                AND S.ORDER_PACKING_DT IS NOT NULL
+                                            ) AS ORDER_CNT
+                                          , ISNULL
+                                            (
+                                                   (SELECT SUM (RESV_FUND)
+                                                     FROM ASW_M_MBR_RESV_LIST WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID )
+                                                      , 0
+                                                  ) AS MBR_RESV_FUND
+                                                , ISNULL
+                                                  (
+                                                         (SELECT SUM (RESV_FUND)
+                                                           FROM O_RESERVE_USE
+                                                         WITH
+                                                                (
+                                                                    NOLOCK
+                                                                )
+                                                          WHERE ORDER_NO IN
+                                                                (SELECT ORDER_NO
+                                                                  FROM O_ORDER WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID )
+                                                               )
+                                                               , 0
+                                                           ) AS MBR_USE_FUND
+                                                         ,
+                                                           (SELECT ISNULL(SUM(OD.DEPOSIT_AMOUNT), 0) AS AMT
+                                                             FROM O_ORDER OO
+                                                           WITH
+                                                                  (
+                                                                      NOLOCK
+                                                                  )
+                                                              LEFT JOIN O_DEPOSIT OD
+                                                           WITH
+                                                                  (
+                                                                      NOLOCK
+                                                                  )
+                                                                  ON OD.ORDER_NO = OO.ORDER_NO
+                                                              LEFT JOIN O_ORDER_SEND S
+                                                                  ON S.ORDER_NO = OO.ORDER_NO
+                                                                  AND OO.CLAIM_YN = 'N'
+                                                            WHERE OO.MBR_ID = A.MBR_ID
+                                                                   AND S.ORDER_PACKING_DT IS NOT NULL
+                                                                  AND OO.CLAIM_YN = 'N'
+                                                            GROUP BY OO.MBR_ID
+                                                              ) AS MBR_TOTAL_ORDER_AMT
+                                                            , ISNULL
+                                                              (
+                                                                     (SELECT SUM ( OAH.ORDER_COPN_AMT + OAH.ORDER_RESV_AMT + OAH.ORDER_PT_OUT_SCORE )
+                                                                       FROM O_ORDER OO
+                                                                     WITH
+                                                                            (
+                                                                                NOLOCK
+                                                                            )
+                                                                        LEFT JOIN O_ORDER_AMT_HIS OAH
+                                                                     WITH
+                                                                            (
+                                                                                NOLOCK
+                                                                            )
+                                                                            ON OAH.ORDER_NO = OO.ORDER_NO
+                                                                        LEFT JOIN O_ORDER_SEND S
+                                                                            ON S.ORDER_NO = OO.ORDER_NO
+                                                                            AND OO.CLAIM_YN = 'N'
+                                                                      WHERE OO.MBR_ID = A.MBR_ID
+                                                                            AND OO.ORDER_DT > DATEADD(YEAR, 0, DATEADD(MONTH, - 1, DATEADD(MM, DATEDIFF(MM, 0, GETDATE()), 0)))
+                                                                            AND S.ORDER_PACKING_DT IS NOT NULL
+                                                                            AND OO.CLAIM_YN = 'N'
+                                                                        )
+                                                                        , 0
+                                                                    ) AS MBR_DISCOUNT_AMT
+                                                                  ,
+                                                                    (SELECT MAX (ORDER_DT)
+                                                                      FROM O_ORDER WITH(NOLOCK) WHERE MBR_ID = A.MBR_ID ) AS MBR_ORDER_DT
+                                                                     , B.MBR_JOB
+                                                                     , B.MBR_RTL_ADDR + ' ' + B.MBR_RTL_ADDR_DTL AS MBR_RTL_FULL_ADDR
+                                                                     , B.MBR_LIKES
+                                                                     , B.MBR_MARD_STATUS_YN
+                                                                     , CONVERT ( VARCHAR (10), B.MBR_MARD_DT, 120 ) AS MBR_MARD_DT
+                                                                     , dbo.FN_MBR_NEXT_LEV_NM (A.MBR_ID)            AS NEXT_MBR_LEV_NM
+                                                                     , dbo.FN_MBR_NEXT_LEV_AMOT (A.MBR_ID)          AS NEXT_LEV_AMOT
+                                                                     , MC.CS_MBR_ID
+                                                                     , MC.CS_FUNNEL
+                                                                     , MC.CS_TYPE
+                                                                     , MC.CS_QUESTION
+                                                                     , MC.CS_CONSULT
+                                                                     , MC.CS_CALL
+                                                                     , MC.CS_PROCESS
+                                                                  FROM ASW_M_MBR A
+                                                                WITH
+                                                                       (
+                                                                           NOLOCK
+                                                                       )
+                                                                   LEFT OUTER JOIN ASW_M_MBR_IMP B
+                                                                WITH
+                                                                       (
+                                                                           NOLOCK
+                                                                       )
+                                                                       ON A.MBR_ID = B.MBR_ID
+                                                                   LEFT OUTER JOIN ASW_M_MBR_RESV_LIST C
+                                                                WITH
+                                                                       (
+                                                                           NOLOCK
+                                                                       )
+                                                                       ON A.MBR_ID = C.MBR_ID
+                                                                   LEFT OUTER JOIN ASW_M_MBR_LOGIN D
+                                                                WITH
+                                                                       (
+                                                                           NOLOCK
+                                                                       )
+                                                                       ON A.MBR_ID = D.MBR_ID
+                                                                   LEFT OUTER JOIN
+                                                                       (SELECT ROW_NUMBER() OVER( ORDER BY cs_dt DESC ) AS NUM
+                                                                            , *
+                                                                         FROM ASW_M_CS WITH(NOLOCK) )
+                                                                          MC
+                                                                          ON A.MBR_ID = MC.CS_MBR_ID
+                                                                          AND mc.num='1'
+                                                                    WHERE A.MBR_ID = #MBR_ID#
+                                                                      )
+                                                                      UI
+			]]>
+	</select>
+
+	<select id="AmM102DAO.csInfo" parameterClass="string" resultClass="camelMap">
+	SELECT	 CS_NO
+				,ROW_NUMBER() OVER( ORDER BY	CS_NO DESC ) AS NUM
+				,CS_MBR_ID
+				,CA_MBR_ID
+				,(SELECT MBR_NM FROM ASW_M_MBR WITH(NOLOCK) WHERE MBR_ID = CS_MBR_ID) AS CS_MBR_NM
+				,(SELECT ADM_NAME FROM ASW_S_ADM WITH(NOLOCK) WHERE ADM_ID =CA_MBR_ID) AS CA_MBR_NM
+				,CONVERT(VARCHAR(10), CS_DT, 120) AS CS_DT
+				,CS_FUNNEL
+				,(SELECT CS_TYPE_NM FROM ASW_M_CS_FUNNEL WITH(NOLOCK) WHERE CS_TYPE_CD = CS_FUNNEL) AS CS_FUNNEL_NM
+				,CS_TYPE
+				,CS_QUESTION
+				,CS_CONSULT
+				,CS_PROCESS
+	FROM	M_CS WITH(NOLOCK)
+	WHERE	CS_MBR_ID = 'guest'
+	AND		CS_NO = (SELECT MAX(CS_NO) FROM ASW_M_CS WITH(NOLOCK) WHERE CS_MBR_ID = 'guest')
+	</select>
+
+	<select id="AmM102DAO.amM1023L" parameterClass="map" resultClass="camelMap">
+		SELECT * FROM ORDER_INFO_LIST_VIEW OILV WHERE  OILV.MBR_ID =  #MBR_ID#
+		ORDER BY OILV.ORDER_DT DESC
+	</select>
+
+	<select id="AmM102DAO.amM1023SUM" parameterClass="map" resultClass="camelMap">
+		SELECT REPLACE(CONVERT(VARCHAR, CAST (ISNULL(SUM(ODT.DEPOSIT_AMOUNT),0) AS MONEY), 1), '.00', '')+'원' AS DEPOSIT_AMOUNT
+		FROM O_ORDER OOR WITH(NOLOCK)  LEFT JOIN O_DEPOSIT ODT WITH(NOLOCK)   ON ODT.ORDER_NO = OOR.ORDER_NO
+		 LEFT JOIN O_ORDER_SEND S ON S.ORDER_NO = OOR.ORDER_NO AND OOR.CLAIM_YN = 'N'
+    	WHERE OOR.MBR_ID =  #MBR_ID#
+    	AND OOR.CLAIM_YN = 'N'
+		AND S.ORDER_PACKING_DT IS NOT NULL
+		AND ODT.DEPOSIT_FLAG_YNPC = 'Y'
+	</select>
+
+	<select id="AmM102DAO.amM1026L" parameterClass="map" resultClass="camelMap">
+		SELECT A.BOARD_SEQ
+       		   , A.BOARD_CATE_SEQ
+       		   , B.BOARD_CATE_NM
+       		   , A.BOARD_TITLE
+       		   , A.REG_ID
+       		   , CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+			   , (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '완료' ELSE '대기' END) AS BOARD_STATE
+		FROM ASW_BOARD_BASE A WITH(NOLOCK)
+			INNER JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+	   			AND B.BOARD_CATE_USE_YN = 'Y'
+			LEFT OUTER JOIN ASW_BOARD_TP_REPLY C WITH(NOLOCK)
+				ON C.BOARD_SEQ = A.BOARD_SEQ
+		WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.REG_ID = #MBR_ID#
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+		<isEqual property="STATE_YN" prepend="AND" compareValue="Y">
+			C.BOARD_REPLY IS NOT NULL
+		</isEqual>
+		<isEqual property="STATE_YN" prepend="AND" compareValue="N">
+			C.BOARD_REPLY is null
+		</isEqual>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+		       <isNotEmpty  property="TXT_TO_DT" >
+		         	A.REG_DT between #TXT_FROM_DT# AND DATEADD(DAY, 1, #TXT_TO_DT#)
+		      </isNotEmpty>
+		</isNotEmpty>
+
+	  	<isNotEmpty  property="BOARD_CATE_SEQ" prepend="AND">
+			A.BOARD_CATE_SEQ = #BOARD_CATE_SEQ#
+		</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			A.BOARD_CONT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			(A.BOARD_TITLE like '%' + #SEARCH_TXT# +'%' OR A.BOARD_CONT like '%' + #SEARCH_TXT# +'%')
+		</isEqual>
+		ORDER BY A.BOARD_SEQ DESC
+	</select>
+
+	<select id="AmM102DAO.amM1026TC"  parameterClass="map" resultClass="int">
+		SELECT count(*)
+			FROM ASW_BOARD_BASE A WITH(NOLOCK)
+				INNER JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+	       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+	       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+		   			AND B.BOARD_CATE_USE_YN = 'Y'
+				LEFT OUTER JOIN ASW_BOARD_TP_REPLY C WITH(NOLOCK)
+					ON C.BOARD_SEQ = A.BOARD_SEQ
+			WHERE A.BOARD_STATUS_YN = 'Y'
+		AND A.REG_ID = #MBR_ID#
+		AND A.BOARD_MST_CD = #BOARD_MST_CD#
+	</select>
+
+	<select id="AmM102DAO.amM1026NC"  parameterClass="map" resultClass="int">
+		SELECT count(*)
+			FROM ASW_BOARD_BASE A WITH(NOLOCK)
+				INNER JOIN ASW_BOARD_CATE B WITH(NOLOCK)
+	       			ON B.BOARD_MST_CD = A.BOARD_MST_CD
+	       			AND B.BOARD_CATE_SEQ = A.BOARD_CATE_SEQ
+		   			AND B.BOARD_CATE_USE_YN = 'Y'
+				LEFT OUTER JOIN ASW_BOARD_TP_REPLY C WITH(NOLOCK)
+					ON C.BOARD_SEQ = A.BOARD_SEQ
+			WHERE A.BOARD_STATUS_YN = 'Y'
+			AND A.REG_ID = #MBR_ID#
+			AND A.BOARD_MST_CD = #BOARD_MST_CD#
+			AND C.BOARD_REPLY IS NULL
+	</select>
+
+	<select id="AmM102DAO.amM1029TC"  parameterClass="map" resultClass="int">
+		SELECT count(*) FROM ASW_M_CS WITH(NOLOCK)
+		WHERE  CS_MBR_ID = #MBR_ID#
+	</select>
+
+	<select id="AmM102DAO.amM1029NC"  parameterClass="map" resultClass="int">
+		SELECT count(*) FROM ASW_M_CS WITH(NOLOCK)
+		WHERE CS_MBR_ID = #MBR_ID#
+		AND CS_CONSULT is null
+	</select>
+
+	<select id="AmM102DAO.selectCsFunnel" resultClass="camelMap">
+	SELECT	 CS_TYPE_CD
+				,CS_TYPE_NM
+	FROM	M_CS_FUNNEL WITH(NOLOCK)
+	WHERE	CS_TYPE_USE_YN = 'Y'
+	ORDER	BY CS_TYPE_SORT ASC
+	</select>
+
+	<!-- 상담유입경로 목록 (라디오버튼 생성용)  -->
+	<select id="AmM102DAO.selectCsType" resultClass="camelMap">
+	SELECT	 CS_TYPE_CD
+				,CS_TYPE_NM
+	FROM	M_CS_TYPE WITH(NOLOCK)
+	WHERE	CS_TYPE_USE_YN = 'Y'
+	ORDER	BY CS_TYPE_SORT ASC
+	</select>
+
+	<select id="AmM102DAO.amM1025usedCpn" parameterClass="map" resultClass="camelMap">
+	  SELECT ROW_NUMBER() OVER(ORDER BY MST.COPN_ISU_DT DESC) AS ROW_NUM
+         ,MST.ORDER_NO
+		 ,MST.COPN_ISU_CD
+		 ,MST.COPN_CD
+		 ,MST.COPN_NM
+		 ,MST.COPN_TP_PDMC_NM
+		 ,MST.COPN_DT
+		 ,CASE WHEN MST.ORDER_NO is null THEN '기간만료' ELSE MST.COPN_STATE END as COPN_STATE
+		 ,MST.COPN_USE_END_DT
+		 ,CONVERT(VARCHAR(10), MST.COPN_ISU_DT, 120) as COPN_ISU_DT
+		 ,MST.COPN_DIS_VAL
+		 ,MST.COPN_DIS_TP_RAP_NM
+        , ISNULL(CONVERT(VARCHAR(10), MST.ORDER_DT, 120),'기간만료') as ORDER_DT
+		  FROM (
+					  SELECT
+
+							OCU.ORDER_NO     ,
+					        MCL.COPN_ISU_CD     ,
+					        ECN.COPN_CD AS COPN_CD ,
+					        ECN.COPN_NM AS COPN_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_TP_PDMC = 'P'                THEN '상품'
+					            WHEN ECN.COPN_TP_PDMC = 'D'                THEN '다운로드'
+					            WHEN ECN.COPN_TP_PDMC = 'M'                THEN '회원'
+					            WHEN ECN.COPN_TP_PDMC = 'C'                THEN 'CS전용'
+					            ELSE ''
+					        END        ) AS COPN_TP_PDMC_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_DIS_TP_RAP = 'R'                THEN '비율'
+					            WHEN ECN.COPN_DIS_TP_RAP = 'A'                THEN '금액'
+					            WHEN ECN.COPN_DIS_TP_RAP = 'P'                THEN '상품증정'
+					            ELSE ''
+					        END        ) AS COPN_DIS_TP_RAP_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'    THEN  '무제한'
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'    THEN CONVERT(VARCHAR(10),
+				                ISNULL(MCL.COPN_ISU_DT,
+				                ECN.COPN_USE_START_DT),
+				                120) + ' ~ ' + CONVERT(VARCHAR(10),
+				                ISNULL(MCL.COPN_END_DT,
+				                ECN.COPN_USE_END_DT),
+				                120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'    THEN CONVERT(VARCHAR(10),
+					            DATEADD(Month,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'    THEN CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					            ELSE CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_AFTER_DAY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					        END        ) AS COPN_DT ,
+					        (            CASE
+					            WHEN OCU.ORDER_NO IS NOT NULL                THEN '사용'
+					            WHEN OCU.ORDER_NO is null                THEN '미사용'
+					        END        ) AS COPN_STATE ,
+					        CONVERT(VARCHAR(10),
+					        ECN.COPN_USE_START_DT,
+					        120) AS COPN_USE_START_DT ,
+					        CASE
+					            WHEN MCL.COPN_END_DT IS NOT NULL THEN CONVERT(VARCHAR(10),
+					            MCL.COPN_END_DT,
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'      THEN CONVERT(VARCHAR(10),
+					            GETDATE(),
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'      THEN CONVERT(VARCHAR(10),
+					            ECN.COPN_USE_END_DT,
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'      THEN CONVERT(VARCHAR(10),
+					            DATEADD(Month,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'      THEN CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					            ELSE CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_AFTER_DAY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					        END as COPN_USE_END_DT,
+					        MCL.COPN_ISU_DT,
+							OOR.ORDER_DT,
+								REPLACE(CONVERT(VARCHAR, CAST((ECN.COPN_DIS_VAL) AS MONEY), 1), '.00', '')+
+										 (CASE
+										 	WHEN ECN.COPN_DIS_TP_RAP = 'R' THEN ' %'
+											WHEN ECN.COPN_DIS_TP_RAP = 'A' THEN ' 원'
+											ELSE ''
+										  END) AS COPN_DIS_VAL
+					    FROM
+					        ASW_M_MBR_COPN_LIST MCL
+					    LEFT JOIN
+					        E_COPN ECN
+					            ON MCL.COPN_CD = ECN.COPN_CD
+					    LEFT JOIN
+					        O_COUPON_USE OCU
+					            ON MCL.COPN_ISU_CD = OCU.COPN_ISU_CD
+					    LEFT JOIN
+					        O_ORDER OOR
+					            ON OOR.ORDER_NO = OCU.ORDER_NO
+					    WHERE
+					        MCL.MBR_ID =  #MBR_ID#
+							) MST
+						WHERE MST.ORDER_NO IS NOT NULL OR CONVERT(VARCHAR(10),GETDATE(),120) > CONVERT(VARCHAR(10),MST.COPN_USE_END_DT,120)
+					    ORDER BY
+					    	MST.COPN_STATE DESC, MST.COPN_ISU_DT DESC
+
+	</select>
+
+	<select id="AmM102DAO.amM1025unUsedCpn" parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+	   SELECT ROW_NUMBER() OVER(ORDER BY MST.COPN_ISU_DT DESC) AS ROW_NUM
+         ,MST.ORDER_NO
+		 ,MST.COPN_ISU_CD
+		 ,MST.COPN_CD
+		 ,MST.COPN_NM
+		 ,MST.COPN_TP_PDMC_NM
+		 ,MST.COPN_DT
+		 ,MST.COPN_STATE
+		 ,MST.COPN_USE_END_DT
+		 ,CONVERT(VARCHAR(10), MST.COPN_ISU_DT, 120) as COPN_ISU_DT
+		 ,MST.COPN_DIS_VAL
+		 ,MST.COPN_DIS_TP_RAP_NM
+		  FROM (
+					  SELECT
+
+							OCU.ORDER_NO     ,
+					        MCL.COPN_ISU_CD     ,
+					        ECN.COPN_CD AS COPN_CD ,
+					        ECN.COPN_NM AS COPN_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_TP_PDMC = 'P'                THEN '상품'
+					            WHEN ECN.COPN_TP_PDMC = 'D'                THEN '다운로드'
+					            WHEN ECN.COPN_TP_PDMC = 'M'                THEN '회원'
+					            WHEN ECN.COPN_TP_PDMC = 'C'                THEN 'CS전용'
+					            ELSE ''
+					        END        ) AS COPN_TP_PDMC_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_DIS_TP_RAP = 'R'                THEN '비율'
+					            WHEN ECN.COPN_DIS_TP_RAP = 'A'                THEN '금액'
+					            WHEN ECN.COPN_DIS_TP_RAP = 'P'                THEN '상품증정'
+					            ELSE ''
+					        END        ) AS COPN_DIS_TP_RAP_NM ,
+					        (            CASE
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'    THEN  '무제한'
+					             WHEN ECN.COPN_LIMIT_TP_APMD = 'P'    THEN CONVERT(VARCHAR(10),
+				                ISNULL(MCL.COPN_ISU_DT,
+				                ECN.COPN_USE_START_DT),
+				                120) + ' ~ ' + CONVERT(VARCHAR(10),ISNULL(MCL.COPN_END_DT, ECN.COPN_USE_END_DT),
+				                120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'    THEN CONVERT(VARCHAR(10),
+					            DATEADD(Month,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'    THEN CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					            ELSE CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_AFTER_DAY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)+' 까지'
+					        END        ) AS COPN_DT ,
+					        (            CASE
+					            WHEN OCU.ORDER_NO IS NOT NULL                THEN '사용'
+					            WHEN OCU.ORDER_NO is null                THEN '미사용'
+					        END        ) AS COPN_STATE ,
+					        CONVERT(VARCHAR(10),
+					        ECN.COPN_USE_START_DT,
+					        120) AS COPN_USE_START_DT ,
+					        CASE
+					            WHEN MCL.COPN_END_DT IS NOT NULL THEN CONVERT(VARCHAR(10),
+					            MCL.COPN_END_DT,
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'      THEN CONVERT(VARCHAR(10),
+					            GETDATE(),
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'      THEN CONVERT(VARCHAR(10),
+					            ECN.COPN_USE_END_DT,
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'      THEN CONVERT(VARCHAR(10),
+					            DATEADD(Month,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'      THEN CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_VALIDITY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					            ELSE CONVERT(VARCHAR(10),
+					            DATEADD(Day,
+					            ISNULL(ECN.COPN_AFTER_DAY,
+					            0),
+					            MCL.COPN_ISU_DT),
+					            120)
+					        END as COPN_USE_END_DT,
+					        MCL.COPN_ISU_DT,
+							OOR.ORDER_DT,
+								REPLACE(CONVERT(VARCHAR, CAST((ECN.COPN_DIS_VAL) AS MONEY), 1), '.00', '')+
+										 (CASE
+										 	WHEN ECN.COPN_DIS_TP_RAP = 'R' THEN ' %'
+											WHEN ECN.COPN_DIS_TP_RAP = 'A' THEN ' 원'
+											ELSE ''
+										  END) AS COPN_DIS_VAL
+					    FROM
+					        ASW_M_MBR_COPN_LIST MCL
+					    LEFT JOIN
+					        E_COPN ECN
+					            ON MCL.COPN_CD = ECN.COPN_CD
+					    LEFT JOIN
+					        O_COUPON_USE OCU
+					            ON MCL.COPN_ISU_CD = OCU.COPN_ISU_CD
+					    LEFT JOIN
+					        O_ORDER OOR
+					            ON OOR.ORDER_NO = OCU.ORDER_NO
+					    WHERE
+					        MCL.MBR_ID =  #MBR_ID#
+							) MST
+						WHERE MST.ORDER_NO IS  NULL
+        				  AND CONVERT(VARCHAR(10), MST.COPN_USE_END_DT, 120) >= CONVERT(VARCHAR(10), GETDATE(), 120)
+					    ORDER BY
+					        MST.COPN_ISU_DT DESC
+
+ ]]>
+	</select>
+
+	<select id="AmM102DAO.totCopnDisAmt"  parameterClass="map" resultClass="String">
+		SELECT REPLACE(CONVERT(VARCHAR, CAST (ISNULL(SUM(ODH.ORDER_COPN_AMT),0) AS MONEY), 1), '.00', '')+' 원' AS ORDER_COPN_AMT
+		  FROM O_ORDER_AMT_HIS ODH WITH(NOLOCK)
+		   INNER JOIN
+		       (SELECT ORDER_NO
+		         FROM O_ORDER_AMT_HIS WITH(NOLOCK)
+		        WHERE ORDER_NO IN
+		              (SELECT ORDER_NO
+		                FROM O_ORDER WITH(NOLOCK)
+		               WHERE	MBR_ID = #MBR_ID#
+		                     AND CLAIM_YN = 'N'
+		              )
+		        GROUP BY ORDER_NO
+		       ) B
+		       ON ODH.ORDER_NO = B.ORDER_NO
+	</select>
+
+	<select id="AmM102DAO.userInfo" parameterClass="string" resultClass="camelMap">
+		SELECT MBR_NM
+				   , MBR_SCORE
+				   , MBR_REC
+				   , MBR_JOIN_DT
+		FROM ASW_M_MBR WITH(NOLOCK)
+		WHERE MBR_ID = #MBR_ID#
+	</select>
+
+	<select id="AmM102DAO.mCsList" parameterClass="map" resultClass="camelMap">
+		SELECT
+			MC.CA_MBR_ID,
+			CONVERT (VARCHAR(19), MC.CS_DT, 121) AS CS_DT,
+			ISNULL((
+				SELECT
+					CS_TYPE_NM
+				FROM
+					M_CS_FUNNEL
+				WHERE
+					CS_TYPE_CD = MC.CS_FUNNEL
+			), '') AS FUNNEL_NM,
+			ISNULL((
+				SELECT
+					CS_TYPE_NM
+				FROM
+					M_CS_TYPE
+				WHERE
+					CS_TYPE_CD = MC.CS_TYPE
+			), '') AS CS_TYPE_NM,
+			<![CDATA[MC.CA_NON_MBR_NM + '<br />' + MC.CA_NON_MBR_TEL AS CA_NON_MBR,]]>
+			MC.CS_QUESTION,
+			MC.CS_CONSULT,
+			MC.CA_NON_MBR_NM
+		FROM
+			M_CS MC
+		WHERE
+			MC.CA_NON_MBR_TEL = #CALLER#
+		ORDER BY
+			MC.CS_DT DESC
+	</select>
+
+	<select id="AmM102DAO.mCsGuestList" resultClass="camelMap">
+		SELECT
+	        MC.CA_MBR_ID,
+	        CONVERT (VARCHAR(19),
+	        MC.CS_DT,
+	        121) AS CS_DT,
+	        ISNULL((     SELECT
+	            CS_TYPE_NM
+	        FROM
+	            ASW_M_CS_FUNNEL
+	        WHERE
+	            CS_TYPE_CD = MC.CS_FUNNEL    ),
+	        '') AS FUNNEL_NM,
+	        ISNULL((     SELECT
+	            CS_TYPE_NM
+	        FROM
+	            ASW_M_CS_TYPE
+	        WHERE
+	            CS_TYPE_CD = MC.CS_TYPE    ),
+	        '') AS CS_TYPE_NM,
+	        <![CDATA[MC.CA_NON_MBR_NM + '<br />' + MC.CA_NON_MBR_TEL AS CA_NON_MBR,]]>
+	        MC.CS_QUESTION,
+	        MC.CS_CONSULT,
+	        MC.CA_NON_MBR_NM
+	    FROM
+	        ASW_M_CS MC
+	    WHERE (MC.CS_MBR_ID IS NULL OR MC.CS_MBR_ID = 'guest')
+	    AND (MC.CA_NON_MBR_TEL IS NULL OR MC.CA_NON_MBR_TEL = '')
+	    ORDER BY
+	        MC.CS_DT DESC
+	</select>
+
+</sqlMap>

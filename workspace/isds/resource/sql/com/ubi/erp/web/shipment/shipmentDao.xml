@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.shipment.dao.ShipmentDao">
+	<resultMap type="ShipmentVO" id="ShipmentMap" />
+	<select id="selShipmentR" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selShipmentR */
+	         B.CO_CD /* 법인 */
+	       , A.CUST_CD /* 거래처코드 */
+	       , E.CUST_NM /* 거래처명 */
+	       , A.FLD_CD /* 현장코드 */
+	       , H.FLD_NM /* 현장명 */
+	       , A.TRANS_NO /* 운송번호 */
+	       , Z.TCUST_CD /* 운송사-거래처 */
+	       , TCUST_NM = Z1.CUST_NM /* 운송사-거래처명 */
+	       , CAR_NO = ISNULL(Z.CAR_NO,Z.RCAR_NO) /* 차량번호 */
+	       , Z.DRV_NM /* 운전기사 */
+	       , A.OUT_QTY /* 수량 */
+	       , WEIGHT_TOT = ISNULL(A.OUT_QTY,0) * ISNULL(D1.WEIGHT,0) /* 중량 */
+	       , OUT_DT = SUBSTRING(CONVERT(CHAR, A.OUT_DT, 121),0,11) /* 출하일자[YYYY-MM-DD] */
+	       , A.FAC_CD /* 출하공장 */
+	       , Y3.SAL_BC /* 수주구분 */
+	       , SAL_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD538' AND BASE_CD = Y3.SAL_BC) /* 수주구분명 */
+	       , A.CUST_CD2 /* 매출거래처코드 */
+	       , CUST_NM2= F.CUST_NM /* 매출거래처명 */
+	       , A.ITM_ID /* 품목id */
+	       , C.ITM_CD /* 품목코드 */
+	       , C.ITM_NM /* 품목명 */
+	       , SPEC = ISNULL(C.SPEC, D.PC_BNO) /* 품목-규격 */
+	       , A.OUT_UP /* 단가 */
+	       , A.OUT_AMT /* 출고-금액 */
+	       , WEIGHT_UP = CASE ISNULL(A.OUT_QTY,0) * ISNULL(D1.WEIGHT,0) WHEN 0 THEN 0 ELSE A.OUT_AMT / (A.OUT_QTY * ISNULL(D1.WEIGHT,0)) END /* 출고-단가(톤당) */
+	       , A.M_UP /* 출고-M당단가 */
+	       , A.JOINT_UP /* 출고-joint당 단가 */
+	       , A.PLATE_UP /* 출고-보강판단가 */
+	       , A.OUT_TAMT /* 합계 */
+	       , NM = (SELECT NM FROM SCU100 WHERE REG_ID = Y3.SO_RID ) /* 담당자 */
+	       , C.GRP1_CD /* 대분류코드 */
+	       , GRP1_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350310' AND B.SUB_CD = C.GRP1_CD) /* 대분류명 */
+	       , C.GRP2_CD /* 중분류코드 */
+	       , GRP2_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350320' AND B.SUB_CD = C.GRP2_CD) /* 중분류명 */
+	       , C.GRP3_CD /* 소분류코드 */
+	       , GRP3_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350330' AND B.SUB_CD = C.GRP3_CD) /* 소분류명 */
+	       , A.TCOLOR /* 타일-색상 */
+	       , TCOLOR_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD530' AND BASE_CD = A.TCOLOR)
+	       , A.TSIZE /* 타일-사이즈 */
+	       , TSIZE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD526' AND BASE_CD = A.TSIZE)
+	       , A.TGRADE /* 타일-등급 */
+	       , TGRADE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD522' AND BASE_CD = A.TGRADE)
+	       , M_TIME = CONVERT(VARCHAR, Z.CDT,8) /* 출발시간 */
+	       , A.WH_CD /* 출하창고 */
+	       , WH_NM = (SELECT WH_NM FROM BCW100 WHERE USE_YN = '1' AND FAC_CD <> '500' AND WH_CD = A.WH_CD) /* 출하창고명 */
+	       , A.OUT_BC /* 출고유형 */
+	       , OUT_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'LE200' AND BASE_CD = A.OUT_BC) /* 출고유형명 */
+	       , A.OUT_NO /* 출고번호 */
+	       , A.OUT_SQ /* 순번 */
+	       , A.UM_BC /* 단위 */
+	       , A.MNG_NO /* LOT */
+	       , A.ENT_BC /* 입력경로 */
+	       , MOV_NO = (SELECT Z.MOV_NO FROM LEB120 Z WHERE Z.OUT_NO = A.OUT_NO AND Z.OUT_SQ = A.OUT_SQ) /* 출하이동번호 */
+	       , PART_CODE = NULL /* 거래처품번 */
+	       , D.MODEL_CD /* 차종 */
+	       , C.ITM_BC /* 구분 */
+	       , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM100' AND BASE_CD = C.ITM_BC) /* 품목구분명 */
+	       , D.SPEC1 /* color */
+	       , Z.RCAR_NO /* 차량번호2 */
+	       , MNM = U.NM /* 등록자 */
+	       , MDT = Z.CDT /* 등록일 */
+	       , DRV_COUNT = CASE WHEN #{facCd} <> '750' 
+	                          THEN (SELECT COUNT(*) FROM LEM150 S WHERE S.MOV_NO = Y1.MOV_NO)
+	                          ELSE '' END /* count */
+	       , NO = ROW_NUMBER() OVER(ORDER BY A.OUT_NO, A.OUT_DT, A.TRANS_NO) /* NO */
+	    FROM LEB100 A 
+		     LEFT JOIN BCC300 B ON A.FAC_CD = B.FAC_CD
+			 LEFT JOIN DMA100 C ON A.ITM_ID = C.ITM_ID
+			 LEFT JOIN DMA110 D ON A.ITM_ID = D.ITM_ID
+	         LEFT JOIN DMA210 D1 ON A.ITM_ID = D1.ITM_ID AND A.OUT_BS = D1.BS_CD
+	         LEFT OUTER JOIN LEB200 Z ON A.TRANS_NO = Z.TRANS_NO  
+	         LEFT OUTER JOIN BCV100 Z1 ON Z.TCUST_CD = Z1.CUST_CD  
+			 LEFT JOIN BCV100 E ON A.CUST_CD = E.CUST_CD
+	         LEFT JOIN BCV100 F ON A.CUST_CD2 = F.CUST_CD
+	         LEFT JOIN BCV200 H ON A.FLD_CD = H.FLD_CD
+			 LEFT JOIN SCU100 U ON U.REG_ID = A.MID
+	         LEFT JOIN LEB120 Y ON A.OUT_NO = Y.OUT_NO AND A.OUT_SQ = Y.OUT_SQ
+	         LEFT JOIN LEM150 Y1 ON Y.MOV_NO = Y1.MOV_NO AND Y.MOV_SQ = Y1.MOV_SQ
+	         LEFT JOIN SDB150 Y2 ON Y1.SO_NO = Y2.SO_NO AND Y1.SO_SQ = Y2.SO_SQ
+	         LEFT JOIN SDB100 Y3 ON Y2.SO_NO = Y3.SO_NO
+		   --LEFT OUTER JOIN SDV100 M ON A.ITM_ID = M.ITM_ID AND A.CUST_CD = M.CUST_CD
+	   WHERE A.OUT_BC IN ('LE200730', 'LE200650', 'LE200400', 'LE200850')	/* 출하이동만출하로본다 */
+	     AND A.FAC_CD = #{facCd} /* 출하공장 */
+	     AND A.OUT_DT BETWEEN #{outDtFr} AND #{outDtTo} /* 출하기간(from~to) */
+	     ]]>
+	     <if test="custCd != '' and custCd != null">
+	     AND (A.CUST_CD = #{custCd} OR A.CUST_CD2 = #{custCd}) /* 납품거래처 */
+	     </if>
+	     <if test="whCd != '' and whCd != null">
+	     AND A.WH_CD = #{whCd}	/* 출하창고 */
+	     </if>
+	     <if test="regId != '' and regId != null">
+		 AND Y3.SO_RID = #{regId} /* 사용자등록 */
+		 </if>
+		 <if test="deptCd != '' and deptCd != null">
+		 AND Y3.SO_DEPT = #{deptCd} /* 부서코드 */
+		 </if>
+		 <if test="salBc != '' and salBc != null">
+		 AND Y3.SAL_BC IN (#{salBc}) /* 수주구분 */
+		 </if>
+		 <if test="fldCd != '' and fldCd != null">
+		 AND Y3.FLD_CD = #{fldCd} /* 현장코드 */
+		 </if>
+		 <if test="itmCd != '' and itmCd != null">
+		 AND UPPER(C.ITM_CD) LIKE '%' + UPPER(#{itmCd}) + '%' /* 품목코드 */
+		 </if>
+		 <if test="itmNm != '' and itmNm != null">
+		 AND UPPER(C.ITM_NM) LIKE '%' + UPPER(#{itmNm}) + '%' /* 품목명 */
+		 </if>
+		 <if test="grp1Cd != '' and grp1Cd != null">
+		 AND C.GRP1_CD LIKE '%' + #{grp1Cd} + '%' /* 대분류 */
+		 </if>
+		 <if test="grp2Cd != '' and grp2Cd != null">
+		 AND C.GRP2_CD LIKE '%' + #{grp2Cd} + '%' /* 중분류 */
+		 </if>
+		 <if test="grp3Cd != '' and grp3Cd != null">
+		 AND C.GRP3_CD LIKE '%' + #{grp3Cd} + '%' /* 소분류 */
+		 </if>
+		 <if test="orderBy != '' and orderBy != null">
+		 ORDER BY ${orderBy}
+		 </if>
+	</select>
+
+
+	<!-- 
+		설명 : 출하공장에서 레미콘을 선택 시에 출력물을 조회하기 위한 프로시저
+		파라미터 : 운송번호, 공장코드, 현장코드, 차량번호
+	 -->
+	<select id="selShipmentRPrint" statementType="CALLABLE" parameterType="ShipmentVO"  resultMap="ShipmentMap" resultType="ResultSet">
+	<![CDATA[
+	  	{call LEB150R_Print(#{transNo,jdbcType=VARCHAR},#{facCd,jdbcType=VARCHAR},#{fldCd,jdbcType=VARCHAR},#{carNo,jdbcType=VARCHAR})}
+	]]>
+	</select>
+	
+	
+	<!-- 
+		설명 : 출하처리 상단 조회
+		, MOV_NO = ( SELECT MAX(Q.MOV_NO)
+			           FROM	LEM150 Q
+			           JOIN LEM100 Z ON Q.MOV_NO = Z.MOV_NO
+			          WHERE Q.REQ_NO = X.REQ_NO
+			            AND Q.REQ_SQ = X.REQ_SQ
+			            AND Q.ITM_ID = X.ITM_ID) /* 출하이동번호 */
+	 -->
+	<select id="selShipmentProcessR" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selShipmentProcessR */
+	         X.*
+		FROM (SELECT SO_DT = SUBSTRING(CONVERT(CHAR, B.SO_DT, 121),0,11) /* 요청일자 */
+		           , SO_FAC = (SELECT TOP 1 FAC_CD FROM BCC300 WHERE BS_CD = B.SAL_BS) /* 수주공장 */
+				   , B.SAL_BS /* 매출사업장 */
+				   , B.CURY_BC /* 수주통화 */
+				   , DLV_DT = SUBSTRING(CONVERT(CHAR, Y.REQ_DT, 121),0,11) /* 요청일자 */
+				   , B.CUST_CD /* 거래처코드 */
+				   , C.CUST_NM /* 거래처명 */
+				   , B.CUST_CD2 /* 매출거래처 */
+				   , CUST_NM2 = F.CUST_NM /* 매출거래처명 */
+				   , B.FLD_CD /* 현장코드*/
+				   , H.FLD_NM /* 현장명 */ 
+				   , X.ITM_ID /* 품목ID */
+				   , D.ITM_CD /* 품목코드 */
+				   , D.ITM_NM /* 품목명 */
+				   , D.SPEC /* 품목규격 */
+				   , D.ITM_BC /* 품목구분 */
+				   , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM100' AND BASE_CD = D.ITM_BC) /* 품목구분명 */
+				   , STD_UM = D.UM_BC /* 품목단위 */
+				   , STD_UM_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM150' AND BASE_CD = D.UM_BC) /* 품목단위명 */
+				   , A.UM_BC /* 기준단위 */
+				   , SO_QTY  = X.REQ_QTY /* 요청수량 */
+				   , REM_QTY = ISNULL(X.REQ_QTY,0) - ( SELECT ISNULL(SUM(Q.MOV_QTY),0)
+										                  FROM LEM150 Q
+										                  JOIN LEM100 Z ON Q.MOV_NO = Z.MOV_NO
+									                     WHERE Q.REQ_NO = X.REQ_NO
+														   AND Q.REQ_SQ = X.REQ_SQ
+														   AND Q.ITM_ID = X.ITM_ID) /* 출하잔량 */
+				   , OUT_QTY = ( SELECT ISNULL(SUM(Q.MOV_QTY),0)
+						           FROM	LEM150 Q
+						           JOIN LEM100 Z ON Q.MOV_NO = Z.MOV_NO
+						          WHERE Q.REQ_NO = X.REQ_NO
+						            AND Q.REQ_SQ = X.REQ_SQ
+						            AND Q.ITM_ID = X.ITM_ID) /* 출하수량 */
+				   , OUT_QTY_INPUT = 6 /* 출하수량(입력용) : 20180713 ryul : 6으로 초기값 불러오도록 수정*/
+				   , WEIGHT = ( SELECT COUNT(*)
+							      FROM LEM150 X1 
+								  JOIN LEM100 Y ON X1.MOV_NO = Y.MOV_NO
+							     WHERE 1=1
+							       AND X1.SO_NO = A.SO_NO
+								   AND X1.SO_SQ = A.SO_SQ
+								   AND X1.REQ_NO = X.REQ_NO
+								   AND X1.REQ_SQ = X.REQ_SQ	
+								   AND Y.OUT_DT BETWEEN #{reqDtFr} AND #{reqDtTo}) /* 회전수 */
+				    , OUT_UP  = ISNULL(A.SO_UP,0) /* 출고단가 */
+				    , OUT_AMT = ISNULL(X.REQ_AMT,0) /* 금액 */
+				    , A.SO_VAT /* 부가세 */
+				    , TOT_WEIGHT = 0 /* 총증량 */
+				    , X.DLV_TEL /* 담당자 연락처 */
+				    , X.RMKS /* 비고 */
+				    , D.GRP1_CD /* 대분류코드 */
+				    , GRP1_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350310' AND B.SUB_CD = D.GRP1_CD) /* 대분류명 */
+				    , D.GRP2_CD /* 중분류코드 */
+			        , GRP2_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350320' AND B.SUB_CD = D.GRP2_CD) /* 중분류명 */
+				    , D.GRP3_CD /* 소분류코드 */
+				    , GRP3_NM = (SELECT  B.SUB_NM FROM DMG300 A JOIN DMG150 B ON A.GRP_CD = B.GRP_CD WHERE A.MNG_BC = 'DM350330' AND B.SUB_CD = D.GRP3_CD) /* 소분류명 */
+				    , A.TCOLOR /* 색상 */
+				    , A.TSIZE /* 사이즈 */
+				    , A.TGRADE /* 등급 */
+				    , SO_NM = G.NM /* 담당자 */
+				    , A.SO_NO /* 수주번호 */
+				    , A.SO_SQ /* 수주순번 */
+					, A.CID /* 생성자 */
+					, QTY = 0.0 /* 처리수량 */
+					, A.STAT_BC /* 상태구분 */
+					, STAT_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD201' AND BASE_CD = A.STAT_BC) /* 품목단위명 */
+					, A.CDT /* 생성일 */
+					, A.MID /* 수정자 */
+					, A.MDT /* 수정일 */
+				    , E.MODEL_CD /* 차종코드 */
+				    , E.SPEC1 /* 규격1 */
+				    , X.REQ_NO /* 출하의뢰번호 */
+					, X.REQ_SQ /* 출하의뢰순번 */
+					, B.SAL_BC /* 수주번호 */
+					, MOV_UP = (SELECT SO_UP FROM SDB150 WHERE SO_NO = A.SO_NO AND SO_SQ = A.SO_SQ) /* 이동단가 */ 
+			     FROM SDB150 A
+				 JOIN SDB100 B ON A.SO_NO = B.SO_NO
+				 JOIN BCV100 C ON B.CUST_CD = C.CUST_CD
+			     JOIN BCV100 F ON B.CUST_CD2 = F.CUST_CD
+				 JOIN SDC150 X ON A.SO_NO = X.SO_NO AND A.SO_SQ = X.SO_SQ
+				 JOIN SDC100 Y ON X.REQ_NO = Y.REQ_NO
+				 JOIN DMA100 D ON X.ITM_ID = D.ITM_ID
+				 LEFT JOIN DMA110 E ON A.ITM_ID = E.ITM_ID
+			     LEFT JOIN DMA210 Z ON A.ITM_ID = Z.ITM_ID AND A.SAL_BS = Z.BS_CD 
+				 LEFT JOIN SCU100 G ON B.SO_RID = G.REG_ID
+			     LEFT JOIN BCV200 H ON B.FLD_CD = H.FLD_CD
+			    WHERE Y.REQ_DT BETWEEN #{reqDtFr} AND #{reqDtTo}
+			     ]]>
+			     <if test="bsCd != '' and bsCd != null">
+			     AND Y.SAL_BS = #{bsCd} /* 출고사업장:필수 */
+			     </if>
+			     <if test="fldCd != '' and fldCd != null">
+			     AND B.FLD_CD = #{fldCd} /* 현장코드 */
+			     </if>
+			     <if test="custCd != '' and custCd != null">
+				 AND C.CUST_CD = #{custCd} /* 거래처코드:필수 */
+				 </if>
+				 <![CDATA[
+			) X
+		--ORDER BY CASE WHEN X.STAT_BC < 'SD201500' THEN 1 ELSE 2 END, X.CUST_CD, X.ITM_CD
+		]]>
+	</select>
+	
+	
+	
+	<!-- 
+		설명 : 출하처리 하단 조회
+	 -->
+	<select id="selShipmentProcessDetailR" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selShipmentProcessR */
+	         OUT_DT = SUBSTRING(CONVERT(CHAR, Y.OUT_DT, 121),0,11) /* 실출하일자 */
+	       , A.MOV_SQ /* 순번 */
+	 	   , A.ITM_ID /* 품목id */
+	 	   , B.ITM_CD /* 품목코드 */
+	 	   , B.ITM_NM /* 품목명 */
+	 	   , B.SPEC /* 품목규격 */
+	 	   , A.UM_BC /* 품목단위 */
+	 	   , UM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM150' AND BASE_CD = A.UM_BC) /* 품목단위명 */
+	 	   , B.ITM_BC /* 품목구분 */
+	 	   , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM100' AND BASE_CD = B.ITM_BC) /* 품목구분명 */
+	 	   , A.MOV_QTY /* 수량 */
+	 	   , A.MOV_UP /* 단가 */
+	 	   , A.MOV_AMT /* 금액 */
+	 	   , WEIGHT = A.MOV_QTY * Z.WEIGHT /* 중량 */
+	 	   , A.TCOLOR /* 색상 */
+	 	   , TCOLOR_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD530' AND BASE_CD = A.TCOLOR)
+	 	   , A.TSIZE /* 사이즈 */
+	 	   , TSIZE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD526' AND BASE_CD = A.TSIZE)
+	 	   , A.TGRADE /* 등급 */
+	 	   , TGRADE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD522' AND BASE_CD = A.TGRADE)
+	 	   , B.GRP1_CD /* 대분류코드 */
+	 	   , GRP1_NM = (SELECT  Y.SUB_NM FROM DMG300 A JOIN DMG150 Y ON A.GRP_CD = Y.GRP_CD WHERE A.MNG_BC = 'DM350310' AND Y.SUB_CD = B.GRP1_CD) /* 대분류명 */
+	 	   , B.GRP2_CD /* 중분류코드 */
+	 	   , GRP2_NM = (SELECT  Y.SUB_NM FROM DMG300 A JOIN DMG150 Y ON A.GRP_CD = Y.GRP_CD WHERE A.MNG_BC = 'DM350320' AND Y.SUB_CD = B.GRP2_CD) /* 중분류명 */
+	 	   , B.GRP3_CD /* 소분류코드 */
+	 	   , GRP3_NM = (SELECT  Y.SUB_NM FROM DMG300 A JOIN DMG150 Y ON A.GRP_CD = Y.GRP_CD WHERE A.MNG_BC = 'DM350330' AND Y.SUB_CD = B.GRP3_CD) /* 소분류명 */
+	 	   , A.TRANS_NO /* 운송번호 */
+	 	   , Z2.DLV_YARD /* 납품장소 */
+	 	   , Z2.DLV_TEL /* 고객전화번호 */
+	 	   , Z2.DLV_CUSTNM /* 고객명 */
+	 	   , A.RMKS /* 비고 */
+	 	   , A.OUT_PNO /* 출고계획번호 */
+	 	   , A.OUT_PSQ /* 출고계획순번 */
+	 	   , A.SO_NO /* 수주번호 */
+	 	   , A.SO_SQ /* 순번 */
+	 	   , A.WO_NO /* 작업지시번호 */
+	 	   , A.SAL_BC /* 수주구분 */
+	 	   , SAL_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'SD538' AND BASE_CD = A.SAL_BC) /* 수주구분명 */
+	 	   , C.FKIND /* 파일종류 */
+	 	   , MNM = U.NM /* 등록자 */
+	 	   , M1 =  CASE B.GRP1_CD WHEN '300A10' THEN CASE ISNULL(M1,'') WHEN '' THEN SUBSTRING(B.ITM_CD, 4,2) ELSE CONVERT(DECIMAL(15), Z1.M1) END END /* 관리1 */
+	 	   , MDT = SUBSTRING(CONVERT(CHAR, A.MDT, 121),0,11) /* 등록일 */
+	 	   , H.M_UP /* M당단가 */
+	 	   , H.JOINT_UP /* joint단가 */
+	 	   , H.PLATE_UP /* 보강판단가 */
+	 	   , A.ENG_AMT /* 기술료 */
+	 	   , C.MODEL_CD /* 차종 */
+	 	   , A.REQ_NO /* 출하요청 */
+	 	   , A.REQ_SQ /* 요청순번 */
+	 	   , C.SPEC1 /* Color */
+	 	   , A.TO_MNG_NO /* 변경품목lotno */
+	 	   , A.TO_ITM_ID /* 변경품목ID */
+	 	   , WGT = ISNULL(Z.WEIGHT,0) /* 단위무게 */
+	 	   , A.ORD_NO /* 주문번호 */
+	 	   , A.ORD_SQ /* 정열순번 */
+	      
+	       , A.MOV_NO /* 출하번호 */
+	 	   , A.MNG_NO /* 관리번호 */
+	    FROM LEM150 A
+	 	     LEFT JOIN DMA100 B ON A.ITM_ID=B.ITM_ID
+	 	     LEFT JOIN DMA110 C ON A.ITM_ID=C.ITM_ID
+	         LEFT JOIN LEM100 I ON A.MOV_NO =I.MOV_NO
+	         LEFT JOIN DMA210 Z ON A.ITM_ID=Z.ITM_ID AND I.OUT_BS = Z.BS_CD
+	  	     LEFT JOIN SCU100 U ON A.MID = U.REG_ID
+	         LEFT JOIN BCA200V Z1 ON C.FLENTH = Z1.BASE_CD
+	         LEFT JOIN SDB100 Z2 ON A.SO_NO = Z2.SO_NO
+	 	     LEFT JOIN BCV200 H ON Z2.FLD_CD =H.FLD_CD
+	 	     LEFT JOIN LEB120 X ON X.MOV_NO = A.MOV_NO AND X.MOV_SQ = A.MOV_SQ
+	         LEFT JOIN LEB100 Y ON Y.OUT_NO = X.OUT_NO AND Y.OUT_SQ = X.OUT_SQ
+	   WHERE A.MOV_NO = #{movNo} /* 출하이동번호 */
+		]]>
+	</select>
+
+	<!--
+		설명 : 출고사업장 조회[BCC200]
+		AND A.BS_CD = ISNULL((SELECT BS_CD FROM CCM100 WHERE ID = #{id}),'75') /* 사용자의 BS_CD가 NULL이면 75로 설정 */ 
+		AND A.BS_CD = '75' 
+	-->
+	<select id="selBsCd" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selBsCd */
+	         A.BS_CD
+	       , BS_NM = A.BS_BNM
+	    FROM BCC200 A
+	   WHERE 1=1
+	     AND A.BS_CD = '75'
+	   ORDER BY A.BS_CD, ISNULL(A.DISP_SQ,999)
+		]]>
+	</select>
+	
+	
+	<!--
+		설명 : 출고사업장 조회[BCC200] 
+	-->
+	<select id="selDailyRevCntPop" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selDailyRevCntPop */
+	         CAR_SEQ = C.SEQ		/* 순번 */
+	       , RCAR_NO = C.CAR_NO		/* 차량번호 */
+	       , B.DRV_NM				/* 운전자 */
+	       , CNT = COUNT(*)			/* 건수 */
+	    FROM LEB100	A
+			 JOIN LEB200 B ON A.TRANS_NO = B.TRANS_NO
+			 JOIN SDZ300 C ON C.CAR_NO = B.RCAR_NO
+	   WHERE A.OUT_BS = '75' /* 중앙레미콘 */
+         AND A.OUT_DT = #{outDt}
+		 AND A.OUT_BC IN ((SELECT Z.BASE_CD FROM BCA200V Z WHERE Z.MAIN_CD = 'LE200' AND (Z.M2 = '1' OR Z.M1 = '1') ))  /* 매출용출하만보여주기*/
+	   GROUP BY C.SEQ, C.CAR_NO, B.DRV_NM
+		]]>
+	</select>
+	
+	<!--
+		설명 : 차량정보 조회[SDZ300] 
+	-->
+	<select id="selCarInfoPop" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selCarInfoPop */
+	         SEQ	/* 순번 */
+		   , CAR_NO	/* 차량번호 */
+		   , DRV_NM /* 운전자 */
+		   , DRV_HP	/* 운전자핸드폰 */
+		   , CAR_KD	/* 차량종류 */
+		FROM SDZ300
+	   WHERE BS_CD = '75' /* 출고사업장:중앙레미콘 */
+         AND CUST_CD = '999555' /* 거래처코드:중앙레미콘 운송[고정] */
+         AND CAR_NO LIKE '%' + #{carNo} + '%' /* 차량번호 */
+		]]>
+	</select>
+	
+	<!--
+		설명 : 사용자 id로 부서코드, 등록자id 가져오기
+	-->
+	<select id="selUserInfoById" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selUserInfoById */
+	         ID
+	       , REG_ID
+	       , DEPT_CD
+	       , NM
+		FROM SCU100
+	   WHERE ID = #{id}
+		]]>
+	</select>
+	
+	<!--
+		설명 : dbo.fnCodeNo2(tableNm, outDt, outFac)
+	-->
+	<select id="selCodeNo2" parameterType="ShipmentVO"  resultType="ShipmentVO">
+	  <![CDATA[
+	  SELECT /* ShipmentDao.selMovNo */
+	         VAL = dbo.fnCodeNo2(#{tableNm}, #{outDt}, #{bsCd})
+		FROM DUAL
+		]]>
+	</select>
+	
+	<!--
+		설명 : 출하처리 첫번째 insert [LEM100] LE.품목이동
+	-->
+	<insert id="insLem100" parameterType="ShipmentVO">
+	<![CDATA[
+	    INSERT INTO LEM100 ( MOV_NO /* 이동번호 */
+	                       , MOV_BC /* 이동구분 */
+	                       , MOV_RID /* 이동자ID */
+	                       , CAR_NO /* 차량번호 */
+	                       , OUT_DT /* 출고일자 */
+	                       , OUT_BS /* 출고사업장 */
+	                       , OUT_FAC /* 출고공장코드 */
+	                       , OUT_WH /* 출고창고코드 */
+	                       , OUT_DEPT /* 출고부서코드 */
+	                       , OUT_RID /* 출고자ID */
+	                       , CUST_CD /* 매출거래처 */
+	                       , FLD_CD /* 현장코드 */
+	                       , IN_DT /* 입고일자 */
+	                       , IN_BS /* 입고사업장 */
+	                       , IN_FAC /* 입고공장코드 */
+	                       , IN_WH /* 입고창고코드 */
+	                       , IN_DEPT /* 입고부서코드 */
+	                       , IN_RID /* 입고자ID */
+	                       , ORG_MOV_NO 
+	                       , ORG_CUST_CD
+	                       , ORG_FLD_CD
+	                       , ENT_BC /* 입력경로구분 */
+	                       , RMKS /* 비고 */
+	                       , CID /* 입력자 */
+	                       , CDT /* 입력날짜 */
+	                       , MID /* 수정자 */
+	                       , MDT /* 수정날짜 */
+	                       , ORD_NO 
+	    				   )
+	    			VALUES ( #{movNo}
+	    			       , 'LE300250'
+	    			       , NULL
+	    			       , NULL
+	    			       , #{outDt}
+	    			       , '75'
+	    			       , '750'
+	    			       , '710'	/* 영업창고 */
+	    			       , #{deptCd}
+	    			       , #{regId}
+	    			       , #{custCd}
+	    			       , #{fldCd}
+	    			       , #{outDt}
+	    			       , '75'
+	    			       , '750'
+	    			       , '915' /* 매출창고 */
+	    			       , #{deptCd}
+	    			       , #{regId}
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , 'LE920300'
+	    			       , NULL
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , NULL
+	    			        )
+	    ]]>
+	</insert>
+	
+	<!--
+		설명 : 출하처리 두번째 insert [LEB200] LE.운송정보
+	-->
+	<insert id="insLeb200" parameterType="ShipmentVO">
+	<![CDATA[
+	    INSERT INTO LEB200 ( TRANS_NO /* 운송정보 */
+	                       , BS_CD /* 사업장 */
+	                       , TCUST_CD /* 운송사_거래처 */
+	                       , CAR_NO /* 차량번호 */
+	                       , DRV_NM /* 운전자 */
+	                       , MOBILE /* 핸드폰 */
+	                       , STD_TRANFEE /* 기본운송비 */
+	                       , EXT_TRANFEE /* 추가운송비 */
+	                       , STD_BC /* 운송비기준단가 */
+	                       , REG_TY /* 운송구분 */
+	                       , PORT_CD /* 운송지명 */
+	                       , CAR_BC /* 차량구분 */
+	                       , MOV_NO /* 이동번호 */
+	                       , RUN_ING_DT /* 배차예정일시 */
+	                       , ARR_ING_DT /* 도착예정일시 */
+	                       , TRANS_STAT /* 운송상태 */
+	                       , TOT_WEIGHT /* 총중량 */
+	                       , RMKS /* 비고 */
+	                       , CID /* 생성자 */
+	                       , CDT /* 생성날짜 */
+	                       , MID /* 수정자 */
+	                       , MDT /* 수정일자 */
+	                       , DLV_BC
+	                       , OUT_NO
+	                       , TRANS_UP
+	                       , SONG_BS /* 송장발행용 사업장 */
+	                       , TRANS_NUM 
+	                       , RCAR_NO /* 중앙래미콘용 차량번호 */
+	                       , RMKS2
+	                       , TCUST_SQ
+	                       , SO_TEL
+	    				   )
+	    			VALUES ( #{transNo}
+	    			       , '75'
+	    			       , '999555'
+	    			       , NULL
+	    			       , #{drvNm}
+	    			       , #{drvHp}
+	    			       , '0.00000'
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , 'GA654200'
+	    			       , #{movNo}
+	    			       , #{outDt}
+	    			       , #{outDt}
+	    			       , 'SD720200'
+	    			       , NULL
+	    			       , NULL
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , '75'
+	    			       , NULL
+	    			       , #{carNo}
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       )
+	    ]]>
+	</insert>
+	
+	<!--
+		설명 : 출하처리 세번째 insert [LEM150] LE.품목이동상세
+	-->
+	<insert id="insLem150" parameterType="ShipmentVO">
+	<![CDATA[
+	    INSERT INTO LEM150 ( MOV_NO /* 이동번호 */
+	                       , MOV_SQ /* 이동순번 */
+	                       , ITM_ID /* 품목ID */
+	                       , MNG_NO /* LOT번호 */
+	                       , TO_ITM_ID /* 품목ID(To) */
+	                       , TCOLOR
+	                       , TSIZE
+	                       , TGRADE
+	                       , TO_MNG_NO /* LOT번호(To) */
+	                       , UM_BC /* 이동단위코드 */
+	                       , MOV_QTY /* 이동수량 */
+	                       , MOV_UP /* 단가 */
+	                       , MOV_AMT /* 금액 */
+	                       , WO_NO /* 작업지시번호 */
+	                       , SO_NO /* 수주번호 */
+	                       , SO_SQ /* 수주순번 */
+	                       , SO_DEPT /* 수주부서 */
+	                       , SO_RID /* 수주담당 */
+	                       , RTN_BC /* 반품구분 */
+	                       , TRANS_NO /* 운송번호 */
+	                       , MOV_CHK /* 이동확인 */
+	                       , JOINT_UP /* joint단가 */
+	                       , M_UP /* m당단가 */
+	                       , ENG_AMT /* 기술료 */
+	                       , PLATE_UP /* 보강판단가 */
+	                       , SAL_BC /* 수주구분 */
+	                       , RMKS /* 비고 */
+	                       , CID /* 생성자 */
+	                       , CDT /* 생성일 */
+	                       , MID /* 수정자 */
+	                       , MDT /* 수정일 */
+	                       , OUT_PNO 
+	                       , OUT_PSQ
+	                       , IN_PNO
+	                       , IN_PSQ
+	                       , REQ_NO /* 출하요청번호 */
+	                       , REQ_SQ /* 출하요청순번 */
+	                       , ORD_NO 
+	                       , ORD_SQ
+	                       , REMICON_CHK /* 레미콘 BP 완료코드 */
+	    				   )
+	    			VALUES ( #{movNo}
+	    			       , '1'
+	    			       , #{itmId}
+	    			       , NULL
+	    			       , NULL
+	    			       , 'SD530100'
+	    			       , 'SD526100'
+	    			       , 'SD522100'
+	    			       , NULL
+	    			       , 'DM150195'
+	    			       , CONVERT(DECIMAL(18,1), #{outQtyInput})
+	    			       , CONVERT(DECIMAL(18,1), #{movUp})
+	    			       , (CASE WHEN #{outQtyInput} = '' THEN 0 ELSE CONVERT(DECIMAL(18,1), #{outQtyInput}) END) * (CASE WHEN #{movUp} = '' THEN 0 ELSE CONVERT(DECIMAL(18,1), #{movUp}) END)
+	    			       , NULL
+	    			       , #{soNo}
+	    			       , #{soSq}
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , (SELECT TOP 1 TRANS_NO FROM LEB200 WHERE MOV_NO = #{movNo})
+	    			       , '1'
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , 'SD538100'
+	    			       , NULL
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , #{regId}
+	    			       , GETDATE()
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       , #{reqNo}
+	    			       , #{reqSq}
+	    			       , NULL
+	    			       , NULL
+	    			       , NULL
+	    			       )
+	   ]]>
+	</insert>
+	
+	<!--
+		설명 : 출하처리 세번째 delete [LEM100] 
+	-->
+	<delete id="delLem100" parameterType="TempData">
+	<![CDATA[
+    	DELETE FROM LEM100
+    	WHERE MOV_NO = #{movNo}
+    ]]>
+    </delete>
+    
+    <!--
+		설명 : 출하처리 두번째 delete [LEB200] 
+	-->
+    <delete id="delLeb200" parameterType="TempData">
+    <![CDATA[
+    	DELETE FROM LEB200
+    	WHERE TRANS_NO = #{transNo}
+    ]]>
+    </delete>
+    
+    <!--
+		설명 : 출하처리 첫번째 delete [LEM150] 
+	-->
+    <delete id="delLem150" parameterType="TempData">
+    <![CDATA[
+    	DELETE FROM LEM150
+    	WHERE MOV_NO = #{movNo}
+    ]]>
+    </delete>
+</mapper>

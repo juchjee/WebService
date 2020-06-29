@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.inusBath.dao.MInusBathDao">
+	<resultMap type="MInusBathVO" id="MInusBathMap" />
+	
+	<!--
+		설명 : 모바일-inusBath 시공마감(시공정)
+	-->
+	<select id="selMobileSigongFinishList" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* mInusBathDao.selMobileSigongFinishList */
+	         T.*
+	       , SALE_LEVEL_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = T.SALE_LEVEL)
+	    FROM (SELECT SALE_GUBUN =  A.SALE_TYPE
+		   , SALE_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SALE_TYPE)
+		   , C.END_CHK
+		   , END_CHK_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = C.END_CHK)
+		   , CON_PIC = CASE WHEN F.IMG IS NULL THEN '' ELSE 'Y' END
+		   , END_PIC = CASE WHEN F.IMG2 IS NULL THEN '' ELSE 'Y' END
+		   , A.SALE_END_CHK
+		   , A.CUST_CD
+		   , D.CUST_NM
+		   , SIGONG_END = CASE WHEN H.SIGONG_END = '1' THEN 'Y' ELSE '' END 
+		   , CHECK_END = CASE WHEN H.CHECK_END = '1' THEN 'Y' ELSE '' END
+		   , K.FLD_NM
+		   , K.FLD_ADDR
+		   , SALE_LEVEL = CASE WHEN CONVERT(VARCHAR,GETDATE(),23) < ISNULL(C.WORK_FRDT, A.SIGONG_DT) THEN  'SDH1504'
+		    		           WHEN CONVERT(VARCHAR,GETDATE(),23) >= ISNULL(C.WORK_FRDT, A.SIGONG_DT) 
+		    			        AND CONVERT(VARCHAR,GETDATE(),23) <= ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN  'SDH1505'
+		       		           WHEN CONVERT(VARCHAR,GETDATE(),23) > ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN 'SDH1506' END
+		   , CUS_NAME = SUBSTRING(K.CUST_EMP, 1,7)
+		   , VISIT_DT = ISNULL(C.VISIT_DT, A.CUST_END_DT)
+		   , WORK_FRDT = ISNULL(C.WORK_FRDT, A.SIGONG_DT)
+		   , WORK_TODT = ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT)))
+		   , GONG_DAY = CONVERT(VARCHAR, DATEDIFF(DAY, ISNULL(C.WORK_FRDT, A.SIGONG_DT), ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT)))) + 1) +'일'
+		   , A.EST_NO  /* 프로시저 필수값 */
+		   , C.BUY_AMT
+		   , C.EXP_BC_TEXT
+		   , C.SI_END_TEXT
+		   , C.VISIT_CHK
+		   , C.IN_NO
+		   , SALE_EMP = DBO.FNEMPNM(P.EMP_NO)
+		   , A.SALE_TYPE
+		   , A.SERVEY_CUST
+		FROM SDA100 A
+		     JOIN BCV200 K ON A.FLD_CD  = K.FLD_CD
+		   	 LEFT JOIN SDA170  B ON A.EST_NO  = B.EST_NO
+			 LEFT JOIN SDA180  C ON A.EST_NO  = C.EST_NO
+			 LEFT JOIN BCV100  D ON A.SERVEY_CUST = D.CUST_CD
+			 LEFT JOIN BCA200V V ON A.SIGONG_DAY  = V.BASE_CD
+			 LEFT JOIN SDH300  H ON A.EST_NO = H.EST_NO
+			 LEFT JOIN SDA190  F ON A.EST_NO = F.EST_NO
+			 LEFT JOIN SDH100  P ON P.ORD_NO = A.ORD_NO
+	   WHERE ISNULL(A.BON_CHK,'0') = '1' -- 본사시공조회
+		 AND ISNULL(C.WORK_TODT, A.SIGONG_DT) BETWEEN #{frDt} AND #{toDt} /* 공사일자(필수) */
+		 AND A.SERVEY_CUST = #{serveyCust} /*  시공점코드(필수) */
+		 ]]>
+		 <if test="estNo != '' and estNo != null">
+		   AND A.EST_NO = #{estNo} /* 견적번호 */
+	     </if>
+		 <![CDATA[
+		 ) T
+	   ORDER BY T.WORK_FRDT, T.EST_NO DESC
+	   ]]>
+	</select>
+
+	<!--
+		설명 : 모바일-inusBath 시공마감(시공정) > 계약별 시공 금액 내역
+	-->
+	<select id="selMobileSigongSumList" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* mInusBathDao.selMobileSigongSumList */
+	         MAIN_NM = B.TITLE
+		   , CLH_NM = C.TITLE
+		   , A.PRC_NM
+		   , A.BASIC_AMT
+		   , A.BIGO
+		   , A.MAIN_CD
+		   , A.CLH_CD
+		   , A.PRC_CD
+		   , A.CID
+		   , A.CDT
+		   , A.MID
+		   , A.MDT
+		   , A.EST_NO
+		FROM ASS350 A
+			 LEFT JOIN BCA200V B ON A.MAIN_CD = B.BASE_CD
+			 LEFT JOIN BCA200V C ON A.CLH_CD  = C.BASE_CD
+	   WHERE EST_NO = #{estNo}
+	   ORDER BY CONVERT(INT, A.PRC_CD), A.MAIN_CD, A.CLH_CD
+	   ]]>
+	</select>
+	
+	<!-- 
+		설명 : 마감진행
+		파라미터 : 견적번호[estNo], 상품구분[saleGubun], 시공마감여부[saleEndChk], 등록ID[regId]
+	 -->
+	<select id="prcsSdh680SQuery" statementType="CALLABLE" parameterType="MInusBathVO"  resultMap="MInusBathMap" resultType="ResultSet">
+	<![CDATA[
+	  	{call SDH680S_Query(#{estNo,jdbcType=VARCHAR}
+	  	                   ,#{saleGubun,jdbcType=VARCHAR}
+	  	                   ,#{saleEndChk,jdbcType=VARCHAR}
+	  	                   ,#{regId,jdbcType=VARCHAR})}
+	]]>
+	</select>
+	
+	
+	<!--
+		설명 : 마감진행 (업데이트만)
+	-->
+	<update id="updSda180" parameterType="MInusBathVO">
+	<![CDATA[
+	    UPDATE SDA180
+	       SET END_CHK = #{endChk} /* SDH4110 */
+	     WHERE EST_NO = #{estNo}
+	       and ISNULL(END_CHK, 'SDH4120') <> 'SDH4130' /* 완료가 아닌 경우만 */		       
+	    ]]>
+	</update>
+	
+	
+	<!--
+		설명 : 마감진행 전에, SDA180에 데이터가 없는 경우
+		           시공현황관리에서 매입금액 입력하기 전에 작업이 진행되었을 경우 SDA180에 기본자료 등록 먼저 하고 진행한다.
+	-->
+	<insert id="insSDA180" parameterType="MInusBathVO">
+	<![CDATA[
+	    INSERT INTO SDA180 ( EST_NO
+	                       , FLD_CD
+	                       , CUST_CD
+	                       , EMP_NO
+	                       , ITM_CD
+	                       , SALE_LEVEL
+	                       , VISIT_DT
+	                       , WORK_FRDT
+	                       , WORK_TODT
+	                       , CUS_NAME
+	                       , CUS_TEL
+	                       , WORK_TYPE	
+	                       , WORK_AREA	
+	                       , VISIT_CHK	
+	                       , PICTURE_CHK
+	                       , CID
+	                       , CDT	
+	                       , MID	
+	                       , MDT	
+	                       , CONTRACT_NM	
+	                       , EXP_BC	
+	                       , EXP_BC_TEXT	
+	                       , BASIC_AMT
+	                       , ADD_AMT
+	                       , BUY_AMT
+	                       , SALE_AMT
+	                       , ETC_AMT )
+			     	  SELECT A.EST_NO
+			     	  	   , A.FLD_CD
+			     	  	   , CUST_CD = ISNULL(C.CUST_CD, DBO.FNEMPNO(A.EST_RID))
+			     	  	   , FLD_EMP_NO = C.EMP_NO, ITM_CD = A.SDH_MODEL
+			     	  	   , SALE_LEVEL = CASE WHEN CONVERT(VARCHAR,GETDATE(),23) < ISNULL(C.WORK_FRDT, A.SIGONG_DT) THEN  'SDH1504'
+			    		                       WHEN CONVERT(VARCHAR,GETDATE(),23) >= ISNULL(C.WORK_FRDT, A.SIGONG_DT)
+				 	                            AND CONVERT(VARCHAR,GETDATE(),23) <= ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN 'SDH1505'
+			    		                       WHEN CONVERT(VARCHAR,GETDATE(),23) >  ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN 'SDH1506' END
+			    		   , VISIT_DT = C.VISIT_DT
+			    		   , WORK_FRDT = ISNULL(C.WORK_FRDT, A.SIGONG_DT)
+			    		   , WORK_TODT = ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT)))
+			    		   , CUS_NAME = ISNULL(K.CUST_EMP, C.CUS_NAME),	CUS_TEL = ISNULL(A.DELIVERY_TEL, ISNULL(C.CUS_TEL, K.FLD_TELNO1))
+			    		   , C.WORK_TYPE
+			    		   , WORK_AREA = ISNULL(C.WORK_AREA, K.REG_BC)
+			    		   , C.VISIT_CHK
+			    		   , C.PICTURE_CHK
+			    		   , #{regId}
+			    		   , GETDATE()
+			    		   , #{regId}
+			    		   , GETDATE()
+			    		   , C.CONTRACT_NM
+			    		   , C.EXP_BC
+			    		   , C.EXP_BC_TEXT
+			    		   , C.BASIC_AMT
+			    		   , C.ADD_AMT
+			    		   , C.BUY_AMT
+			    		   , C.SALE_AMT
+			    		   , C.ETC_AMT
+	                    FROM SDA100 A
+		 					 JOIN BCV200 K ON A.FLD_CD = K.FLD_CD
+	   						 LEFT JOIN SDH100 H ON A.ORD_NO = H.ORD_NO
+	   						 LEFT JOIN BCV100 P ON A.SERVEY_CUST = P.CUST_CD
+		 					 JOIN BCV100 Q ON A.CUST_CD = Q.CUST_CD
+						     LEFT JOIN SDA180 C ON A.EST_NO  = C.EST_NO
+						     LEFT JOIN BCV100 D ON D.CUST_CD = ISNULL(C.CUST_CD, DBO.FNEMPNO(A.EST_RID))
+						     LEFT JOIN HRA100 E ON C.EMP_NO  = E.EMP_NO
+						     LEFT JOIN SDH140 B ON B.CUST_CD = ISNULL(C.CUST_CD, DBO.FNEMPNO(A.EST_RID))
+						     LEFT JOIN BCA200V V ON A.SIGONG_DAY = V.BASE_CD
+					  	     LEFT JOIN SCU100  R ON H.EMP_NO = R.ID
+					   WHERE 1=1
+					     AND A.CONTRACT_CHK = 'SDH1802'
+					     AND A.EST_NO = #{estNo}
+	    ]]>
+	</insert>
+	
+	
+	 <!--
+		설명 : 마감진행 시에 아직 시공비가 책정되기 전인지 데이터 수 확인
+	-->
+	<select id="getCntEstNo" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* MInusBathVO.getCntEstNo */
+	         CNT = COUNT(EST_NO)
+		FROM SDA180
+	   WHERE EST_NO = #{estNo}
+		]]>
+	</select>
+
+
+    <!--
+		설명 : 마감진행 화면에서 시작-종료일에 따른 시공점코드 콤보박스
+	-->
+	<select id="selCustCdList" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* MInusBathVO.selCustCdList */
+	         DISTINCT
+	         ID = ISNULL(A.SERVEY_CUST, C.CUST_CD)
+	       , VALUE = ISNULL(P.CUST_NM, A.SERVEY_NM)
+		FROM SDA100 A
+		     LEFT JOIN SDA180 C ON A.EST_NO  = C.EST_NO 
+		     LEFT JOIN BCV100 P ON P.CUST_CD = ISNULL(A.SERVEY_CUST, C.CUST_CD) 
+		     LEFT JOIN BCA200V V ON A.SIGONG_DAY = V.BASE_CD
+	   WHERE A.CONTRACT_CHK = 'SDH1802'
+	     AND ISNULL(BON_CHK,'0') LIKE CASE WHEN '1' = '0' THEN  '%' ELSE '1' END  /* 본사시공조회만 */
+	     ]]>
+	     <choose>
+           <when test="frDt != null and frDt !=''">
+           		AND	(ISNULL(C.WORK_FRDT, A.SIGONG_DT) BETWEEN #{frDt} AND #{toDt}
+			     OR ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) BETWEEN #{frDt} AND #{toDt})
+           </when>
+           <otherwise>
+           		AND	(ISNULL(C.WORK_FRDT, A.SIGONG_DT) BETWEEN (LEFT(SUBSTRING(CONVERT(CHAR, GETDATE(), 121),0,11) ,7) + '-01') AND (LEFT(SUBSTRING(CONVERT(CHAR, GETDATE(), 121),0,11) ,10))
+           		 OR ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) BETWEEN (LEFT(SUBSTRING(CONVERT(CHAR, GETDATE(), 121),0,11) ,7) + '-01') AND (LEFT(SUBSTRING(CONVERT(CHAR, GETDATE(), 121),0,11) ,10)))
+           </otherwise>
+         </choose>
+		 <if test="custCd != '' and custCd != null">
+		   AND ISNULL(A.SERVEY_CUST, C.CUST_CD) = #{custCd}
+	     </if>
+		 <![CDATA[
+	ORDER BY ID DESC
+		]]>
+	</select>
+	
+	
+	<!--
+		설명 : 모바일-inusbath 견적별 출하내역
+	-->
+	<select id="selMobileItmShipList" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* mInusBathDao.selMobileItmShipList */
+	         T.*
+	       , SALE_LEVEL_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = T.SALE_LEVEL)
+	    FROM (SELECT SALE_GUBUN =  A.SALE_TYPE
+		   , SALE_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SALE_TYPE)
+		   , C.END_CHK
+		   , END_CHK_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = C.END_CHK)
+		   , CON_PIC = CASE WHEN F.IMG IS NULL THEN '' ELSE 'Y' END
+		   , END_PIC = CASE WHEN F.IMG2 IS NULL THEN '' ELSE 'Y' END
+		   , A.SALE_END_CHK
+		   , A.CUST_CD
+		   , D.CUST_NM
+		   , SIGONG_END = CASE WHEN H.SIGONG_END = '1' THEN 'Y' ELSE '' END 
+		   , CHECK_END = CASE WHEN H.CHECK_END = '1' THEN 'Y' ELSE '' END
+		   , K.FLD_NM
+		   , K.FLD_ADDR
+		   , SALE_LEVEL = CASE WHEN CONVERT(VARCHAR,GETDATE(),23) < ISNULL(C.WORK_FRDT, A.SIGONG_DT) THEN  'SDH1504'
+		    		           WHEN CONVERT(VARCHAR,GETDATE(),23) >= ISNULL(C.WORK_FRDT, A.SIGONG_DT) 
+		    			        AND CONVERT(VARCHAR,GETDATE(),23) <= ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN  'SDH1505'
+		       		           WHEN CONVERT(VARCHAR,GETDATE(),23) > ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT))) THEN 'SDH1506' END
+		   , CUS_NAME = SUBSTRING(K.CUST_EMP, 1,7)
+		   , VISIT_DT = ISNULL(C.VISIT_DT, A.CUST_END_DT)
+		   , WORK_FRDT = ISNULL(C.WORK_FRDT, A.SIGONG_DT)
+		   , WORK_TODT = ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT)))
+		   , GONG_DAY = CONVERT(VARCHAR, DATEDIFF(DAY, ISNULL(C.WORK_FRDT, A.SIGONG_DT), ISNULL(C.WORK_TODT, DATEADD(DD, V.ORD_SQ-1, ISNULL(C.WORK_FRDT, A.SIGONG_DT)))) + 1) +'일'
+		   , A.EST_NO  /* 프로시저 필수값 */
+		   , C.BUY_AMT
+		   , C.EXP_BC_TEXT
+		   , C.SI_END_TEXT
+		   , C.VISIT_CHK
+		   , C.IN_NO
+		   , SALE_EMP = DBO.FNEMPNM(P.EMP_NO)
+		   , A.SALE_TYPE
+		   , A.SERVEY_CUST
+		FROM SDA100 A
+		     JOIN BCV200 K ON A.FLD_CD  = K.FLD_CD
+		   	 LEFT JOIN SDA170  B ON A.EST_NO  = B.EST_NO
+			 LEFT JOIN SDA180  C ON A.EST_NO  = C.EST_NO
+			 LEFT JOIN BCV100  D ON A.SERVEY_CUST = D.CUST_CD
+			 LEFT JOIN BCA200V V ON A.SIGONG_DAY  = V.BASE_CD
+			 LEFT JOIN SDH300  H ON A.EST_NO = H.EST_NO
+			 LEFT JOIN SDA190  F ON A.EST_NO = F.EST_NO
+			 LEFT JOIN SDH100  P ON P.ORD_NO = A.ORD_NO
+	   WHERE ISNULL(A.BON_CHK,'0') = '1' -- 본사시공조회
+		 AND ISNULL(C.WORK_TODT, A.SIGONG_DT) BETWEEN #{frDt} AND #{toDt} /* 공사일자(필수) */
+		 AND A.SERVEY_CUST = #{serveyCust} /*  시공점코드(필수) */
+		 ]]>
+		 <if test="estNo != '' and estNo != null">
+		   AND A.EST_NO = #{estNo} /* 견적번호 */
+	     </if>
+		 <![CDATA[
+		 ) T
+	   ORDER BY T.WORK_FRDT, T.EST_NO DESC
+	   ]]>
+	</select>
+
+	<!--
+		설명 : 모바일-inusBath 시공마감(시공정) > 계약별 시공 금액 내역
+	-->
+	<select id="selMobileItmShipDtlList" parameterType="MInusBathVO"  resultType="MInusBathVO">
+	  <![CDATA[
+	  SELECT /* mInusBathDao.selMobileItmShipDtlList */
+	         D.ITM_CD
+	       , D.ITM_NM
+	       , D.SPEC
+	       , C.OUT_QTY					
+		FROM LEM150 A				
+		JOIN LEB120 B ON A.MOV_NO = B.MOV_NO AND A.MOV_SQ = B.MOV_SQ				
+		JOIN LEB100 C ON B.OUT_NO = C.OUT_NO AND B.OUT_SQ = C.OUT_SQ				
+		JOIN DMA100 D ON C.ITM_ID = D.ITM_ID				
+	   WHERE A.SO_NO IN (SELECT B.SO_NO				
+						   FROM SDA100 A
+						   JOIN SDB100 B ON A.EST_NO = B.EST_NO
+						  WHERE A.EST_NO = #{estNo} )	
+		AND ISNULL(C.OUT_QTY,0) <> 0
+	   ORDER BY D.BIZ_AREA, D.ITM_CD
+	   ]]>
+	</select>
+</mapper>

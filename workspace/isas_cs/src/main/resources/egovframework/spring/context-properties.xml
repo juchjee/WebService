@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 프로퍼티 정보 설정 -->
+	<bean name="propertiesService" class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+		<property name="properties">
+			<map>
+				<entry key="Globals.addedOptions" value="false" />
+			</map>
+		</property>
+		<property name="extFileName">
+			<set>
+				<map>
+					<entry key="encoding" value="UTF-8" />
+					<entry key="filename" value="classpath*:/egovframework/egovProps/site.properties" />
+				</map>
+				<value>file:classpath*:/egovframework/egovProps/site.properties</value>
+			</set>
+		</property>
+	</bean>
+</beans>	

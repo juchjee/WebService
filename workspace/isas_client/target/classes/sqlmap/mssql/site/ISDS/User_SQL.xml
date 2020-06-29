@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="UserDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="UserDAO.mypageUser" parameterClass="map" resultClass="camelMap">
+		SELECT MLP.MBR_LEV_NM
+					, MLP.MBR_LEV_CD
+					, ISNULL((DBO.FN_MBR_NEXT_LEV_NM(#MBR_ID#)), (SELECT MBR_LEV_NM FROM ASW_M_MBR_LEV_PLICY WHERE MBR_LEV_CD = MLP.MBR_LEV_CD)) AS NEXT_LEV_NM
+		            ,MLP.MBR_LEV_AMOT
+		            ,(dbo.FN_MBR_NEXT_LEV_AMOT(#MBR_ID#)) AS NEXT_MBR_LEV_AMOT
+		            ,(dbo.FN_MBR_PROD_PT_OUT_SCORE(#MBR_ID#)) as PROD_PT_OUT_SCORE
+		            ,(dbo.FN_MBR_COPN_COUNT(#MBR_ID#)) as COPN_COUNT
+		            ,(dbo.FN_MBR_RESV_FUND(#MBR_ID#)) as RESV_FUND
+		            , MM.MBR_ID
+					, MM.MBR_NM
+					, MM.MBR_EMAIL
+					, MM.MBR_PHONE
+					, MM.MBR_MOBILE
+		         FROM ASW_M_MBR_LEV_PLICY MLP
+		         LEFT OUTER JOIN ASW_M_MBR MM ON MM.MBR_ID = #MBR_ID#
+		        WHERE MLP.MBR_LEV_CD = (SELECT	MML.MBR_LEV_CD
+								        FROM	M_MBR_LEV MML
+								        WHERE	MML.MBR_ID = #MBR_ID#
+										AND MML.MBR_LEV_DT =
+												              (SELECT MAX(S_MML.MBR_LEV_DT)
+												                FROM ASW_M_MBR_LEV ASW_S_MML
+												               WHERE ASW_S_MML.MBR_ID = #MBR_ID#
+												              )
+       )
+	</select>
+
+	<select id="UserDAO.totalAmt" parameterClass="map" resultClass="int">
+		SELECT
+			ISNULL(SUM(ODT.DEPOSIT_AMOUNT),0) AS MBR_AMT
+		FROM O_ORDER OOR INNER JOIN O_DEPOSIT ODT
+				ON ODT.ORDER_NO = OOR.ORDER_NO
+			INNER JOIN O_ORDER_SEND OOS
+				ON OOS.ORDER_NO = OOR.ORDER_NO
+		WHERE 1=1
+			AND OOR.MBR_ID = #MBR_ID#
+			AND OOR.CLAIM_YN = 'N'
+			AND OOS.ORDER_PACKING_DT IS NOT NULL
+			AND CONVERT(VARCHAR(8), OOS.ORDER_PACKING_DT, 112) >= CONVERT(VARCHAR(6), DATEADD(YEAR,-1, GETDATE()),112)+'01'
+			AND CONVERT(VARCHAR(8), OOS.ORDER_PACKING_DT, 112) <![CDATA[ <= ]]> CONVERT(VARCHAR(8), DATEADD(DAY, -1, CONVERT(VARCHAR(6), DATEADD(MONTH,0, GETDATE()),112)+'01'), 112)
+	</select>
+
+	<select id="UserDAO.mypageAdvice" parameterClass="map" resultClass="camelMap">
+		SELECT TOP 3 NUM, BOARD_SEQ, BOARD_TITLE, BOARD_STATE, BOARD_MST_CD, BOARD_MST_NM, BOARD_PROD_YN
+		FROM
+	   (
+		SELECT
+			ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ desc ) AS NUM
+        	, A.BOARD_SEQ AS BOARD_SEQ
+        	, A.BOARD_TITLE AS BOARD_TITLE
+        	, (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '완료' ELSE '대기' END) AS BOARD_STATE
+			, A.BOARD_MST_CD
+			, T.BOARD_MST_NM AS BOARD_MST_NM
+			, T.BOARD_PROD_YN
+    	FROM ASW_BOARD_BASE A
+    		LEFT OUTER JOIN ASW_BOARD_TP_REPLY C
+            	ON C.BOARD_SEQ = A.BOARD_SEQ
+            LEFT OUTER JOIN ASW_BOARD_MST T
+				ON T.BOARD_MST_CD = A.BOARD_MST_CD
+    	WHERE A.BOARD_STATUS_YN = 'Y'
+        	AND T.BOARD_TP_CD = 'BBT00002'
+			AND A.REG_ID = #MBR_ID#
+        ) k
+	</select>
+
+	<select id="UserDAO.mypageAfter" parameterClass="map" resultClass="camelMap">
+		SELECT TOP 1 NUM, BOARD_SEQ, BOARD_TITLE, REG_ID, REG_DT, BOARD_STATE, PROD_GRADE, PROD_NM,
+			   PROD_CD, BASIC_IMG FROM
+		(
+			SELECT ROW_NUMBER() OVER( ORDER BY A.BOARD_SEQ desc ) AS NUM
+				   , A.BOARD_SEQ
+	       		   , A.BOARD_TITLE
+	       		   , A.REG_ID
+	       		   , CONVERT(VARCHAR(10), A.REG_DT, 120) AS REG_DT
+				   , (CASE WHEN C.BOARD_REPLY IS NOT NULL THEN '완료' ELSE '대기' END) AS BOARD_STATE
+				   , C.PROD_GRADE
+				   , (SELECT PROD_NM FROM P_PROD Y WHERE Y.PROD_CD = X.PROD_CD) AS PROD_NM
+				   , X.PROD_CD AS PROD_CD
+				   , (SELECT G.ATTCH_FILE_PATH FROM ASW_G_ATTCH G WHERE G.ATTCH_CD = I.ATTCH_CD) AS BASIC_IMG
+        		FROM ASW_BOARD_BASE A
+		   		INNER JOIN ASW_BOARD_TP_PROD X
+					ON X.BOARD_SEQ = A.BOARD_SEQ
+				INNER JOIN P_PROD_BASIC_IMG I
+					ON I.PROD_CD = X.PROD_CD
+					AND I.PROD_BASIC_SIZE_BMS = 'M'
+				LEFT OUTER JOIN ASW_BOARD_TP_REVIEW C
+					ON C.BOARD_SEQ = A.BOARD_SEQ
+			WHERE A.BOARD_STATUS_YN = 'Y'
+			AND A.BOARD_MST_CD = 'BBM00005'
+			AND A.REG_ID = #MBR_ID#
+		) k
+	</select>
+
+	<select id="UserDAO.mypageOrderCnt" parameterClass="map" resultClass="camelMap">
+			SELECT (SELECT count(OOR.ORDER_NO) FROM O_ORDER OOR WHERE OOR.CLAIM_YN = 'N' AND OOR.ORDER_DT BETWEEN DATEADD(MONTH, -1, GETDATE()) and GETDATE() AND OOR.ORDER_STATUS_CD = 'OOS00001'
+	   			  	AND OOR.MBR_ID = #MBR_ID# ) AS ORDER_CNT
+	   			  , (SELECT count(OOR.ORDER_NO) FROM O_ORDER OOR WHERE OOR.CLAIM_YN = 'N' AND OOR.ORDER_DT BETWEEN DATEADD(MONTH, -1, GETDATE()) and GETDATE() AND OOR.ORDER_STATUS_CD in ('OOS00002','OOS00003')
+	   			  	AND OOR.MBR_ID = #MBR_ID# ) AS DEPOSIT_CNT
+	   			  , (SELECT count(OOR.ORDER_NO) FROM O_ORDER OOR WHERE OOR.CLAIM_YN = 'N' AND OOR.ORDER_DT BETWEEN DATEADD(MONTH, -1, GETDATE()) and GETDATE() AND OOR.ORDER_STATUS_CD in ('OOS00004','OOS00009')
+	   			  	AND OOR.MBR_ID = #MBR_ID# ) AS SEND_CNT
+	   			  , (SELECT count(OOR.ORDER_NO) FROM O_ORDER OOR WHERE OOR.CLAIM_YN = 'Y' AND OOR.ORDER_DT BETWEEN DATEADD(MONTH, -1, GETDATE()) and GETDATE()
+	   			  	AND OOR.MBR_ID = #MBR_ID# ) AS CLAIM_CNT
+	</select>
+
+	<select id="UserDAO.mypageOrder" parameterClass="map" resultClass="camelMap">
+	SELECT OIHV.*,
+			   CONVERT(VARCHAR(10), DATEADD(day, 5, OIHV.ORDER_DT), 120) AS ORDER_PAY_DT
+	 FROM ORDER_INFO_HIS_VIEW OIHV
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="MBR_ID">
+				OIHV.MBR_ID = #MBR_ID#
+			</isNotEmpty>
+			<isNotEmpty property="S_DATE" prepend="AND" >
+  		 		<![CDATA[
+  		 			 OIHV.ORDER_DT >= CONVERT(datetime, #S_DATE#)
+  		 		]]>
+  		 	</isNotEmpty>
+  		 	<isNotEmpty property="E_DATE" prepend="AND" >
+  		 		<![CDATA[
+  		 			 OIHV.ORDER_DT < DATEADD(DAY, 1, #E_DATE#)
+  		 		]]>
+	 		</isNotEmpty>
+
+
+		  	<isNotEmpty prepend="AND" property="ORDER_NO">
+				OIHV.ORDER_NO = #ORDER_NO#
+			</isNotEmpty>
+			<isEmpty property="ORDER_NO">
+			  	<isEmpty property="S_DATE" >
+					<isEmpty prepend="AND" property="E_DATE">
+							OIHV.ORDER_DT between DATEADD(MONTH, -1, GETDATE()) and GETDATE()
+					</isEmpty>
+			  	</isEmpty>
+			</isEmpty>
+	  	</dynamic>
+		ORDER BY OIHV.ORDER_DT_FULL DESC
+	</select>
+
+	<select id="UserDAO.prodInfoList" parameterClass="String" resultClass="camelMap">
+		SELECT OPILV.* FROM ORDER_PROD_INFO_LIST_VIEW OPILV WHERE OPILV.ORDER_NO = #orderNo#
+	</select>
+
+	<select id="UserDAO.claimInfoList" parameterClass="String" resultClass="camelMap">
+		SELECT OPILV.* FROM CLAIM_PROD_INFO_LIST_VIEW OPILV WHERE OPILV.ORDER_NO = #orderNo#
+	</select>
+
+
+	<select id="UserDAO.mypageWishList" parameterClass="map" resultClass="camelMap">
+		SELECT OW.MBR_ID
+	   		   , OW.PROD_CD
+	   		   , OW.REG_DT
+			   , PP.PROD_NM
+			   , (SELECT G.ATTCH_FILE_PATH FROM ASW_G_ATTCH G WHERE G.ATTCH_CD = PBI.ATTCH_CD) AS BASIC_IMG
+			   , (SELECT PAIM.PROD_ADD_INFO_VAL  FROM P_PROD_ADD_INFO_MPG PAIM WHERE PAIM.PROD_ADD_INFO_CD = 'PAI00004' AND PAIM.PROD_CD = OW.PROD_CD ) as PPT_CD
+			   , STUFF((SELECT ','+PSP.SEC_PROD_NM FROM P_SEC_PROD_MPG SPM
+		        				INNER JOIN P_SEC_PROD PSP ON SPM.SEC_PROD_CD = PSP.SEC_PROD_CD
+		        				WHERE OW.PROD_CD = SPM.PROD_CD FOR XML PATH('')),1 ,1,'') AS SEC_PROD_NM
+				, REPLACE(CONVERT(VARCHAR, CAST(PPF.PROD_PRICE as MONEY), 1), '.00', '') AS PROD_PRICE
+				, REPLACE(CONVERT(VARCHAR, CAST(PPF.PROD_SALE_PRICE as MONEY), 1), '.00', '') AS PROD_SALE_PRICE
+				, REPLACE(CONVERT(VARCHAR, CAST(PPF.PROD_PT_IN_SCORE as MONEY), 1), '.00', '') +'P' AS PROD_PT_IN_SCORE
+
+				, dbo.FN_INVENTORY_QTY(PP.PROD_CD) AS ORDER_QTY
+		FROM O_WISHLIST OW
+		INNER JOIN P_PROD PP ON PP.PROD_CD = OW.PROD_CD AND PROD_USE_FLAG_YN = 'Y'
+		INNER JOIN
+			 (SELECT PPF.*
+			   FROM P_PROD_FI PPF
+			  WHERE PPF.PROD_INFO_REG_NO =
+					(SELECT MAX(S_PPF.PROD_INFO_REG_NO)
+					  FROM P_PROD_FI ASW_S_PPF
+					 WHERE PPF.PROD_CD = ASW_S_PPF.PROD_CD
+					)
+			 ) PPF
+			 ON OW.PROD_CD = PPF.PROD_CD
+		INNER JOIN P_PROD_BASIC_IMG PBI ON PBI.PROD_CD = OW.PROD_CD AND PBI.PROD_BASIC_SIZE_BMS = 'M'
+		WHERE MBR_ID = #MBR_ID#
+	</select>
+
+	<select id="UserDAO.mypagePoint" parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+			  SELECT
+			  	 	  ROW_NUMBER() OVER( ORDER BY MPTL.MBR_PT_ACC_DT desc ) AS NUM
+					,  MPTL.*
+		FROM
+			(SELECT A.MBR_ID AS MBR_ID
+					, X.MBR_NM AS MBR_NM
+					, REPLACE(CONVERT(VARCHAR, CAST((A.MBR_PT_SCORE) AS MONEY), 1), '.00', '')+'P' AS MBR_PT_SCORE
+					, '적립' AS A_STATE
+				    , A.MBR_PT_ACC_DT AS MBR_PT_ACC_DT
+				    , (SELECT Y.PT_NM FROM ASW_M_MBR_PT_PLC Y WHERE Y.PT_CD = A.PT_CD) AS PT_NM
+			 FROM ASW_M_MBR_PT_LIST A
+			 	INNER JOIN ASW_M_MBR X
+				ON A.MBR_ID = X.MBR_ID
+		UNION ALL
+			 SELECT OD.MBR_ID AS MBR_ID
+					, (SELECT M.MBR_NM FROM ASW_M_MBR M WHERE OD.MBR_ID = M.MBR_ID) AS MBR_NM
+					, REPLACE(CONVERT(VARCHAR, CAST((P.PROD_PT_OUT_SCORE * O.PROD_QTY) AS MONEY), 1), '.00', '')+'P' AS MBR_PT_SCORE
+					, '차감' AS A_STATE
+					, OD.ORDER_DT AS MBR_PT_ACC_DT
+					, (SELECT RO.PROD_NM+' 구매' AS PROD_NM FROM P_PROD RO WHERE RO.PROD_CD = P.PROD_CD) AS PT_NM
+			 FROM P_PROD_PT P
+			 	INNER JOIN O_ORDER_PROD O ON P.PROD_CD = O.PROD_CD AND P.PROD_INFO_REG_NO = O.PROD_INFO_REG_NO
+				INNER JOIN O_ORDER OD ON O.ORDER_NO = OD.ORDER_NO
+			) MPTL
+		WHERE MBR_ID = #MBR_ID#
+            AND MBR_PT_SCORE <![CDATA[ <> ]]> '0P'
+			) x
+		         WHERE NUM BETWEEN #START_PAGE_NUM# AND #END_PAGE_NUM#
+			  ORDER BY MBR_PT_ACC_DT DESC
+	</select>
+
+	<select id="UserDAO.mypagePointCnt"  parameterClass="map" resultClass="int">
+		SELECT (count(A.MBR_PT_SEQ)+(SELECT count(P.PROD_INFO_REG_NO) from P_PROD_PT P
+							INNER JOIN O_ORDER_PROD D
+							ON P.PROD_CD = D.PROD_CD AND P.PROD_INFO_REG_NO = D.PROD_INFO_REG_NO
+							INNER JOIN P_PROD_PT PPT ON PPT.PROD_CD = D.PROD_CD
+							INNER JOIN O_ORDER OD ON D.ORDER_NO = OD.ORDER_NO AND OD.MBR_ID = #MBR_ID#
+					)) AS totCnt
+		FROM ASW_M_MBR_PT_LIST A
+		WHERE A.MBR_ID = #MBR_ID#
+	</select>
+
+	<select id="UserDAO.mypageCoupon" parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+	SELECT a.* FROM (
+		  SELECT
+        ECN.COPN_CD AS COPN_CD ,
+        ECN.COPN_NM AS COPN_NM ,
+        (            CASE
+            WHEN ECN.COPN_TP_PDMC = 'P'                THEN '상품'
+            WHEN ECN.COPN_TP_PDMC = 'D'                THEN '다운로드'
+            WHEN ECN.COPN_TP_PDMC = 'M'                THEN '회원'
+            WHEN ECN.COPN_TP_PDMC = 'C'                THEN 'CS전용'
+            ELSE ''
+        END        ) AS COPN_TP_PDMC_NM ,
+        (            CASE
+            WHEN ECN.COPN_DIS_TP_RAP = 'R'                THEN '비율'
+            WHEN ECN.COPN_DIS_TP_RAP = 'A'                THEN '금액'
+            WHEN ECN.COPN_DIS_TP_RAP = 'P'                THEN '상품증정'
+            ELSE ''
+        END        ) AS COPN_DIS_TP_RAP_NM ,
+        (            CASE
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'    THEN  '무제한'
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'    THEN CONVERT(VARCHAR(10),
+            ECN.COPN_USE_START_DT,
+            120) + ' ~ ' + CASE
+            WHEN MCL.COPN_END_DT IS NOT NULL THEN CONVERT(VARCHAR(10),
+            MCL.COPN_END_DT,
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'      THEN CONVERT(VARCHAR(10),
+            GETDATE(),
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'      THEN CONVERT(VARCHAR(10),
+            ECN.COPN_USE_END_DT,
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'      THEN CONVERT(VARCHAR(10),
+            DATEADD(Month,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'      THEN CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+            ELSE CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_AFTER_DAY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+        END
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'    THEN CONVERT(VARCHAR(10),
+            DATEADD(Month,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)+' 까지'
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'    THEN CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)+' 까지'
+            ELSE CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_AFTER_DAY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)+' 까지'
+        END        ) AS COPN_DT ,
+        (            CASE
+            WHEN OCU.ORDER_NO IS NOT NULL                THEN '사용'
+            WHEN OCU.ORDER_NO is null                THEN '미사용'
+        END        ) AS COPN_STATE ,
+        CONVERT(VARCHAR(10),
+        ECN.COPN_USE_START_DT,
+        120) AS COPN_USE_START_DT ,
+        CASE
+            WHEN MCL.COPN_END_DT IS NOT NULL THEN CONVERT(VARCHAR(10),
+            MCL.COPN_END_DT,
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'A'      THEN CONVERT(VARCHAR(10),
+            GETDATE(),
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'P'      THEN CONVERT(VARCHAR(10),
+            ECN.COPN_USE_END_DT,
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'M'      THEN CONVERT(VARCHAR(10),
+            DATEADD(Month,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+            WHEN ECN.COPN_LIMIT_TP_APMD = 'D'      THEN CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_VALIDITY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+            ELSE CONVERT(VARCHAR(10),
+            DATEADD(Day,
+            ISNULL(ECN.COPN_AFTER_DAY,
+            0),
+            MCL.COPN_ISU_DT),
+            120)
+        END as COPN_USE_END_DT,
+        MCL.COPN_ISU_DT,
+		CONVERT(VARCHAR(10),OOR.ORDER_DT,102) as ORDER_DT
+    FROM
+        ASW_M_MBR_COPN_LIST MCL
+    LEFT JOIN
+        E_COPN ECN
+            ON MCL.COPN_CD = ECN.COPN_CD
+    LEFT JOIN
+        O_COUPON_USE OCU
+            ON MCL.COPN_ISU_CD = OCU.COPN_ISU_CD
+    LEFT JOIN
+        O_ORDER OOR
+            ON OOR.ORDER_NO = OCU.ORDER_NO
+    WHERE
+        MCL.MBR_ID =  #MBR_ID#
+) a
+    ORDER BY
+     CASE WHEN CONVERT(VARCHAR(10),COPN_USE_END_DT,112) > CONVERT(VARCHAR(10),GETDATE(),112) THEN 1 ELSE 2 END,  CASE WHEN a.COPN_STATE = '미사용'THEN 1 WHEN a.COPN_STATE =  '사용' THEN 2 END , a.COPN_ISU_DT DESC
+
+          ]]>
+	</select>
+
+	<select id="UserDAO.mypageTransY" parameterClass="string" resultClass="camelMap">
+		SELECT top 1 TRANS_NM
+			   , TRANS_REV_NM
+	   		   , MBR_ADDR
+	   		   , MBR_ADDR_DTL
+	   		   , MBR_ZIPCODE
+	   		   , MBR_PHONE
+	   		   , MBR_MOBILE
+	   		   , TRANS_INFO_SEQ
+		FROM ASW_M_TRANS_INFO
+		WHERE MBR_ID = #MBR_ID#
+		AND BASIC_TRANS_YN = 'Y'
+		order by MBR_REG_DT DESC
+	</select>
+
+	<select id="UserDAO.mypageTransList" parameterClass="map" resultClass="camelMap">
+		SELECT TRANS_INFO_SEQ
+		       , BASIC_TRANS_YN
+			   , TRANS_NM
+			   , TRANS_REV_NM
+	   		   , MBR_ADDR
+	   		   , MBR_ADDR_DTL
+	   		   , MBR_ZIPCODE
+	   		   , MBR_PHONE
+	   		   , MBR_MOBILE
+		FROM ASW_M_TRANS_INFO
+		WHERE MBR_ID = #MBR_ID#
+		ORDER BY TRANS_INFO_SEQ DESC
+	</select>
+
+	<select id="UserDAO.transView" parameterClass="map" resultClass="camelMap">
+		SELECT TRANS_INFO_SEQ
+		       , BASIC_TRANS_YN
+			   , TRANS_NM
+			   , TRANS_REV_NM
+	   		   , MBR_ADDR
+	   		   , MBR_ADDR_DTL
+	   		   , MBR_ZIPCODE
+	   		   , MBR_PHONE
+	   		   , MBR_MOBILE
+		FROM ASW_M_TRANS_INFO
+		WHERE MBR_ID = #MBR_ID#
+		AND TRANS_INFO_SEQ = #TRANS_INFO_SEQ#
+	</select>
+
+	<select id="UserDAO.getOrderTotalAmt"  parameterClass="map" resultClass="int">
+		SELECT	CASE WHEN SUM(AA.TOTALAMT) IS NULL THEN '0'
+				ELSE SUM(AA.TOTALAMT)
+				END AS TOTAL_AMT
+		FROM (
+				SELECT (OAH.ORDER_AMT - OAH.ORDER_SALE_AMT + OAH.ORDER_DELI_CHARGE - OAH.ORDER_COPN_AMT - OAH.ORDER_RESV_AMT - OAH.ORDER_PT_OUT_SCORE) AS TOTALAMT
+				    	, OD.ORDER_STATUS_CD
+				    	, OD.ORDER_DT
+				FROM	O_ORDER_AMT_HIS OAH
+				 LEFT JOIN  O_ORDER OD ON OAH.ORDER_NO = OD.ORDER_NO
+	   			 LEFT JOIN O_ORDER_SEND S ON S.ORDER_NO = OD.ORDER_NO
+				WHERE	  OD.CLAIM_YN = 'N'
+				 AND    S.ORDER_PACKING_DT IS NOT NULL
+				AND		CONVERT(VARCHAR(4), OD.ORDER_DT, 120) = #YEAR#
+				AND		OD.MBR_ID= #MBR_ID#
+		) AA
+	</select>
+
+
+	<select id="UserDAO.getMyInfoMap" parameterClass="String" resultClass="camelMap">
+		SELECT MLP.MBR_LEV_NM
+					, MLP.MBR_LEV_CD
+		            ,(dbo.FN_MBR_PROD_PT_OUT_SCORE(#mbrId#)) as PROD_PT_OUT_SCORE
+		            ,(dbo.FN_MBR_COPN_COUNT(#mbrId#)) as COPN_COUNT
+		         FROM ASW_M_MBR_LEV_PLICY MLP
+		        WHERE MLP.MBR_LEV_CD = (SELECT MML.MBR_LEV_CD
+         FROM ASW_M_MBR_LEV MML
+        WHERE MML.MBR_ID = #mbrId#
+              AND MML.MBR_LEV_DT =
+              (SELECT MAX(S_MML.MBR_LEV_DT)
+                FROM ASW_M_MBR_LEV ASW_S_MML
+               WHERE ASW_S_MML.MBR_ID = #mbrId#
+              )
+       )
+	</select>
+
+	<select id="UserDAO.getOrderAddr" parameterClass="String" resultClass="camelMap">
+		SELECT *
+         FROM ORDER_INFO_LIST_VIEW
+        WHERE ORDER_NO = #ORDER_NO#
+	</select>
+
+	<select id="UserDAO.addrClaimCheck"  parameterClass="string" resultClass="string">
+		SELECT REGI_NO
+		    FROM O_ORDER_SEND WITH(NOLOCK)
+		WHERE ORDER_NO = #ORDER_NO#
+	</select>
+</sqlMap>

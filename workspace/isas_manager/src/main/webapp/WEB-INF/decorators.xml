@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/WEB-INF/jsp/general">
+
+	<!-- sitemesh를 사용하지 않을 패턴을 지정한다 -->
+	<excludes>
+		<pattern>*.action*</pattern>
+		<pattern>*/popup/*</pattern>
+		<pattern>*/mng/cashbill/*</pattern>
+		<pattern>*/crm/softPhone/*.do*</pattern>
+	</excludes>
+	<!-- /sitemesh를 사용하지 않을 패턴을 지정한다 -->
+
+	<decorator name="header" page="head.jsp"/>
+	<decorator name="top" page="top.jsp"/>
+	<decorator name="left" page="left.jsp"/>
+	<decorator name="title_path" page="title_path.jsp"/>
+	<decorator name="footer" page="footer.jsp"/>
+	<decorator name="pop_header" page="pop_head.jsp"/>
+	<decorator name="pop_top" page="pop_top.jsp"/>
+	<decorator name="pop_right" page="pop_right.jsp"/>
+	<decorator name="null" />
+
+	<decorator name="pop_layout" title="i6ShopAdminMbr" page="pop_main.jsp">
+		<pattern>*.pop*</pattern>
+	</decorator>
+	<decorator name="admin_layout" title="i6ShopMall" page="site.jsp">
+		<pattern>/*</pattern>
+	</decorator>
+
+</decorators>

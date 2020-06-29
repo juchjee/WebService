@@ -1,0 +1,2102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.dailyWork.dao.DailyWorkDao">
+	<resultMap type="DailyWorkVO" id="DailyWorkMap" />
+
+	<!-- 패스워드 변경 -->
+	<select id="selChangeCheck" parameterType="LoginVO" resultType="int">
+	   SELECT /* DailyWorkVO.selChangeCheck */
+	          COUNT(*) AS CNT 
+	     FROM CCM330  
+	    WHERE PER_NO=#{perNo} 
+	      AND PASSWORD=#{pw} 
+	      AND SITE_CD = #{siteCd} 
+	      AND CUST_CD = #{custCd}  
+	</select>
+	
+	<insert id="prcsChangePassWord" parameterType="LoginVO">
+	   UPDATE CCM330 
+	      SET PASSWORD = #{pw}
+			, OUT_MID = #{id}
+			, OUT_MDT = GETDATE()  
+	    WHERE PER_NO = #{perNo} 
+	      AND SITE_CD = #{siteCd} 
+	      AND CUST_CD = #{custCd} 
+	</insert>
+
+    <!--  팝업 및 기타  -->
+    <select id="selSiteCd" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT /* DailyWorkVO.selSiteCd */ 
+	         A.SITE_FAC_CD AS SITE_CD
+		   , B.SITE_DS
+		   , B.CONSTRUCT_DS
+	    FROM CCM101 A
+           , CMZ100 B
+	   WHERE A.SITE_FAC_CD = B.SITE_CD
+	     AND A.ID = #{id}
+	     AND A.SITE_FAC_DIV = 'site'
+	     AND A.USE_YN = '1'
+	   <if test="siteCd != null">
+	     AND (A.SITE_FAC_CD LIKE '%'+ #{siteCd} + '%' OR B.SITE_DS LIKE '%'+ #{siteCd} + '%')
+	   </if>
+	</select>
+	
+	<select id="selWeather" resultType="DailyWorkVO">
+	  SELECT /* DailyWorkVO.selWeather */ 
+	         A.BASE_CD AS WEATHER_BC
+		   , A.TITLE 
+	    FROM BCA200V A 
+	   WHERE A.MAIN_CD = 'CMG10'
+	</select>
+	
+	<select id="selCommgrpmCd" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT /* DailyWorkVO.selWeather */
+	          A.BASE_CD AS COMMGRPM_CD
+			, A.TITLE
+			, B.RMKS
+         FROM BCA200V A
+			, CMG610 B
+        WHERE A.BASE_CD = B.COMMGRPM_CD
+          AND A.MAIN_CD = 'CMG60'
+          AND B.SITE_CD = #{siteCd}
+	</select>
+	
+	<select id="selCommgrpsCd" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT /* DailyWorkVO.selCommgrpsCd */
+	          A.COMMGRPS_CD
+			, B.COMMGRPS_DS
+         FROM CMG611 A
+  			, CMG600 B
+        WHERE A.COMMGRPS_CD = B.COMMGRPS_CD
+          AND A.SITE_CD = #{siteCd} 
+          AND A.COMMGRPM_CD = #{commgrpmCd}
+	</select>
+	
+	<select id="selPerNm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT /* DailyWorkVO.selPerNm */
+	          A.SITE_CD
+			, A.CUST_CD
+			, A.PER_NO
+			, A.PER_NM
+			, A.PER_KIND
+			, CASE WHEN A.PER_KIND = '10' THEN '직원' 
+			       WHEN A.PER_KIND = '20' THEN '작업자' 
+			       WHEN A.PER_KIND = '30' THEN '용역' 
+			       WHEN A.PER_KIND = '40' THEN '직영' END AS PER_KIND_NM
+         FROM CCM330 A
+        WHERE (A.RETIRE_DT IS NULL OR A.RETIRE_DT = '')
+          AND A.CUST_CD = #{custCd}
+          AND A.SITE_CD = #{siteCd}
+         <if test="perNm != null">
+          AND A.PER_NM LIKE '%' + #{perNm} + '%' 
+         </if>   
+	</select>
+	
+	<select id="selPerNum" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT /* DailyWorkVO.selPerNum */
+	          A.SITE_CD
+			, A.CUST_CD
+			, A.PER_NO
+			, A.WORK_DT
+			, B.PER_NM
+			, B.REGI_NO
+			, B.FORE_NO
+			, B.PER_KIND
+			, CASE WHEN B.PER_KIND = '10' THEN '직원' 
+			       WHEN B.PER_KIND = '20' THEN '작업자' 
+			       WHEN B.PER_KIND = '30' THEN '용역' 
+			       WHEN B.PER_KIND = '40' THEN '직영' END AS PER_KIND_NM
+         FROM CCM340 A
+            , CCM330 B
+        WHERE A.PER_NO = B.PER_NO 
+          AND A.SITE_CD = B.SITE_CD 
+          AND A.CUST_CD = B.CUST_CD
+          AND A.WORK_YN = '1'
+          AND A.SITE_CD = #{siteCd} 
+          AND A.WORK_DT = #{workDt}
+	</select>
+
+	  <!-- 근무자 등록 -->
+	  <select id="selWorkerSSeq" parameterType="DailyWorkVO" resultType="String">
+	     SELECT /* DailyWorkVO.selPerNum */
+	            RIGHT('0000' + CONVERT(VARCHAR, ISNULL(CONVERT(INT,MAX(SUBSTRING(PER_NO,5,7))), 0) + 1), 4) AS SEQ 
+           FROM CCM330 
+          WHERE SUBSTRING(ENTER_DT, 1, 4) = #{year} 
+            AND SITE_CD = #{siteCd} 
+            AND CUST_CD = #{custCd}
+	  </select>
+	  
+	 <select id="selWorkerS" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT /* DailyWorkVO.selWorkerS */
+	         A.SITE_CD
+           , A.CUST_CD
+           , A.PER_NO
+           , A.PER_NM
+           , A.REGI_NO
+           , A.FORE_NO
+           , A.RETIRE_DIV
+           , A.BANK
+           , A.ACCOUNT
+           , A.ENTER_DT
+           , A.WORK_YN
+           , A.RETIRE_DT
+           , A.REG_BIRTH
+           , A.PASSWORD
+           , A.FILE_SAVE_NM
+           , A.FILE_NM
+           , A.HP_NO
+           , A.PER_KIND
+           , A.COMMGRPM_CD
+           , A.COMMGRPS_CD
+           , A.COMMGRPD_CD
+           , A.PER_KIND2
+           , B.TITLE
+           , C.COMMGRPS_DS
+           , D.DESC_NM
+	    FROM CCM330 A 
+	         LEFT OUTER JOIN BCA200V B ON(A.COMMGRPM_CD = B.BASE_CD AND B.MAIN_CD = 'CMG60')
+	         LEFT OUTER JOIN CMG600 C ON(A.COMMGRPS_CD = C.COMMGRPS_CD)
+	         LEFT OUTER JOIN CCM550 D ON(A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.COMMGRPD_CD = D.DESC_CD)
+	   WHERE A.SITE_CD = #{siteCd} 
+	     AND A.CUST_CD = #{custCd}
+	   ORDER BY SITE_CD, CUST_CD,PER_NO
+	 </select>
+	 
+	 <select id="selWorkerDelCheck" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT COUNT(*) CNT FROM CCM340 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND PER_NO = #{perNo}
+	  UNION ALL
+	  SELECT COUNT(*) CNT FROM CCM400 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND PER_NO = #{perNo}
+	  UNION ALL
+	  SELECT COUNT(*) CNT FROM CCM410 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} 
+	                                    AND (REG_EMP = #{perNo} OR REVIEW_EMP = #{perNo} OR REVIEW2_EMP = #{perNo} OR CONFIRM_EMP = #{perNo})
+	  UNION ALL
+	  SELECT COUNT(*) CNT FROM CCM300 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} 
+	                                    AND (REG_EMP = #{perNo} OR REVIEW_EMP = #{perNo} OR REVIEW2_EMP = #{perNo} OR CONFIRM_EMP = #{perNo})                                  
+	 </select>
+	 
+	 <insert id="prcsWorkerS" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">
+	     INSERT INTO CCM330 (SITE_CD
+                           , CUST_CD
+                           , PER_NO
+                           , PER_NM
+                           , REG_BIRTH
+                           , REGI_NO
+                           , FORE_NO
+                           , PASSWORD
+                           , FILE_SAVE_NM
+                           , FILE_NM
+                           , HP_NO
+                           , PER_KIND
+                           , RETIRE_DIV
+                           , BANK
+                           , ACCOUNT
+                           , ENTER_DT
+                           , RETIRE_DT
+                           , OUT_CID
+                           , OUT_CDT
+                           , COMMGRPM_CD
+                           , COMMGRPS_CD
+                           , COMMGRPD_CD
+                           , PER_KIND2
+                           , WORK_YN) 
+                     VALUES ( #{siteCd}
+                            , #{custCd}
+                            , #{perNo}
+                            , #{perNm}
+                            , #{regBirth}
+                            , #{regiNo}
+                            , #{foreNo}
+                            , #{password}
+                            , #{fileSaveNm}
+                            , #{fileNm}
+                            , #{hpNo}
+                            , #{perKind}
+                            , #{retireDiv}
+                            , #{bank}
+                            , #{account}
+                            , #{enterDt}
+                            , #{retireDt}
+                            , #{id}
+                            , GETDATE()
+                            , #{commgrpmCd}
+                            , #{commgrpsCd}
+                            , #{commgrpdCd}
+                            , #{perKind2}
+                            , #{workYn}) 
+	    </if>
+	    <if test="cudKey == 'UPDATE'">
+          UPDATE CCM330 
+	         SET PER_NM = #{perNm}
+			   , REGI_NO = #{regiNo}
+			   , FORE_NO = #{foreNo}
+			   , RETIRE_DIV = #{retireDiv}
+			   , BANK = #{bank}
+			   , ACCOUNT = #{account}
+               , REG_BIRTH = #{regBirth}
+               , ENTER_DT = #{enterDt}
+               , RETIRE_DT = #{retireDt}
+               , PER_KIND = #{perKind}
+               , OUT_MID = #{id}
+               , OUT_MDT = GETDATE()
+               , PASSWORD = CASE WHEN #{password} = '*****' then PASSWORD ELSE #{password} END
+               , FILE_SAVE_NM = #{fileSaveNm}
+               , FILE_NM = #{fileNm}
+               , HP_NO = #{hpNo}
+               , PER_KIND2 = #{perKind2}
+               , COMMGRPM_CD = #{commgrpmCd}
+               , COMMGRPS_CD = #{commgrpsCd}
+               , COMMGRPD_CD = #{commgrpdCd}
+               , WORK_YN = #{workYn}
+          WHERE SITE_CD = #{siteCd} 
+            AND CUST_CD = #{custCd} 
+            AND PER_NO = #{perNo}    
+        </if>  
+        <if test="cudKey == 'DELETE'">
+          DELETE FROM CCM330 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND PER_NO = #{perNo}
+        </if>
+	 </insert>
+	 
+	 <!-- 일일근태 등록  -->
+	  <select id="selDayByDiliSPerNo" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT A.PER_NO
+, B.PER_NM
+	   FROM CCM340 A
+,CCM330 B
+	   WHERE A.PER_NO = B.PER_NO AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD 
+	     AND A.SITE_CD = #{siteCd} AND A.WORK_DT = #{workDt} AND A.CUST_CD = #{custCd}
+	     AND B.PER_NM LIKE '%' + #{perNm} + '%'
+	   ORDER BY A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+	 </select>
+	 
+	 <select id="selCommgrpm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.COMMGRPD_CD
+, B.TITLE
+, C.COMMGRPS_DS
+, D.DESC_NM
+	   FROM CCM330 A LEFT OUTER JOIN BCA200V B ON(A.COMMGRPM_CD = B.BASE_CD AND B.MAIN_CD = 'CMG60')
+	                 LEFT OUTER JOIN CMG600 C ON(A.COMMGRPS_CD = C.COMMGRPS_CD)
+	                 LEFT OUTER JOIN CCM550 D ON(A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.COMMGRPD_CD = D.DESC_CD)
+	   WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.PER_NO = #{perNo}
+	 </select>
+	 
+	 <select id="selDayByDiliS" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT A.SITE_CD
+, A.CUST_CD
+,A.PER_NO
+, A.WORK_DT
+, A.IN_TIME
+, A.OUT_TIME
+, A.WORK_KN
+, A.NORMAL
+, A.EXTEND
+, A.NIGHT
+,
+	         A.SPECIAL
+, A.OUTSIDE
+, A.EARLY
+, A.LATE
+, A.TOTAL
+, B.PER_NM
+, A.WORK_YN
+,
+	         C.TITLE
+, D.COMMGRPS_DS
+, E.DESC_NM
+	   FROM CCM340 A INNER JOIN CCM330 B ON (A.PER_NO = B.PER_NO AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD)
+	                 LEFT OUTER JOIN BCA200V C ON(B.COMMGRPM_CD = C.BASE_CD AND C.MAIN_CD = 'CMG60')
+	                 LEFT OUTER JOIN CMG600 D ON(B.COMMGRPS_CD = D.COMMGRPS_CD)
+	                 LEFT OUTER JOIN CCM550 E ON(B.SITE_CD = E.SITE_CD AND B.CUST_CD = E.CUST_CD AND B.COMMGRPD_CD = E.DESC_CD)
+	   WHERE A.SITE_CD = #{siteCd} AND A.WORK_DT = #{workDt} AND A.CUST_CD = #{custCd}
+	   ORDER BY A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+	 </select>
+	 
+	 <select id="selDayByDiliChk" parameterType="DailyWorkVO" resultType="int">
+	  SELECT COUNT(*) AS CNT FROM CCM340 WHERE SITE_CD = #{siteCd} AND WORK_DT = #{workDt} AND CUST_CD = #{custCd}
+	 </select>
+	 
+	 <insert id="prcsDayByDiliS" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">
+	    	INSERT INTO CCM340(SITE_CD
+, CUST_CD
+,PER_NO
+, WORK_DT
+, IN_TIME
+, OUT_TIME
+, WORK_KN
+, NORMAL
+, EXTEND
+, NIGHT
+, SPECIAL
+, OUTSIDE
+, EARLY
+, LATE
+,
+	    	                   TOTAL
+, WORK_YN)
+	    	  VALUES(#{siteCd}
+,#{custCd}
+,#{perNo}
+,#{workDt}
+,#{inTime}
+,#{outTime}
+,#{workKn}
+,#{normal}
+,#{extend}
+,#{night}
+,#{special}
+,#{outside}
+,#{early}
+,#{late}
+,
+	    	         #{total}
+,#{workYn})                 
+	    
+	    </if>
+	    <if test="cudKey == 'UPDATE'">
+          UPDATE CCM340 
+	        SET IN_TIME = #{inTime}
+, OUT_TIME = #{outTime}
+, WORK_KN = #{workKn}
+, NORMAL = #{normal}
+, EXTEND = #{extend}
+, NIGHT = #{night}
+, 
+	        SPECIAL = #{special}
+, OUTSIDE = #{outside}
+, EARLY = #{early}
+, LATE = #{late}
+, TOTAL = #{total}
+, WORK_YN = #{workYn}
+          WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND PER_NO = #{perNo} AND WORK_DT = #{workDt}  
+        </if>  
+        <if test="cudKey == 'DELETE'">
+          DELETE FROM CCM340 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND PER_NO = #{perNo} AND WORK_DT = #{workDt}
+        </if>
+	 </insert>
+	
+	<insert id="prcsDayByDiliCreate" parameterType="DailyWorkVO">
+	     INSERT INTO CCM340(SITE_CD
+,CUST_CD
+,PER_NO
+,WORK_DT
+,IN_TIME
+,OUT_TIME
+,WORK_KN
+,NORMAL
+,TOTAL
+,WORK_YN)
+	            SELECT SITE_CD
+,CUST_CD
+,PER_NO
+,#{workDt}
+,'0800' as IN_TIME
+,'1800'as OUT_TIME
+,'10' as WORK_KN
+, 9 as NORMAL
+, 9 as TOTAL
+, '0' 
+	              FROM CCM330
+	             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND (RETIRE_DT IS NULL OR RETIRE_DT = '')
+	               AND WORK_YN = '1'
+	</insert>
+	
+	<insert id="prcsDayByDiliDelCreate" parameterType="DailyWorkVO">	      
+	     INSERT INTO CCM340(SITE_CD
+,CUST_CD
+,PER_NO
+,WORK_DT
+,IN_TIME
+,OUT_TIME
+,WORK_KN
+,NORMAL
+,TOTAL
+,WORK_YN)
+	            SELECT A.SITE_CD
+,A.CUST_CD
+,A.PER_NO
+,#{workDt}
+,'0800' as IN_TIME
+,'1800' as OUT_TIME
+,'10' as WORK_KN
+, 9 as NORMAL
+, 9 as TOTAL
+,'0' 
+	              FROM  CCM330 A LEFT OUTER JOIN CCM340 B ON (A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO AND B.WORK_DT = #{workDt})
+				 WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND B.PER_NO IS NULL  AND (A.RETIRE_DT IS NULL OR A.RETIRE_DT = '')
+				  AND A.WORK_YN = '1'     
+	</insert>
+	
+	<select id="selDayByDiliR" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT A.SITE_CD
+, A.CUST_CD
+,A.PER_NO
+, A.WORK_DT
+, A.IN_TIME
+, A.OUT_TIME
+, A.WORK_YN
+,
+	      CASE WHEN A.WORK_KN = '10' THEN '정상' WHEN A.WORK_KN = '20' THEN '휴가' WHEN A.WORK_KN = '30' THEN '결근' WHEN A.WORK_KN = '40' THEN '출장'  END AS WORK_KN
+,
+	         A.NORMAL
+, A.EXTEND
+, A.NIGHT
+, A.SPECIAL
+, A.OUTSIDE
+, A.EARLY
+, A.LATE
+, A.TOTAL
+, B.PER_NM
+	   FROM CCM340 A
+,CCM330 B
+	   WHERE A.PER_NO = B.PER_NO AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.WORK_KN = #{workKn} AND A.WORK_DT BETWEEN #{sdate} AND #{edate} 
+	     AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+	     <if test="perNm != ''">
+	     AND B.PER_NM LIKE '%' +  #{perNm} +  '%'
+	     </if>
+	   ORDER BY A.WORK_DT
+, A.PER_NO
+	 </select>
+	
+	<!-- 개인 근태 등록 모바일 -->
+	 <select id="selIndividualDili" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 	  SELECT A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+, A.PER_NM
+,B.IN_TIME
+	 	   FROM CCM330 A LEFT OUTER JOIN (
+	 	         SELECT SITE_CD
+, CUST_CD
+, PER_NO
+,IN_TIME FROM CCM340 WHERE WORK_DT = #{workDt})B  ON(A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO)
+	 	   WHERE  A.REG_BIRTH LIKE '%' + #{regiNo} + '%' AND A.CUST_CD = #{custCd} AND A.SITE_CD = #{siteCd} 
+	 	     AND (A.RETIRE_DT IS NULL OR A.RETIRE_DT = '')
+	 	     ORDER BY A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+	 </select>
+	 
+	 <insert id="prcsIndividualDili" parameterType="DailyWorkVO">
+	     MERGE INTO CCM340 MI
+	     USING (SELECT #{siteCd} AS SITE_CD
+,#{custCd} AS CUST_CD
+,#{perNo} AS PER_NO
+, #{workDt} AS WORK_DT) GMI
+	        ON MI.SITE_CD = GMI.SITE_CD AND MI.CUST_CD = GMI.CUST_CD AND MI.PER_NO = GMI.PER_NO AND MI.WORK_DT = GMI.WORK_DT
+	      WHEN MATCHED THEN  
+           UPDATE SET IN_TIME = #{inTime}
+, WORK_KN = '10'
+, MID = #{id}
+, MDT = GETDATE()
+         WHEN NOT MATCHED THEN  
+	        INSERT (SITE_CD
+, CUST_CD
+, PER_NO
+,WORK_KN
+, WORK_DT
+,IN_TIME
+,OUT_TIME
+,NORMAL
+,TOTAL
+, CID
+, CDT)
+                     VALUES (#{siteCd}
+, #{custCd}
+,#{perNo}
+,'10'
+, #{workDt}
+, #{inTime}
+,'1800'
+,'9'
+,'9'
+, #{id}
+, GETDATE());  
+	 </insert>
+	 
+	 <select id="selSiteCdMobile" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT A.SITE_FAC_CD AS ID
+, B.SITE_DS AS VALUE
+	  FROM CCM101 A
+,CMZ100 B
+	  WHERE A.SITE_FAC_CD = B.SITE_CD
+	    AND A.ID = #{id}
+	    AND A.SITE_FAC_DIV = 'site'
+	    AND A.USE_YN = '1'
+	  
+	</select>
+	 
+	 <!-- 월근태 집계 -->
+	 <select id="selMonthByDiliR" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 	SELECT COUNT(*) AS CNT
+, A.SITE_CD
+, A.CUST_CD
+,A.PER_NO
+, SUM(A.NORMAL) AS NORMAL
+, SUM(A.EXTEND) AS EXTEND
+, SUM(A.NIGHT) AS NIGHT
+,
+	         SUM(A.SPECIAL) AS SPECIAL
+, SUM(A.OUTSIDE) AS OUTSIDE
+, SUM(A.EARLY) AS EARLY
+, SUM(A.LATE) AS LATE
+, SUM(A.TOTAL) AS TOTAL
+, B.PER_NM
+	   FROM CCM340 A
+,CCM330 B
+	   WHERE A.PER_NO = B.PER_NO AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD 
+	     AND A.WORK_DT BETWEEN #{sdate} AND #{edate} AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+	     AND A.WORK_YN = '1'
+	   <choose>
+	     <when test="perNm != null">
+	        AND B.PER_NM LIKE '%' +  #{perNm} +  '%'
+	     </when>
+	   </choose>
+	   GROUP BY A.SITE_CD
+, A.CUST_CD
+,A.PER_NO
+,B.PER_NM
+	   ORDER BY A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+	 </select>
+	 
+	 <!-- 공사 일보 등록 -->	 
+	 <select id="selConstructionPop" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.CON_SEC
+, B.TITLE
+, C.SITE_DS
+, C.CONSTRUCT_DS
+	    FROM CCM300 A
+, BCA200V B
+, CMZ100 C
+	    WHERE A.WEATHER_BC = B.BASE_CD AND A.SITE_CD = C.SITE_CD 
+	      AND A.CUST_CD = #{custCd} 
+	      AND A.WORK_DT BETWEEN #{sdate} AND #{edate}
+	      AND B.MAIN_CD = 'CMG10'
+	      AND A.SITE_CD = #{siteCd}
+	</select>
+
+    <select id="selConstructWorkNm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   <![CDATA[   SELECT MAX(WORK_NM) AS WORK_NM FROM CCM300 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT < #{workDt} ]]>
+	</select>
+	
+	<select id="selConstructionAppvForm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	     SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.CON_SEC
+, 
+	           A.NEXT_YN
+, A.REG_EMP
+, A.REG_SETT
+, A.REVIEW_EMP
+, A.REVIEW_SETT
+, 
+	           A.REVIEW2_EMP
+, A.REVIEW2_SETT
+,A.CONFIRM_EMP
+, A.CONFIRM_SETT
+, 
+	           B.TITLE
+, C.SITE_DS
+, C.CONSTRUCT_DS
+,
+	           D.PER_NM AS REG_EMP_NAME
+, E.PER_NM AS REVIEW_EMP_NAME
+, F.PER_NM AS REVIEW2_EMP_NAME
+, G.PER_NM AS CONFIRM_EMP_NAME
+	    FROM CCM300 A INNER JOIN BCA200V B ON (A.WEATHER_BC = B.BASE_CD)
+	                  INNER JOIN  CMZ100 C ON (A.SITE_CD = C.SITE_CD)
+	                  LEFT OUTER JOIN CCM330 D ON ( A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.REG_EMP = D.PER_NO)
+	                  LEFT OUTER JOIN CCM330 E ON ( A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.REVIEW_EMP = E.PER_NO)
+	                  LEFT OUTER JOIN CCM330 F ON ( A.SITE_CD = F.SITE_CD AND A.CUST_CD = F.CUST_CD AND A.REVIEW2_EMP = F.PER_NO)
+	                  LEFT OUTER JOIN CCM330 G ON ( A.SITE_CD = G.SITE_CD AND A.CUST_CD = G.CUST_CD AND A.CONFIRM_EMP = G.PER_NO)
+	    WHERE  A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}
+	      AND B.MAIN_CD = 'CMG10'
+	 </select>
+	
+	 <select id="selConstructionForm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	     SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.CON_SEC
+, A.RMK
+, A.TEMP_MIN
+, A.TEMP_MAX
+, A.WORK_DESC
+, A.WORK_NM
+,
+	           A.NEXT_YN
+, A.REG_EMP
+, A.REG_SETT
+, A.REVIEW_EMP
+, A.REVIEW_SETT
+, 
+	           A.REVIEW2_EMP
+, A.REVIEW2_SETT
+,A.CONFIRM_EMP
+, A.CONFIRM_SETT
+, 
+	           B.TITLE
+, C.SITE_DS
+, C.CONSTRUCT_DS
+,
+	           D.PER_NM AS REG_EMP_NAME
+, E.PER_NM AS REVIEW_EMP_NAME
+, F.PER_NM AS REVIEW2_EMP_NAME
+, G.PER_NM AS CONFIRM_EMP_NAME
+	    FROM CCM300 A INNER JOIN BCA200V B ON (A.WEATHER_BC = B.BASE_CD)
+	                  INNER JOIN  CMZ100 C ON (A.SITE_CD = C.SITE_CD)
+	                  LEFT OUTER JOIN CCM330 D ON ( A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.REG_EMP = D.PER_NO)
+	                  LEFT OUTER JOIN CCM330 E ON ( A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.REVIEW_EMP = E.PER_NO)
+	                  LEFT OUTER JOIN CCM330 F ON ( A.SITE_CD = F.SITE_CD AND A.CUST_CD = F.CUST_CD AND A.REVIEW2_EMP = F.PER_NO)
+	                  LEFT OUTER JOIN CCM330 G ON ( A.SITE_CD = G.SITE_CD AND A.CUST_CD = G.CUST_CD AND A.CONFIRM_EMP = G.PER_NO)
+	    WHERE  A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}
+	      AND B.MAIN_CD = 'CMG10'
+	 </select>
+	 	 
+	 <select id="selConstructionMain" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.WEATHER_MN
+, A.WEATHER_MX
+, A.WEATHER_DS
+, A.CON_SEC
+,A.RMK
+, A.TEMP_MIN
+, A.TEMP_MAX
+, A.WORK_DESC
+, A.WORK_NM
+,
+	           B.COMMGRPM_CD
+, B.COMMGRPS_CD
+, B.COMMGRPD_CD
+, B.PER_NUM
+, B.WORK_CON
+, B.PRINT_YN
+, B.PRE_QTY
+,
+	           C.TITLE
+, D.COMMGRPS_DS
+, ISNULL(E.CNT
+,0) AS CNT
+,
+	           F.DESC_NM
+	    FROM CCM300 A INNER JOIN CCM310 B ON (A.SITE_CD = B.SITE_CD  AND A.CUST_CD = B.CUST_CD AND A.WORK_DT = B.WORK_DT)
+                    INNER JOIN BCA200V C ON (B.COMMGRPM_CD = C.BASE_CD AND C.MAIN_CD = 'CMG60')
+                    INNER JOIN CMG600 D ON (B.COMMGRPS_CD = D.COMMGRPS_CD)
+                    LEFT OUTER JOIN (SELECT COUNT(*) AS CNT
+, SITE_CD
+, CUST_CD
+, WORK_DT
+, COMMGRPM_CD
+, COMMGRPS_CD FROM CCM420
+                                 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+                                  GROUP BY SITE_CD
+, CUST_CD
+, WORK_DT
+, COMMGRPM_CD
+, COMMGRPS_CD) E 
+                              ON(B.SITE_CD = E.SITE_CD AND B.CUST_CD = E.CUST_CD 
+                              AND B.work_dt = E.WORK_DT AND B.commgrpm_cd = E.COMMGRPM_CD AND B.commgrps_cd = E.COMMGRPS_CD)
+                    INNER JOIN CCM550 F ON(B.SITE_CD = F.SITE_CD AND B.CUST_CD = F.CUST_CD AND B.COMMGRPD_CD = F.DESC_CD)          
+         WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}                   
+	      ORDER BY A.SITE_CD
+, A.CUST_CD
+	 </select>
+
+     <select id="selConstructionSub" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+        SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.WEATHER_MN
+, A.WEATHER_MX
+, A.WEATHER_DS
+, A.CON_SEC
+,A.RMK
+, A.TEMP_MIN
+, A.TEMP_MAX
+, A.WORK_DESC
+, A.WORK_NM
+,
+	           B.WORK_SEQ
+, B.ITEM_CD
+, B.ITEM_NM
+, B.ITEM_SPEC
+, B.ITEM_UNIT
+, B.PRE_QTY
+, B.PRINT_YN
+,
+	           B.QTY
+, B.WORK_CON AS WORK_CON_SCM
+, B.EQUIP_BC
+	    FROM CCM300 A
+, CCM320 B
+	    WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.WORK_DT = B.WORK_DT 
+	      AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+	      AND A.WORK_DT = #{workDt}
+        ORDER BY A.SITE_CD
+, A.CUST_CD
+     </select>
+     
+     <select id="selConstructionSub01" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+        SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.WEATHER_BC
+, A.WEATHER_MN
+, A.WEATHER_MX
+, A.WEATHER_DS
+, A.CON_SEC
+,A.RMK
+, A.TEMP_MIN
+, A.TEMP_MAX
+, A.WORK_DESC
+, A.WORK_NM
+,
+	           B.WORK_SEQ
+, B.ITEM_CD
+, B.ITEM_NAME
+, B.ITEM_SPEC
+, B.IN_QTY
+, B.BUILD_QTY
+, B.OUT_QTY 
+	    FROM CCM300 A
+, CCM360 B
+	    WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.WORK_DT = B.WORK_DT 
+	      AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+	      AND A.WORK_DT = #{workDt}
+        ORDER BY A.SITE_CD
+, A.CUST_CD
+     </select>
+	 
+	 <insert id="prcsConstructionForm" parameterType="DailyWorkVO">      
+        <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM300 (SITE_CD
+, CUST_CD
+, WORK_DT
+,WEATHER_BC
+, CON_SEC
+, REG_EMP
+, REG_SETT
+, REG_DT
+, 
+                               REVIEW_EMP
+, REVIEW_SETT
+,REVIEW_DT
+,REVIEW2_EMP
+, REVIEW2_SETT
+,REVIEW2_DT
+, CONFIRM_EMP
+, CONFIRM_SETT
+, CONFIRM_DT
+, NEXT_YN
+, OUT_CID
+, OUT_CDT
+,
+                               TEMP_MIN
+, TEMP_MAX
+, RMK
+, WORK_DESC
+, WORK_NM)
+              VALUES(#{siteCd}
+, #{custCd}
+, #{workDt}
+,#{weatherBc}
+, #{conSec}
+, #{regEmp}
+, #{regSett}
+,CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE NULL END
+, 
+                       #{reviewEmp}
+, #{reviewSett}
+,CASE WHEN #{reviewSett} = 'Y' then GETDATE() ELSE NULL END
+,
+                        #{review2Emp}
+, #{review2Sett}
+,CASE WHEN #{review2Sett} = 'Y' then GETDATE() ELSE NULL END
+,
+                        #{confirmEmp}
+, #{confirmSett}
+,CASE WHEN #{confirmSett} = 'Y' then GETDATE() ELSE NULL END
+, '0'
+, #{id}
+, GETDATE()
+,
+                        #{tempMin}
+,#{tempMax}
+,#{rmk}
+,#{workDesc}
+,#{workNm}) 
+                        
+           UPDATE CCM410 SET NEXT_YN = #{appvNextYn} WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}                                       
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM300
+             SET WEATHER_BC = #{weatherBc}
+, CON_SEC = #{conSec}
+, REG_EMP = #{regEmp}
+, REG_SETT = #{regSett}
+,
+                 REG_DT = CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE REG_DT END
+,
+                 REVIEW_EMP = #{reviewEmp}
+, REVIEW_SETT = #{reviewSett}
+,
+                 REVIEW_DT = CASE WHEN #{reviewSett} = 'Y' then GETDATE() ELSE REVIEW_DT END
+,
+                 REVIEW2_EMP = #{review2Emp}
+, REVIEW2_SETT = #{review2Sett}
+,
+                 REVIEW2_DT = CASE WHEN #{review2Sett} = 'Y' then GETDATE() ELSE REVIEW2_DT END
+,
+                 CONFIRM_EMP = #{confirmEmp}
+, CONFIRM_SETT = #{confirmSett}
+,
+                 CONFIRM_DT = CASE WHEN #{confirmSett} = 'Y' then GETDATE() ELSE CONFIRM_DT END
+,
+                 OUT_MID = #{id}
+, OUT_MDT = GETDATE()
+,
+                 TEMP_MIN = #{tempMin}
+, TEMP_MAX = #{tempMax}
+, RMK = #{rmk}
+, WORK_DESC = #{workDesc}
+, WORK_NM = #{workNm}
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+        </if> 
+	 </insert>
+
+	 <insert id="delConstructionForm" parameterType="DailyWorkVO">
+	     DELETE FROM CCM310 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+         DELETE FROM CCM320 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+         DELETE FROM CCM300 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+         DELETE FROM CCM360 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+         
+         UPDATE CCM410 SET NEXT_YN = '0' WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+	 </insert>
+	 
+	 <insert id="prcsConstructionMain" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">        
+          INSERT INTO CCM310 (SITE_CD
+, CUST_CD
+, WORK_DT
+, WORK_SEQ
+, COMMGRPM_CD
+, COMMGRPS_CD
+, COMMGRPD_CD
+, PER_NUM
+, WORK_CON
+, PRE_QTY
+, PRINT_YN
+, OUT_CID
+, OUT_CDT)
+                   SELECT  #{siteCd}
+, #{custCd}
+, #{workDt}
+,right('000' + convert(varchar
+, isnull(convert(int
+, max(work_seq))
+, 0) + 1)
+, 3)
+,
+                  #{commgrpmCd}
+,#{commgrpsCd}
+, #{commgrpdCd}
+, #{perNum}
+, #{workCon}
+,#{preQty}
+,#{printYn}
+, #{id}
+, GETDATE()
+                  FROM CCM310 
+                  WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}                          
+	    </if>
+	    <if test="cudKey == 'UPDATE'">          
+          UPDATE CCM310 
+             SET  COMMGRPD_CD = #{commgrpdCd}
+, PER_NUM = #{perNum}
+, WORK_CON = #{workCon}
+, PRE_QTY = #{preQty}
+, PRINT_YN = #{printYn}
+, 
+                  OUT_MID = #{id}
+, OUT_MDT = GETDATE()
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND COMMGRPM_CD = #{commgrpmCd}
+                  AND COMMGRPS_CD = #{commgrpsCd} AND COMMGRPD_CD = #{commgrpdCd} AND WORK_SEQ = #{workSeq}
+        </if>  
+        <if test="cudKey == 'DELETE'">       
+          DELETE FROM CCM310 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+               AND COMMGRPM_CD = #{commgrpmCd} AND COMMGRPS_CD = #{commgrpsCd} AND COMMGRPD_CD = #{commgrpdCd} AND WORK_SEQ = #{workSeq}
+        </if>
+	 </insert>
+	 
+	 <insert id="prcsConstructionSub" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM320 (SITE_CD
+, CUST_CD
+, WORK_DT
+,WORK_SEQ
+,  ITEM_CD
+, ITEM_NM
+, ITEM_SPEC
+, ITEM_UNIT
+, QTY
+, WORK_CON
+, OUT_CID
+, OUT_CDT
+,EQUIP_BC
+,PRE_QTY
+,PRINT_YN)
+                  SELECT  #{siteCd}
+, #{custCd}
+, #{workDt}
+,right('000' + convert(varchar
+, isnull(convert(int
+, max(work_seq))
+, 0) + 1)
+, 3)
+,
+                  #{itemCd}
+,#{itemNm}
+, #{itemSpec}
+, #{itemUnit}
+, #{qty}
+, #{workConScm}
+, #{id}
+, GETDATE()
+, 'CMG2010'
+,#{preQty}
+,#{printYn}
+                  FROM CCM320 
+                  WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}                                         
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM320
+             SET  ITEM_NM = #{itemNm}
+, ITEM_SPEC = #{itemSpec}
+, ITEM_UNIT = #{itemUnit}
+,PRE_QTY = #{preQty}
+, PRINT_YN = #{printYn}
+,
+                  QTY = #{qty}
+, WORK_CON = #{workConScm}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE()
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND WORK_SEQ = #{workSeq}
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM320 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND WORK_SEQ = #{workSeq}
+        </if>
+	 </insert>
+	 
+	 <insert id="prcsConstructionSub01" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM360 (SITE_CD
+, CUST_CD
+, WORK_DT
+, WORK_SEQ
+, ITEM_CD
+, ITEM_NAME
+, ITEM_SPEC
+, IN_QTY
+, BUILD_QTY
+, OUT_QTY
+, OUT_CID
+, OUT_CDT)
+                  SELECT  #{siteCd}
+, #{custCd}
+, #{workDt}
+, right('000' + convert(varchar
+, isnull(convert(int
+, max(work_seq))
+, 0) + 1)
+, 3)
+,
+                  #{itemCd}
+,#{itemName}
+, #{itemSpec}
+, #{inQty}
+, #{buildQty}
+, #{outQty}
+, #{id}
+, GETDATE()
+                  FROM CCM360 
+                  WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}                                          
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM360
+             SET  ITEM_CD = #{itemCd}
+, ITEM_NAME = #{itemName}
+, ITEM_SPEC = #{itemSpec}
+, IN_QTY = #{inQty}
+,
+                  BUILD_QTY = #{buildQty}
+, OUT_QTY = #{outQty}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND WORK_SEQ = #{workSeq}
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM360 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND WORK_SEQ = #{workSeq}
+        </if>
+	 </insert>
+	 
+	 <!-- 공사일보 추가 작업 부분  -->
+	 <select id="selConstructDailyAttendChk" parameterType="DailyWorkVO" resultType="DailyWorkVO"> 
+	     SELECT COUNT(*) CNT  FROM CCM420 A
+, CCM410 B WHERE  B.REG_SETT = 'Y' AND (B.REVIEW_SETT = 'P' OR B.REVIEW_SETT = 'Y')
+		                        AND (B.REVIEW2_SETT = 'P' OR B.REVIEW2_SETT = 'Y') AND (B.CONFIRM_SETT = 'P' OR B.CONFIRM_SETT = 'Y')
+		                        AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.WORK_DT = B.WORK_DT 
+		                        AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt} 
+	 </select>
+	 
+	 <select id="selConstructDailyAttend" parameterType="DailyWorkVO" resultType="DailyWorkVO"> 
+	 <![CDATA[  
+		SELECT A.SITE_CD
+, A.CUST_CD
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.COMMGRPD_CD
+,sum(ISNULL(A.LEG_PER_QTY
+,0)) AS PRE_QTY
+, 
+		      SUM(ISNULL(A.QTY
+,0)) AS PER_NUM
+,
+		      B.TITLE
+, C.COMMGRPS_DS
+,
+		      D.DESC_NM
+,
+		      MAX(A.WORK_CON) AS WORK_CON
+		FROM
+		  (SELECT SITE_CD
+, CUST_CD
+, '' AS WORK_DT
+, COMMGRPM_CD
+, COMMGRPS_CD
+, COMMGRPD_CD
+, COUNT(PER_NO) AS LEG_PER_QTY
+, 0 AS QTY
+, '' AS WORK_CON
+		       FROM CCM420 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT < #{workDt} AND (PER_KIND = '10' OR PER_KIND = '20')
+		        GROUP BY SITE_CD
+, CUST_CD
+, COMMGRPM_CD
+, COMMGRPS_CD
+, COMMGRPD_CD
+		        UNION ALL
+		        SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.COMMGRPD_CD
+, 0 AS LEG_PER_QTY 
+, COUNT(A.PER_NO) AS QTY
+,
+		        STUFF((SELECT case when isnull(E.WORK_COND
+, '') = '' then '' else '
+, ' END +  E.WORK_COND  
+		                FROM ccm420 E
+		                WHERE (A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.WORK_DT = E.WORK_DT AND A.COMMGRPM_CD =  E.COMMGRPM_CD 
+		                       AND A.COMMGRPS_CD = E.COMMGRPS_CD AND A.COMMGRPD_CD = E.COMMGRPD_CD)
+		                 FOR XML PATH ('')) 
+,1
+,1
+,'') AS WORK_CON
+		       FROM CCM420 A
+, CCM410 B WHERE  B.REG_SETT = 'Y'
+		           AND (B.REVIEW_SETT = 'P' OR B.REVIEW_SETT = 'Y')
+		           AND (B.REVIEW2_SETT = 'P' OR B.REVIEW2_SETT = 'Y')
+			       AND (B.CONFIRM_SETT = 'P' OR B.CONFIRM_SETT = 'Y')
+		           AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.WORK_DT = B.WORK_DT
+		           AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt} AND (A.PER_KIND = '10' OR A.PER_KIND = '20')
+		         GROUP BY A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.COMMGRPD_CD
+		       UNION ALL 
+		       SELECT SITE_CD
+, CUST_CD
+, '' AS WORK_DT
+, COMMGRPM_CD
+, COMMGRPS_CD
+, COMMGRPD_CD
+, PER_NUM AS LEG_PER_QTY 
+, 0 AS QTY
+, '' AS WORK_CON
+		          FROM CCM510
+		          WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}) A
+		       INNER JOIN BCA200V B on (A.COMMGRPM_CD = B.BASE_CD AND B.MAIN_CD = 'CMG60')
+		       INNER JOIN CMG600 C on (A.COMMGRPS_CD = C.COMMGRPS_CD) 
+		       INNER JOIN CCM550 D on ( A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.COMMGRPD_CD = D.DESC_CD)
+		      GROUP BY A.SITE_CD
+, A.CUST_CD
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.COMMGRPD_CD
+,B.TITLE
+, C.COMMGRPS_DS
+,D.DESC_NM
+	 ]]>    
+	 </select>
+	 
+	 <select id="selConstructAppvSubGrid" parameterType="DailyWorkVO" resultType="DailyWorkVO">    
+	<![CDATA[  SELECT A.SITE_CD
+, A.CUST_CD
+,A.EQUIP_BC
+, A.ITEM_CD
+, A.ITEM_NM
+, A.ITEM_SPEC
+, A.ITEM_UNIT
+, SUM(ISNULL(A.LEG_qTY
+,0)) AS PRE_QTY
+,
+                      SUM(A.QTY) AS QTY
+, A.WORK_CON
+, C.TITLE
+                 FROM 
+                     (SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+, ITEM_NM
+, ITEM_SPEC
+, ITEM_UNIT
+,EQUIP_BC
+, '' AS WORK_CON
+, QTY AS LEG_QTY
+, 0 AS QTY
+                       FROM CCM320 
+                       WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND  WORK_DT < #{workDt} AND PRINT_YN = '1'
+                       UNION ALL
+                      SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+, ITEM_NM
+, ITEM_SPEC
+, ITEM_UNIT
+,EQUIP_BC
+, WORK_CON
+, QTY 
+, 0 AS LEG_QTY
+                      FROM CCM320 
+                      WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} AND PRINT_YN = '1'
+                      UNION ALL
+                      SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+, ITEM_NAME AS ITEM_NM
+, ITEM_SPEC
+, ITEM_UNIT
+,EQUIP_BC
+,'' AS WORK_CON
+, QTY AS LEG_QTY
+, 0AS QTY
+                       FROM CCM520 
+                       WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+                       ) A LEFT OUTER JOIN BCA200 C ON (A.ITEM_UNIT = C.BASE_CD AND C.MAIN_CD LIKE 'BM700%')
+              GROUP BY A.SITE_CD
+, A.CUST_CD
+, A.EQUIP_BC
+, A.ITEM_CD
+, A.ITEM_NM
+, A.ITEM_SPEC
+, A.ITEM_UNIT
+, C.TITLE
+,A.WORK_CON  ]]> 
+	 </select>
+	 
+	 <select id="selConstructAppvEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '20'
+	 </select>
+	 
+	 <select id="selConstructKindEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '20' AND A.SETT_KIND = #{settKind}
+	 </select>
+	 
+	 <select id="selConstructRegEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '20' AND A.SETT_KIND = '10'
+	 </select>
+	 
+	 <select id="selConstructPerNoP" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	     SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.PER_NO
+, A.ACCP_MD
+, A.WORK_COND
+, A.RMK
+,A.PER_KIND
+,
+	            CASE WHEN A.PER_KIND = '10' THEN '직원' WHEN A.PER_KIND = '20' THEN '작업자' WHEN A.PER_KIND = '30' THEN '용역' WHEN A.PER_KIND = '40' THEN '직영' END AS PER_KIND_NM
+,
+	           B.PER_NM
+,
+	           C.TITLE
+, D.COMMGRPS_DS
+, E.SITE_DS
+, F.CUST_NM AS CUST_DS
+,
+	           G.DESC_NM AS COMMGRPD_CD
+	     FROM CCM420 A
+, CCM330 B
+, BCA200V C
+, CMG600 D
+, CMZ100 E
+, BCV100 F
+, CCM550 G
+	     WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	       AND A.COMMGRPM_CD = C.BASE_CD AND C.MAIN_CD = 'CMG60' AND A.COMMGRPS_CD = D.COMMGRPS_CD
+	       AND A.SITE_CD = E.SITE_CD
+	       AND A.CUST_CD = DBO.SAFEDB_DEC('SAFEDB.POLICY'
+,'ARIA256'
+,F.BIZ_NO
+,'')
+	       AND A.SITE_CD = G.SITE_CD AND A.CUST_CD = G.CUST_CD AND A.COMMGRPD_CD = G.DESC_CD
+	       AND A.PRINT_YN = '1'
+	      AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt} 
+	 </select>
+	 
+	 <select id="selConstructEquiCodePop" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT  B.KBIG_DS
+, C.KMID_DS
+, D.KSMALL_DS
+, A.ITEM_CD
+, A.KITEM_DS
+, A.ITEM_SZ
+, A.ITEM_UT
+, E.TITLE
+	      FROM  BMF400 A INNER JOIN BMF100 B ON (A.BIG_CD = B.BIG_CD)
+	                     INNER JOIN BMF200 C ON (A.BIG_CD = C.BIG_CD AND A.MID_CD = C.MID_CD)
+	                     INNER JOIN BMF300 D ON (A.BIG_CD = D.BIG_CD AND A.MID_cD = D.MID_CD AND A.SMALL_CD = D.SMALL_CD)
+	                     INNER JOIN BCA200 E ON (A.ITEM_UT = E.BASE_CD AND E.MAIN_CD LIKE 'BM700%')
+	     WHERE (A.ITEM_CD LIKE '' + '%' OR A.KITEM_DS LIKE '%' + '' + '%')
+	       AND A.BIG_CD = '5'                
+	 </select>
+	 
+	 <select id="selConstructitemCodePop" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT B.KBIG_DS
+, C.KMID_DS
+, D.KSMALL_DS
+, A.ITEM_CD
+, A.KITEM_DS
+, A.ITEM_SZ
+, A.ITEM_UT
+, ISNULL(E.TITLE
+,'-') AS TITLE
+	      FROM BMF400 A INNER JOIN BMF100 B ON (A.BIG_CD = B.BIG_CD)
+	                    INNER JOIN BMF200 C ON (A.BIG_CD = C.BIG_CD AND A.MID_CD = C.MID_CD)
+	                    INNER JOIN BMF300 D ON (A.BIG_CD = D.BIG_CD AND A.MID_cD = D.MID_CD AND A.SMALL_CD = D.SMALL_CD)
+	                    LEFT OUTER JOIN BCA200V E ON (A.ITEM_UT = E.BASE_CD)
+	      WHERE A.USE_YN = '1'
+	        AND (A.ITEM_CD LIKE '' + '%' OR A.KITEM_DS LIKE '%' + '' + '%')
+	        ORDER BY A.BIG_CD
+, A.MID_CD
+, A.SMALL_CD
+, A.ITEM_CD              
+	 </select>
+	 
+	 <!-- 공사일보 프린트 -->
+	 <select id="selConstructMainP" statementType="CALLABLE" parameterType="DailyWorkVO" resultMap="DailyWorkMap" resultType="ResultSet">                                                                 
+       {call UP_CCM300_PRINT01(#{siteCd
+,jdbcType=VARCHAR}
+,#{workDt
+,jdbcType=VARCHAR}
+,#{custCd
+,jdbcType=VARCHAR})}	
+	 </select>
+	 
+	 <select id="selConstructSumPreQty" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT SITE_CD
+, CUST_CD
+, WORK_DT
+, SUM(PRE_QTY) AS SUM_PRE_QTY
+, SUM(PER_NUM) AS SUM_PER_NUM
+, (SUM(PRE_QTY)+SUM(PER_NUM)) as TOTAL_PER_NUM
+	     FROM CCM310
+	     WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}
+	      GROUP BY SITE_CD
+, CUST_CD
+, WORK_DT
+	 </select>
+	 
+	  <select id="selConstructSumWorkerNum" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, COUNT(A.PER_NO) as WORKER_CNT
+	     FROM CCM340 A
+, CCM330 B
+	     WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}
+	      AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO AND B.PER_KIND = '10'
+	      GROUP BY A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+	 </select>
+	 
+	 <select id="selConstructAppvSumNum" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	<![CDATA[    SELECT A.SITE_CD
+, A.CUST_CD
+, SUM(ISNULL(A.APPV_WORK_CNT
+,0)) AS APPV_WORK_CNT
+, 
+	                    SUM(ISNULL(A.LEG_WORK_CNT
+,0)) AS LEG_WORK_CNT
+,
+                        SUM(ISNULL(A.APPV_WORK_CNT
+,0)+ ISNULL(A.LEG_WORK_CNT
+,0)) AS TOTAL_APPV_WORK_CNT
+         FROM (
+            SELECT SITE_CD
+, CUST_CD
+, '' AS WORK_DT
+, 0 AS APPV_WORK_CNT
+, COUNT(PER_NO) AS LEG_WORK_CNT  
+              FROM CCM420 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT < #{workDt} AND (PER_KIND ='30' OR PER_KIND = '40')
+              GROUP BY SITE_CD
+, CUST_CD
+            UNION ALL
+            SELECT SITE_CD
+, CUST_CD
+, WORK_DT
+, COUNT(PER_NO) AS APPV_WORK_CNT
+, 0 AS LEG_WORK_CNT 
+              FROM CCM420 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt}  AND (PER_KIND ='30' OR PER_KIND = '40')
+              GROUP BY SITE_CD
+, CUST_CD
+, WORK_DT
+         )A
+         GROUP BY A.SITE_CD
+, A.CUST_CD]]> 
+	 </select>  
+	 
+	 <select id="selConstructSubP" parameterType="DailyWorkVO" resultType="DailyWorkVO">    
+	<![CDATA[ 
+	     SELECT A.SITE_CD
+, A.CUST_CD
+,A.EQUIP_BC
+, A.ITEM_CD
+, B.KITEM_DS AS ITEM_NM
+, B.ITEM_SZ AS ITEM_SPEC
+, B.ITEM_UT AS ITEM_UNIT
+, 
+	            SUM(ISNULL(A.LEG_QTY
+,0)) AS LEG_QTY
+,
+                SUM(A.QTY) AS QTY
+, MAX(A.WORK_CON)
+, C.TITLE
+, SUM(ISNULL(A.LEG_QTY
+,0))+SUM(A.QTY) AS TOT_QTY
+, MAX(A.PRINT_YN)
+          FROM 
+                (SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+,EQUIP_BC
+, '' AS WORK_CON
+, QTY AS LEG_QTY
+, 0 AS QTY
+, '0' PRINT_YN
+                       FROM CCM320 
+                       WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND  WORK_DT < #{workDt}
+                       UNION ALL
+                      SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+, EQUIP_BC
+, WORK_CON
+, 0 AS LEG_QTY
+, QTY
+, print_yn
+                      FROM CCM320 
+                      WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+                      UNION ALL
+                      SELECT SITE_CD
+, CUST_CD
+, ITEM_CD
+, EQUIP_BC
+,'' AS WORK_CON
+, QTY AS LEG_QTY
+, 0 AS QTY
+, '0' PRINT_YN
+                       FROM CCM520 
+                       WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+                       ) A INNER JOIN BMF400 B ON (A.ITEM_CD = B.ITEM_CD AND B.BIG_CD = '5')
+                           INNER JOIN BCA200 C ON (B.ITEM_UT = C.BASE_CD AND C.MAIN_CD LIKE 'BM700%')
+              GROUP BY A.SITE_CD
+, A.CUST_CD
+, A.EQUIP_BC
+, A.ITEM_CD
+, B.KITEM_DS
+, B.ITEM_SZ
+, B.ITEM_UT
+, C.TITLE
+             HAVING MAX(A.PRINT_YN) = 1
+	  ]]>  
+	 </select>
+
+	 <!-- 공사일보 프린트 여기까지 -->
+	 
+	 <!--  공사일보 결재 -->
+	 <insert id="prcsConsturctionRForm" parameterType="DailyWorkVO">                    
+         UPDATE CCM300
+             SET  REG_EMP = #{regEmp}
+, REG_SETT = #{regSett}
+, REG_DT = CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE REG_DT END
+,
+                 REVIEW_EMP = #{reviewEmp}
+, REVIEW_SETT = #{reviewSett}
+, REVIEW_DT = CASE WHEN #{reviewSett} = 'Y' then GETDATE() ELSE REVIEW_DT END
+,
+                 REVIEW2_EMP = #{review2Emp}
+, REVIEW2_SETT = #{review2Sett}
+, REVIEW2_DT = CASE WHEN #{review2Sett} = 'Y' then GETDATE() ELSE REVIEW2_DT END
+,
+                 CONFIRM_EMP = #{confirmEmp}
+, CONFIRM_SETT = #{confirmSett}
+, CONFIRM_DT = CASE WHEN #{confirmSett} = 'Y' then GETDATE() ELSE CONFIRM_DT END
+,
+                 OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+	 </insert>
+	 
+	 <!-- 결재기준등록  -->
+	 <select id="selApprovalStanS" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+	 </select>
+	 
+	 <insert id="prcsApprovalStanS" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM400 (SITE_CD
+, CUST_CD
+, KIND
+, SETT_KIND
+, PER_NO
+, RMK
+, OUT_CID
+, OUT_CDT)
+                        VALUES(#{siteCd}
+, #{custCd}
+, #{kind}
+, #{settKind}
+, #{perNo}
+, #{rmk}
+, #{id}
+, GETDATE())                                        
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM400
+             SET  RMK = #{rmk}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND KIND = #{kind} AND SETT_KIND = #{settKind} AND PER_NO = #{perNo}
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM400 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND KIND = #{kind} AND SETT_KIND = #{settKind} AND PER_NO = #{perNo}
+        </if>
+	 </insert>
+	 
+	 <!-- 일일출역표 등록 -->
+	 <select id="selDailyAttendDiliS" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	  SELECT A.SITE_CD
+, A.CUST_CD
+,A.PER_NO
+, A.WORK_DT
+, A.IN_TIME
+, A.OUT_TIME
+, A.WORK_KN
+, A.NORMAL
+, A.EXTEND
+, A.NIGHT
+,
+	         A.SPECIAL
+, A.OUTSIDE
+, A.EARLY
+, A.LATE
+, A.TOTAL
+, B.PER_NM
+, B.PER_KIND
+, 
+	         CASE WHEN B.PER_KIND = '10' THEN '직원' WHEN B.PER_KIND = '20' THEN '작업자' WHEN B.PER_KIND = '30' THEN '용역' WHEN B.PER_KIND = '40' THEN '직영' END AS PER_KIND_NM
+,
+	         B.COMMGRPM_CD
+, B.COMMGRPS_CD
+, B.COMMGRPD_CD
+,
+	         C.TITLE
+, D.COMMGRPS_DS
+, E.DESC_NM
+	   FROM CCM340 A INNER JOIN CCM330 B ON (A.PER_NO = B.PER_NO AND A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD)
+	                 LEFT OUTER JOIN BCA200V C ON(B.COMMGRPM_CD = C.BASE_CD AND C.MAIN_CD = 'CMG60')
+	                 LEFT OUTER JOIN CMG600 D ON(B.COMMGRPS_CD = D.COMMGRPS_CD)
+	                 LEFT OUTER JOIN CCM550 E ON(B.SITE_CD = E.SITE_CD AND B.CUST_CD = E.CUST_CD AND B.COMMGRPD_CD = E.DESC_CD)
+	   WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt} AND A.WORK_KN = '10'
+	   AND A.WORK_YN = '1'
+	   ORDER BY A.SITE_CD
+, A.CUST_CD
+, A.PER_NO
+	 </select>
+	 
+	 <select id="selDailyAttendSPop" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	   SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, B.SITE_DS
+, B.CONSTRUCT_DS
+	    FROM CCM410 A
+,  CMZ100 B
+	    WHERE A.SITE_CD = B.SITE_CD 
+	      AND A.CUST_CD = #{custCd} 
+	      AND A.WORK_DT BETWEEN #{sdate} AND #{edate}
+	      AND A.SITE_CD = #{siteCd}
+	</select>
+	 
+	 <select id="selDailyAttendSForm" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.REG_EMP
+, A.REG_SETT
+, A.REG_DT
+, A.REVIEW_EMP
+, A.REVIEW_SETT
+, A.REVIEW_DT
+, A.REVIEW2_EMP
+, A.REVIEW2_SETT
+, A.REVIEW2_DT
+,
+	           A.CONFIRM_EMP
+, A.CONFIRM_SETT
+, A.CONFIRM_DT
+, A.NEXT_YN
+, A.REG_EMP AS PER_NO
+,
+	           B.PER_NM AS REG_EMP_NAME
+, C.PER_NM AS REVIEW_EMP_NAME
+, D.PER_NM AS CONFIRM_EMP_NAME 
+, E.PER_NM AS REVIEW2_EMP_NAME
+,
+	           B.FILE_SAVE_NM AS REG_FILE_NM
+, C.FILE_SAVE_NM AS REVIEW_FILE_NM
+, 
+	           E.FILE_SAVE_NM AS REVIEW2_FILE_NM
+, D.FILE_SAVE_NM AS CONFIRM_FILE_NM
+	     FROM CCM410 A LEFT OUTER JOIN CCM330 B ON ( A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.REG_EMP = B.PER_NO)
+	                   LEFT OUTER JOIN CCM330 C ON ( A.SITE_CD = C.SITE_CD AND A.CUST_CD = C.CUST_CD AND A.REVIEW_EMP = C.PER_NO)
+	                   LEFT OUTER JOIN CCM330 D ON ( A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.CONFIRM_EMP = D.PER_NO)
+	                   LEFT OUTER JOIN CCM330 E ON ( A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.REVIEW2_EMP = E.PER_NO)
+	     WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}      
+	 </select>
+	 
+	 <select id="selDailyAttendSGrid" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.PER_NO
+, A.ACCP_MD
+, A.WORK_COND
+, A.RMK
+, A.PER_KIND
+, A.AMT
+, A.COMMGRPD_CD
+, A.PRINT_YN
+,
+	           CASE WHEN A.PER_KIND = '10' THEN '직원' WHEN A.PER_KIND = '20' THEN '작업자' WHEN A.PER_KIND = '30' THEN '용역' WHEN A.PER_KIND = '40' THEN '직영' END AS PER_KIND_NM
+,
+	           B.PER_NM
+,
+	           C.TITLE
+, D.COMMGRPS_DS
+,
+	           E.DESC_NM
+	     FROM CCM420 A
+, CCM330 B
+, BCA200V C
+, CMG600 D
+, CCM550 E
+	     WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	       AND A.COMMGRPM_CD = C.BASE_CD AND C.MAIN_CD = 'CMG60' AND A.COMMGRPS_CD = D.COMMGRPS_CD
+	       AND A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.COMMGRPD_CD = E.DESC_CD
+	      AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}   
+	 </select>
+	 
+	 <select id="selDailyAttendRegEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '10' AND A.SETT_KIND = '10'
+	 </select>
+	 
+	 <select id="selDailyAttendAppvEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '10'
+	 </select>
+	 
+	 <select id="selDailyAttendConfirmRegEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT COUNT(*) AS CNT FROM CCM330 A
+, CCM400 B 
+	    WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	      AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.PER_NO = #{perNo} AND A.PASSWORD = #{password}
+	 </select>
+	 
+	 <insert id="prcsDailyAttendSForm" parameterType="DailyWorkVO">
+	   <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM410 (SITE_CD
+, CUST_CD
+, WORK_DT
+, REG_EMP
+, REG_SETT
+, REG_DT
+, REVIEW_EMP
+, REVIEW_SETT
+,REVIEW2_EMP
+, REVIEW2_SETT
+,
+                               CONFIRM_EMP
+, CONFIRM_SETT
+, NEXT_YN
+, OUT_CID
+, OUT_CDT)
+                       VALUES(#{siteCd}
+, #{custCd}
+, #{workDt}
+, #{regEmp}
+, #{regSett}
+,CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE NULL END
+, #{reviewEmp}
+, #{reviewSett}
+,
+                        #{review2Emp}
+, #{review2Sett}
+,#{confirmEmp}
+, #{confirmSett}
+, '0'
+, #{id}
+, GETDATE())                                        
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM410
+             SET  REG_EMP = #{regEmp}
+, REG_SETT = #{regSett} 
+,REG_DT = CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE REG_DT END
+,
+              REVIEW_EMP = #{reviewEmp}
+, REVIEW_SETT = #{reviewSett}
+,REVIEW2_EMP = #{review2Emp}
+, REVIEW2_SETT = #{review2Sett}
+,
+                  CONFIRM_EMP = #{confirmEmp}
+, CONFIRM_SETT = #{confirmSett}
+,  OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+        </if>  
+	 </insert>
+	 
+	 <insert id="prcsDailyAttendSGrid" parameterType="DailyWorkVO">
+	    <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM420 (SITE_CD
+, CUST_CD
+, WORK_DT
+, COMMGRPM_CD
+, COMMGRPS_CD
+, PER_NO
+, ACCP_MD
+, WORK_COND
+, 
+                               RMK
+, OUT_CID
+, OUT_CDT
+,PER_KIND
+,AMT
+,COMMGRPD_CD
+,PRINT_YN)
+                       VALUES(#{siteCd}
+, #{custCd}
+, #{workDt}
+, #{commgrpmCd}
+, #{commgrpsCd}
+, #{perNo}
+, #{accpMd}
+, #{workCond}
+,
+                              #{rmk}
+, #{id}
+, GETDATE()
+,#{perKind}
+,#{amt}
+,#{commgrpdCd}
+,#{printYn})                                        
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM420
+             SET  ACCP_MD = #{accpMd}
+, WORK_COND = #{workCond}
+,  RMK = #{rmk}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE()
+,COMMGRPD_CD = #{commgrpdCd}
+,
+                  PRINT_YN = #{printYn}
+, AMT = #{amt}
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+               AND COMMGRPM_CD = #{commgrpmCd} AND COMMGRPS_CD = #{commgrpsCd} AND PER_NO = #{perNo} 
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM420 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+               AND COMMGRPM_CD = #{commgrpmCd} AND COMMGRPS_CD = #{commgrpsCd} AND PER_NO = #{perNo}
+        </if>
+	 </insert>
+	 
+	 <insert id="delDailyAttendS" parameterType="DailyWorkVO">
+	     DELETE FROM CCM410 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+	     DELETE FROM CCM420 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+	 </insert>
+	 
+	 <!-- 일일출역표 결재  -->
+	 <select id="selDailyAttendRAppvEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	    SELECT A.SITE_CD
+, A.CUST_CD
+, A.WORK_DT
+, A.REG_EMP
+, A.REG_SETT
+, A.REG_DT
+, A.REVIEW_EMP
+, A.REVIEW_SETT
+, A.REVIEW_DT
+,
+	           A.REVIEW2_EMP
+, A.REVIEW2_SETT
+, A.REVIEW2_DT
+,
+	           A.CONFIRM_EMP
+, A.CONFIRM_SETT
+, A.CONFIRM_DT
+, A.NEXT_YN
+,
+	           B.PER_NM AS REG_EMP_NAME
+, C.PER_NM AS REVIEW_EMP_NAME
+, D.PER_NM AS CONFIRM_EMP_NAME
+, E.PER_NM AS REVIEW2_EMP_NAME
+	     FROM CCM410 A LEFT OUTER JOIN CCM330 B ON ( A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.REG_EMP = B.PER_NO)
+	                   LEFT OUTER JOIN CCM330 C ON ( A.SITE_CD = C.SITE_CD AND A.CUST_CD = C.CUST_CD AND A.REVIEW_EMP = C.PER_NO)
+	                   LEFT OUTER JOIN CCM330 D ON ( A.SITE_CD = D.SITE_CD AND A.CUST_CD = D.CUST_CD AND A.CONFIRM_EMP = D.PER_NO)
+	                   LEFT OUTER JOIN CCM330 E ON ( A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.REVIEW2_EMP = E.PER_NO)
+	     WHERE A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.WORK_DT = #{workDt}      
+	 </select>
+	 
+	 <select id="selDailyAttendRKindEmp" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+	 		SELECT A.SITE_CD
+, A.CUST_CD
+, A.KIND
+, A.SETT_KIND
+, A.PER_NO
+, A.RMK
+, B.PER_NM
+	 		  FROM CCM400 A
+, CCM330 B
+	 		  WHERE A.SITE_CD = B.SITE_CD AND A.CUST_CD = B.CUST_CD AND A.PER_NO = B.PER_NO
+	 		    AND A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd} AND A.KIND = '10' AND A.SETT_KIND = #{settKind}
+	 </select>
+	 
+	 <insert id="prcsDailyAttendRForm" parameterType="DailyWorkVO">                    
+          UPDATE CCM410
+             SET  REG_EMP = #{regEmp}
+, REG_SETT = #{regSett} 
+,REG_DT = CASE WHEN #{regSett} = 'Y' then GETDATE() ELSE REG_DT END
+,
+              REVIEW_EMP = #{reviewEmp}
+, REVIEW_SETT = #{reviewSett}
+, REVIEW_DT = CASE WHEN #{reviewSett} = 'Y' then GETDATE() ELSE REVIEW_DT END
+,
+              REVIEW2_EMP = #{review2Emp}
+, REVIEW2_SETT = #{review2Sett}
+, REVIEW2_DT = CASE WHEN #{review2Sett} = 'Y' then GETDATE() ELSE REVIEW2_DT END
+,
+                  CONFIRM_EMP = #{confirmEmp}
+, CONFIRM_SETT = #{confirmSett}
+, CONFIRM_DT = CASE WHEN #{confirmSett} = 'Y' then GETDATE() ELSE CONFIRM_DT END
+,
+                   OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_DT = #{workDt} 
+	 </insert>
+
+    <!-- 공사일보 누계 현황 -->
+    <select id="selConstructStanMst" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+      SELECT A.SITE_CD
+, A.CUST_CD
+, A.COMMGRPM_CD
+, A.COMMGRPS_CD
+, A.STND_DT
+, A.COMMGRPD_CD
+, A.PER_NUM
+, A.WORK_CON
+,
+             B.TITLE
+, D.COMMGRPS_DS
+, E.DESC_NM
+        FROM CCM510 A
+, BCA200V B
+, CMG600 D
+, CCM550 E
+        WHERE A.COMMGRPM_CD = B.BASE_CD AND B.MAIN_CD = 'CMG60'
+         AND  A.COMMGRPS_CD = D.COMMGRPS_CD 
+         AND  A.SITE_CD = E.SITE_CD AND A.CUST_CD = E.CUST_CD AND A.COMMGRPD_cD = E.DESC_CD
+	     AND  A.SITE_CD = #{siteCd} AND A.CUST_CD = #{custCd}
+    </select>
+    
+     <select id="selConstructStanSub" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+       SELECT SITE_CD
+, CUST_CD
+, WORK_SEQ
+, STND_DT
+, EQUIP_BC
+, ITEM_CD
+, ITEM_NAME
+, ITEM_SPEC
+, ITEM_UNIT
+, QTY
+, WORK_CON
+         FROM CCM520
+         WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+    </select>
+
+    <insert id="insConstructStanMst" parameterType="DailyWorkVO">
+       <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM510 (SITE_CD
+, CUST_CD
+, COMMGRPM_CD
+, COMMGRPS_CD
+, STND_DT
+, COMMGRPD_CD
+, PER_NUM
+, WORK_CON
+, OUT_CID
+, OUT_CDT)
+                   VALUES(#{siteCd}
+, #{custCd}
+, #{commgrpmCd}
+, #{commgrpsCd}
+, #{stndDt}
+, #{commgrpdCd}
+, #{perNum}
+, #{workCon}
+, #{id}
+, GETDATE())                                       
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM510
+             SET  STND_DT = #{stndDt}
+, PER_NUM = #{perNum}
+, WORK_CON = #{workCon}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND COMMGRPM_CD = #{commgrpmCd} AND COMMGRPS_CD = #{commgrpsCd} AND COMMGRPD_CD = #{commgrpdCd}
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM510 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND COMMGRPM_CD = #{commgrpmCd} AND COMMGRPS_CD = #{commgrpsCd} AND COMMGRPD_CD = #{commgrpdCd}
+        </if>
+    </insert>
+    
+    <insert id="insConstructStanSub" parameterType="DailyWorkVO">
+      <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM520 (SITE_CD
+, CUST_CD
+, WORK_SEQ
+, STND_DT
+, EQUIP_BC
+, ITEM_CD
+,ITEM_NAME
+,ITEM_SPEC
+,ITEM_UNIT
+,QTY
+, WORK_CON
+, OUT_CID
+, OUT_CDT)
+                   SELECT #{siteCd}
+,#{custCd}
+,right('000' + convert(varchar
+, isnull(convert(int
+, max(WORK_SEQ))
+, 0) + 1)
+, 3)
+,
+                   #{stndDt}
+,'CMG2010'
+,#{itemCd}
+,#{itemName}
+,#{itemSpec}
+,#{itemUnit}
+,#{qty}
+, #{workCon}
+, #{id}
+, GETDATE()
+                    FROM CCM520
+                    WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM520
+             SET  STND_DT = #{stndDt}
+, ITEM_CD = #{itemCd}
+,ITEM_NAME = #{itemName}
+,ITEM_SPEC = #{itemSpec}
+,ITEM_UNIT = #{itemUnit}
+,
+                  QTY = #{qty}
+, WORK_CON = #{workCon}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_SEQ = #{workSeq} 
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM520 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND WORK_SEQ = #{workSeq} 
+        </if>
+    </insert>
+    
+    <!-- 세부공종 등록  -->
+    <select id="selCommgrpdSSeq" parameterType="DailyWorkVO" resultType="String">
+	     SELECT right('00000' + convert(varchar
+, isnull(convert(int
+,MAX(DESC_CD))
+, 0) + 1)
+, 5) AS DESC_CD 
+         FROM CCM550 where SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+	  </select>
+	  
+    <select id="selCommgrpdS" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+       SELECT SITE_CD
+, CUST_CD
+, DESC_CD
+, DESC_NM
+, USE_YN
+, RMKS FROM CCM550 WHERE  SITE_CD = #{siteCd} AND CUST_CD = #{custCd}
+    </select>
+    
+     <insert id="insCommgrpdS" parameterType="DailyWorkVO">
+      <if test="cudKey == 'INSERT'">         
+           INSERT INTO CCM550 (SITE_CD
+, CUST_CD
+, DESC_CD
+, DESC_NM
+, USE_YN
+, RMKS
+, OUT_CID
+, OUT_CDT)
+                  VALUES(#{siteCd}
+,#{custCd}
+,#{descCd}
+,#{descNm}
+,#{useYn}
+,#{rmks}
+,#{id}
+,GETDATE())
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+          UPDATE CCM550
+             SET  DESC_NM = #{descNm}
+, USE_YN = #{useYn}
+, RMKS = #{rmks}
+, OUT_MID = #{id}
+, OUT_MDT = GETDATE() 
+             WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND DESC_CD = #{descCd} 
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM550 WHERE SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND DESC_CD = #{descCd} 
+        </if>
+    </insert>
+    
+    <!-- 세부공종 팝업  -->
+    <select id="selCommgrpdSPop" parameterType="DailyWorkVO" resultType="DailyWorkVO">
+       SELECT SITE_CD
+, CUST_CD
+, DESC_CD
+, DESC_NM
+, USE_YN
+, RMKS FROM CCM550 WHERE  SITE_CD = #{siteCd} AND CUST_CD = #{custCd} AND USE_YN = '1'
+    </select>
+   
+</mapper>

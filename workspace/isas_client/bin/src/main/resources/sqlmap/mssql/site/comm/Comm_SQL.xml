@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CommDAO">
+
+	<typeAlias alias="map" type="java.util.Map"/>
+	<typeAlias alias="hashMap" type="java.util.HashMap"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+	<typeAlias alias="string" type="java.lang.String"/>
+	<typeAlias alias="object" type="java.lang.Object"/>
+	<typeAlias alias="tableVO" type="egovframework.cmmn.vo.TableColumnVO"/>
+
+	<!-- 오늘 날짜를 가지고 온다 -->
+	<select id="CommDAO.getToday" resultClass="string">
+		select GETDATE()
+	</select>
+
+	<select id="CommDAO.getMaxNumber" parameterClass="map" resultClass="string">
+        SELECT ISNULL(MAX($commColumnNm$), 0) + 1 AS SEQ
+          FROM $commTableNm$ WITH(NOLOCK)
+          <isNotEmpty property="commWhere">
+          	WHERE $commWhere$
+         </isNotEmpty>
+    </select>
+
+	<select id="CommDAO.getGSiteCode" parameterClass="map" resultClass="camelMap">
+        SELECT SITE_ID,
+		       SITE_PW
+		  FROM ASW_G_SITE_CODE
+          <dynamic prepend="WHERE">
+          	<isNotEmpty prepend="AND" property="SITE_CD">
+				SITE_CD = #SITE_CD#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="SITE_NM">
+				SITE_NM = #SITE_NM#
+			</isNotEmpty>
+          </dynamic>
+    </select>
+
+	<select id="CommDAO.getTableList" parameterClass="map" resultClass="camelMap">
+		SELECT
+			*
+		FROM
+			$commTableNm$ WITH (NOLOCK)
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</select>
+
+	<!-- 동적 Procedure 실행 -->
+	<select id="CommDAO.getProcedureToList" parameterClass="map" resultClass="camelMap" remapResults="true">
+		{call $commProcedureName$(<iterate conjunction="," property="commParams" ><isNull property="commParams[]">null</isNull><isNotNull property="commParams[]">#commParams[]#</isNotNull></iterate>)}
+	</select>
+
+	<!-- 동적 Procedure 실행 -->
+	<select id="CommDAO.getProcedureToObject" parameterClass="map" resultClass="object" remapResults="true">
+		{call $commProcedureName$(<iterate conjunction="," property="commParams" ><isNull property="commParams[]">null</isNull><isNotNull property="commParams[]">#commParams[]#</isNotNull></iterate>)}
+	</select>
+
+	<!-- 테이블의 해당 컬럼들을 가져온다 -->
+	<select id="CommDAO.getTableColumnList" parameterClass="string" resultClass="tableVO">
+		SELECT
+			COLUMN_NAME AS NAME,
+			DATA_TYPE AS TYPE,
+			IS_NULLABLE AS ISNULL,
+			COLUMN_DEFAULT AS DEFAULTVAL
+		FROM
+			INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+		WHERE
+			TABLE_NAME = #commTableNm#
+	</select>
+
+	<select id="CommDAO.getRowCount" parameterClass="map" resultClass="int">
+		SELECT COUNT(*)
+		FROM $commTableNm$ WITH (NOLOCK)
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</select>
+
+	<insert id="CommDAO.tableInsert" parameterClass="map" >
+		INSERT INTO $commTableNm$ (
+		<iterate conjunction="," property="columName" >$columName[]$</iterate>
+		) VALUES (
+		 	<iterate conjunction="," property="columValue" >$columValue[]$</iterate>
+		 )
+	</insert>
+
+	<update id="CommDAO.tableUpdate" parameterClass="map" >
+		UPDATE $commTableNm$ SET
+			<iterate conjunction="," property="columList" >$columList[].name$ = $columList[].value$</iterate>
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</update>
+
+	<delete id="CommDAO.tableDelete" parameterClass="map" >
+		DELETE FROM $commTableNm$
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</delete>
+
+	<select id="CommDAO.getGAttch" parameterClass="map" resultClass="camelMap">
+		SELECT ATTCH_FILE_NM, ATTCH_ABSOLUTE_PATH, ATTCH_REAL_ABSOLUTE_PATH
+		  FROM ASW_G_ATTCH
+		WHERE ATTCH_CD = #ATTCH_CD#
+	</select>
+
+	<select id="CommDAO.getGInfoDesign" parameterClass="string" resultClass="camelMap">
+		SELECT
+			CODE_NAME,
+			CODE_TEXT
+		FROM
+			G_INFO_DESIGN
+		WHERE
+			GID_CODE = #GID_CODE#
+		AND IDX = (
+			SELECT
+				MAX (IDX)
+			FROM
+				G_INFO_DESIGN
+			WHERE
+				GID_CODE = #GID_CODE#
+		)
+	</select>
+
+	<select id="CommDAO.stackUseOnOff" parameterClass="map" resultClass="int">
+		SELECT COUNT(a.PT_CD) AS PT_COUNT
+		  FROM ASW_M_MBR_PT_PLC a
+	   		WHERE a.PT_CD = #PT_CD#
+		     AND a.PT_RFCT_YN = 'Y'
+	</select>
+
+
+	<insert id="CommDAO.stackPoints" parameterClass="map">
+	INSERT INTO	M_MBR_PT_LIST(PT_CD, MBR_ID, MBR_PT_SEQ, MBR_PT_SCORE, MBR_PT_ACC_DT, BOARD_SEQ)
+				VALUES (#PT_CD#,#MBR_ID#, #MBR_PT_SEQ#, (SELECT  isNull(sum(PT_SCORE),0)    FROM  ASW_M_MBR_PT_PLC  WHERE    PT_RFCT_YN = 'Y'  AND PT_CD = #PT_CD#), GETDATE(), #BOARD_SEQ# )
+	</insert>
+
+	<insert id="CommDAO.insertIniStdMap" parameterClass="map">
+		INSERT INTO O_ODER_PROD_PAY_TEMP (ORDER_NO, PROD_JSON_STR, PROD_MAP_STR)
+		VALUES (#ORDER_NO#, #PROD_JSON_STR#, #PROD_MAP_STR#)
+	</insert>
+
+	<select id="CommDAO.selectIniStdMap" parameterClass="string" resultClass="hashMap">
+		SELECT OPPT.PROD_JSON_STR
+		  FROM
+		       (SELECT ORDER_NO,
+		              MAX(ORDER_DT) AS ORDER_DT
+		         FROM O_ODER_PROD_PAY_TEMP WITH (NOLOCK)
+		        WHERE ORDER_NO = #ORDER_NO#
+		        GROUP BY ORDER_NO
+		       ) OPPTG
+		   INNER JOIN O_ODER_PROD_PAY_TEMP OPPT WITH (NOLOCK)
+		       ON OPPTG.ORDER_NO = OPPT.ORDER_NO
+		       AND OPPTG.ORDER_DT = OPPT.ORDER_DT
+	</select>
+
+	<!-- <delete id="CommDAO.deleteIniStdMap" parameterClass="string" >
+		DELETE FROM O_ODER_PROD_PAY_TEMP WHERE ORDER_NO = #ORDER_NO#
+	</delete> -->
+
+	<select id="CommDAO.mbrMailCont" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+				  ,EMR.MSG_ROLE_NM
+				  ,(CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+				  ,EMR.MSG_DIV_RC
+				 , EM.MAIL_TITLE
+				 , EM.MAIL_CONT
+				 , (SELECT EMF.MAIL_FOOTER_CONT  FROM E_MAIL_FOOTER EMF WHERE EMF.MAIL_FOOTER_DT = (SELECT MAX(MAIL_FOOTER_DT) FROM E_MAIL_FOOTER)) as MAIL_FOOTER_CONT
+			FROM E_MSG_ROLE EMR
+			   LEFT JOIN E_MAIL EM  ON EMR.MSG_ROLE_CD = EM.MSG_ROLE_CD
+			 WHERE EMR.MSG_ROLE_TP_ASM in ( 'A','M' )
+			   AND EMR.MSG_ROLE_YN = 'Y'
+			  <isNotEmpty  property="MSG_ROLE_CD">
+				AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+			  </isNotEmpty>
+	</select>
+
+	<select id="CommDAO.mbrInfoMap" parameterClass="map" resultClass="camelMap" >
+		SELECT MM.MBR_ID
+				   , MM.MBR_NM
+				   , MM.MBR_SEX_MW
+				   , MM.MBR_EMAIL
+				   , MM.MBR_MOBILE
+				   , CONVERT(VARCHAR(10), GETDATE(), 120) AS NOW_GET_DATE
+				   , (dbo.FN_MBR_PROD_PT_OUT_SCORE(#MBR_ID#)) as PROD_PT_OUT_SCORE
+		FROM ASW_M_MBR MM
+		WHERE MM.MBR_ID = #MBR_ID#
+	</select>
+
+	<select id="CommDAO.mbrSmsCont" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+				      , EMR.MSG_ROLE_NM
+				      , (CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+				      , EMR.MSG_DIV_RC
+				      , ES.MMS_SUB
+					  , ES.SMS_CONT
+				  FROM E_MSG_ROLE EMR left join E_SMS ES ON EMR.MSG_ROLE_CD = ES.MSG_ROLE_CD
+				 WHERE EMR.MSG_ROLE_TP_ASM in ('A','S')
+				   AND EMR.MSG_ROLE_YN = 'Y'
+				   <isNotEmpty  property="MSG_ROLE_CD">
+				   	  AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+				   </isNotEmpty>
+	</select>
+
+	<insert id="CommDAO.mbrSmsSend" parameterClass="map">
+		INSERT  sms_duolac.dbo.em_tran
+	       (
+	           tran_phone,
+	           tran_callback,
+	           tran_status,
+	           tran_date,
+	           tran_msg
+	       )
+	       VALUES
+	       (
+			  #TRAN_PHONE#,
+	          #TRAN_CALLBACK#,
+	          #TRAN_STATUS#,
+	          GETDATE(),
+	          #TRAN_MSG#
+		   )
+	</insert>
+
+</sqlMap>

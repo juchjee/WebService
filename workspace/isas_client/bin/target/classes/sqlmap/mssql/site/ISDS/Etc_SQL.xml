@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EtcDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="calendarList" parameterClass="map" resultClass="camelMap">
+		SELECT 
+	        bs_cd,
+	        CONVERT(VARCHAR(2), work_dt, 106) AS work_dd,
+	        day_nm,
+	        dt_bc,
+	        work_yn,
+	        rmks,
+	        cid,
+	        cdt,
+	        mid,
+	        mdt,
+	        mon,
+	        wek
+		FROM GAZ500_MB
+		WHERE dt_bc = 'GA120400' 
+		<isNotEmpty prepend="AND" property="CALENDAR_DT" >
+			CONVERT(VARCHAR(6), work_dt, 112)  = #CALENDAR_DT#
+		</isNotEmpty>
+	</select>
+	
+
+	
+</sqlMap>

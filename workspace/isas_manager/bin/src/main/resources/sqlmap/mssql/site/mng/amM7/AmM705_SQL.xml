@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM705DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM705DAO.amM705L" parameterClass="map" resultClass="camelMap">
+		SELECT ADM_AUTH_CD
+			   , ADM_AUTH_NM
+			   , USE_FLAG_YN
+		FROM ASW_S_ADM_AUTH WITH(NOLOCK)
+		WHERE USE_FLAG_YN = 'Y'
+	</select>
+
+	<select id="AmM705DAO.amM705Count"  parameterClass="map" resultClass="int">
+		SELECT count(*)+1 FROM ASW_S_ADM_AUTH WITH(NOLOCK)
+	</select>
+
+	<select id="AmM705DAO.amM705ML" parameterClass="map" resultClass="camelMap">
+		  WITH ASW_S_ADM_MENU_LIST AS         (SELECT
+        1 AS LEVEL              ,
+        SAM.ADM_MENU_CD              ,
+        SAM.ADM_MENU_GROUP              ,
+        SAM.ADM_MENU_NM              ,
+        CONVERT(VARCHAR(255),
+        SAM.ADM_SORT ) as         SORT
+    FROM
+        ASW_S_ADM_MENU SAM
+    WHERE
+        SAM.ADM_MENU_GROUP = 'root'
+    UNION
+    ALL         SELECT
+        LEVEL+1              ,
+        SAM_M.ADM_MENU_CD              ,
+        SAM_M.ADM_MENU_GROUP              ,
+        SAM_M.ADM_MENU_NM              ,
+        CONVERT(VARCHAR(255),
+        CONVERT(NVARCHAR,
+        SAM_L.SORT) + '-' + CONVERT(VARCHAR(255),
+        SAM_M.ADM_SORT))         SORT
+    FROM
+        ASW_S_ADM_MENU SAM_M
+    INNER JOIN
+        ASW_S_ADM_MENU_LIST SAM_L
+            ON SAM_M.ADM_MENU_GROUP = SAM_L.ADM_MENU_CD
+    UNION
+    ALL         SELECT
+        LEVEL+1              ,
+        BBM.BOARD_MST_CD AS ADM_MENU_CD              ,
+        BBM.ADM_MENU_CD AS ADM_MENU_GROUP              ,
+        BBM.BOARD_MST_NM AS ADM_MENU_NM              ,
+        CONVERT(VARCHAR(255),
+        CONVERT(NVARCHAR,
+        SAM_L.SORT) + '-' + CONVERT(VARCHAR(255),
+        BBM.BOARD_SORT))         SORT
+    FROM
+        ASW_BOARD_MST BBM
+    INNER JOIN
+        ASW_S_ADM_MENU_LIST SAM_L
+            ON BBM.ADM_MENU_CD = SAM_L.ADM_MENU_CD         )   SELECT
+            AML.ADM_MENU_CD             ,
+            AML.ADM_MENU_GROUP          ,
+            AML.ADM_MENU_NM                      
+             <isEmpty property="ADM_AUTH_CD">
+			   ,'' as ADM_AUTH_MENU_CD
+			   </isEmpty>
+			   <isNotEmpty property="ADM_AUTH_CD">
+	   		   ,(CASE
+	   		     WHEN AML.ADM_MENU_GROUP = 'root'
+           		 THEN ''
+	             ELSE ISNULL(AAM.ADM_MENU_CD, '')
+	             END) as ADM_AUTH_MENU_CD
+	           </isNotEmpty>
+		       FROM ASW_S_ADM_MENU_LIST AML
+			   <isNotEmpty property="ADM_AUTH_CD">
+   			   LEFT JOIN ASW_S_ADM_AUTH_MENU AAM
+       		   ON AML.ADM_MENU_CD = AAM.ADM_MENU_CD and AAM.ADM_AUTH_CD = #ADM_AUTH_CD#
+   			   </isNotEmpty>
+    ORDER BY
+        AML.SORT
+
+	</select>
+
+	<select id="AmM705DAO.amM705DL" parameterClass="map" resultClass="camelMap">
+		SELECT ADM_AUTH_CD, ADM_MENU_CD
+		FROM ASW_S_ADM_AUTH_MENU  WITH(NOLOCK)
+		WHERE ADM_AUTH_CD = #ADM_AUTH_CD#
+	</select>
+
+</sqlMap>

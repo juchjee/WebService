@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PopupDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="string" type="java.lang.String"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<!--상품 임시코드 조회 -->
+	<select id="PopupDAO.msgRollCode" resultClass="String">
+	     select dbo.FN_TEMP_CODE('EMR') as MSG_TEMP_CD
+	</select>
+
+	<!-- 메시지 롤 조회  -->
+	<select id="PopupDAO.msgRollMgtPopA" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+			       ,EMR.MSG_ROLE_NM
+			       ,EMR.MSG_ROLE_TP_ASM
+			       ,(CASE WHEN EMR.MSG_ROLE_TP_ASM = 'S' THEN 'SMS' WHEN EMR.MSG_ROLE_TP_ASM = 'M' THEN 'EMAIL' ELSE '전체' END) AS ROLE_ASM
+			       ,EMR.MSG_ROLE_YN
+			       ,(CASE WHEN EMR.MSG_ROLE_YN = 'Y' THEN '사용' WHEN EMR.MSG_ROLE_YN = 'N' THEN '미사용' ELSE '' END) AS MSG_ROLE_ST
+			  FROM E_MSG_ROLE EMR WITH(NOLOCK)
+	    where EMR.MSG_ROLE_YN = 'Y'
+	       AND EMR.MSG_ROLE_TP_ASM = #MSG_ROLE_TP_ASM#
+	       and MSG_DIV_RC = 'C'
+	       order by EMR.MSG_ROLE_CD DESC
+	</select>
+
+
+	<select id="PopupDAO.conditionSearchCount" parameterClass="map" resultClass="string">
+		SELECT COUNT(*) as mbrSearchCount FROM (SELECT MM.MBR_ID
+			     ,MM.MBR_NM
+				 ,MM.MBR_SEX_MW
+			     ,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+			  FROM ASW_M_MBR MM  WITH(NOLOCK)
+
+			     ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="MAIL">
+			       	 	MM.MBR_EMAIL_RCV_YN = 'Y'
+			   			AND MM.MBR_EMAIL IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+	   					AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+                    	AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+                    	AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+			       </dynamic>
+	</select>
+
+		<select id="PopupDAO.conditionSearch" parameterClass="map" resultClass="camelMap">
+		SELECT MM.* FROM (SELECT MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+			     ,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+				,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+			  FROM ASW_M_MBR MM   WITH(NOLOCK) 
+			   
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="MAIL">
+			       	 	MM.MBR_EMAIL_RCV_YN = 'Y'
+			   			AND MM.MBR_EMAIL IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+	   					AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+                    	AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+                    	AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			       
+			   </dynamic>
+	</select>
+
+	<select id="PopupDAO.smsContMaxLen" parameterClass="map" resultClass="int">
+		SELECT MAX(MM.SMS_CONT_CNT) AS SMS_CONT_CNT
+	    	FROM (SELECT
+	    			MM.MBR_ID
+			     	,MM.MBR_NM
+			     	,MM.MBR_SEX_MW
+	    			,MM.MBR_MOBILE
+	    			,MM.MBR_MOBILE_RCV_YN
+	    			,MM.MBR_EMAIL
+	    			,MM.MBR_EMAIL_RCV_YN
+	    			,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+	    			,MMV.MBR_LEV_CD
+	    			,OOR.ORDER_AMT
+	    			,LEN(dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID)) AS SMS_CONT_CNT
+			  FROM ASW_M_MBR MM   WITH(NOLOCK) LEFT JOIN ASW_M_MBR_LEV MMV  WITH(NOLOCK) ON MMV.MBR_ID = MM.MBR_ID
+			   LEFT JOIN
+			       (
+				   SELECT OOR.MBR_ID
+				        , SUM(OAH.ORDER_AMT)+SUM(OAH.ORDER_DELI_CHARGE) as ORDER_AMT
+			            , count(*) as MBR_ORDER_COUNT
+			         FROM O_ORDER OOR  WITH(NOLOCK) LEFT JOIN O_ORDER_AMT_HIS OAH  WITH(NOLOCK) ON OOR.ORDER_NO = OAH.ORDER_NO
+			        WHERE OOR.ORDER_STATUS_CD = 'OOS00009' /* 구매(배송)완료기준 */
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="P">
+					    CONVERT(VARCHAR,OOR.ORDER_DT,112) BETWEEN CONVERT(VARCHAR,'$PURCHASE_START_DT$',112) AND CONVERT(VARCHAR,ISNULL('$PURCHASE_END_DT$',GETDATE()),112)
+					  </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="M">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Month, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="D">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Day, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        GROUP BY OOR.MBR_ID
+			       ) OOR
+			       ON OOR.MBR_ID = MM.MBR_ID
+			     ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			      
+			   </dynamic>
+	</select>
+
+	<insert id="PopupDAO.smsSend" parameterClass="map">
+		INSERT  sms_duolac.dbo.em_tran
+	       (
+	           tran_phone,
+	           tran_callback,
+	           tran_status,
+	           tran_date,
+	           tran_msg
+	       )
+	      ( SELECT MM.MBR_MOBILE
+				     ,#tran_callback#
+				     ,#tran_status#
+				     ,GETDATE()
+	                , MM.SMS_CONT FROM
+	          (SELECT
+			      MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+			     ,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+				 ,MMV.MBR_LEV_CD
+				 ,OOR.ORDER_AMT
+				,dbo.FN_MSG_VARIABLE_CUT(#SMS_CONT#,MM.MBR_ID, 80) as SMS_CONT
+			  FROM ASW_M_MBR MM   WITH(NOLOCK) LEFT JOIN ASW_M_MBR_LEV MMV WITH(NOLOCK) ON MMV.MBR_ID = MM.MBR_ID
+			   LEFT JOIN
+			       (
+				   SELECT OOR.MBR_ID
+				        , SUM(OAH.ORDER_AMT)+SUM(OAH.ORDER_DELI_CHARGE) as ORDER_AMT
+			            , count(*) as MBR_ORDER_COUNT
+			         FROM O_ORDER OOR  WITH(NOLOCK) LEFT JOIN O_ORDER_AMT_HIS OAH  WITH(NOLOCK) ON OOR.ORDER_NO = OAH.ORDER_NO
+			        WHERE OOR.ORDER_STATUS_CD = 'OOS00009' /* 구매(배송)완료기준 */
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="P">
+					    CONVERT(VARCHAR,OOR.ORDER_DT,112) BETWEEN CONVERT(VARCHAR,'$PURCHASE_START_DT$',112) AND CONVERT(VARCHAR,ISNULL('$PURCHASE_END_DT$',GETDATE()),112)
+					  </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="M">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Month, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="D">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Day, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        GROUP BY OOR.MBR_ID
+			       ) OOR
+			       ON OOR.MBR_ID = MM.MBR_ID
+			     ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			       	
+			   </dynamic>
+			  )
+	</insert>
+
+	<delete id="PopupDAO.mmsSendTempD">
+		DELETE FROM E_MMS_TEMP
+	</delete>
+
+	<update id="PopupDAO.mmsSendTempReseed">
+		DBCC CHECKIDENT('E_MMS_TEMP', RESEED, 0)
+	</update>
+
+	<select id="PopupDAO.eMmsTempMaxMmsSeq" resultClass="int">
+		SELECT ISNULL(IDENT_CURRENT('E_MMS_TEMP'), 0) AS MAX_SEQ
+	</select>
+
+	<insert id="PopupDAO.emTranMmsSend">
+		INSERT SMS_DUOLAC.DBO.EM_TRAN_MMS
+	       (
+	           file_cnt,
+	           mms_body,
+	           mms_subject
+	       )
+	       (SELECT FILE_CNT, MMS_BODY, MMS_SUBJECT FROM E_MMS_TEMP)
+	</insert>
+
+	<update id="PopupDAO.mmsSendTempU" parameterClass="map">
+		UPDATE E_MMS_TEMP
+		       SET TRAN_ETC4 = ETM.ETM_SEQ
+		  FROM E_MMS_TEMP EMT
+		   LEFT JOIN
+		       (SELECT ETMA.mms_seq AS ETM_SEQ,
+		              (ETMA.mms_seq - $UPDATE_SEQ$) AS EMT_SEQ
+		         FROM SMS_DUOLAC.DBO.EM_TRAN_MMS ETMA
+		        WHERE ETMA.mms_seq <![CDATA[>]]> $EM_TRAN_MMS_MAX_SEQ$
+		       ) ETM
+		       ON EMT.SEQ = ETM.EMT_SEQ
+	</update>
+
+	<insert id="PopupDAO.mmsSend">
+		INSERT INTO SMS_DUOLAC.DBO.EM_TRAN
+			(tran_phone, tran_callback, tran_status, tran_date, tran_msg , tran_type, tran_etc4)
+			(SELECT TRAN_PHONE, TRAN_CALLBACK, TRAN_STATUS, TRAN_DATE, MMS_SUBJECT, TRAN_TYPE, TRAN_ETC4 FROM E_MMS_TEMP)
+	</insert>
+
+	<insert id="PopupDAO.mmsSendTempI" parameterClass="map">
+		INSERT  E_MMS_TEMP
+	       (
+	           FILE_CNT
+	           ,TRAN_PHONE
+	           ,TRAN_CALLBACK
+	           ,TRAN_STATUS
+	           ,TRAN_DATE
+	           ,TRAN_TYPE
+	           ,MMS_BODY
+	           ,MMS_SUBJECT
+	       )
+	      ( SELECT
+	      		 #FILE_CNT#
+			     ,MM.MBR_MOBILE
+			     ,#TRAN_CALLBACK#
+			     ,#TRAN_STATUS#
+			     ,GETDATE()
+			     ,#TRAN_TYPE#
+                 ,MM.SMS_CONT
+                 ,MM.MMS_SUB
+	           FROM
+	          (SELECT
+			      MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+			     ,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+				 ,MMV.MBR_LEV_CD
+				 ,OOR.ORDER_AMT
+				 <isEqual property="IS_VARIABLE_CONT" compareValue="Y">
+				 ,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_CONT" compareValue="N">
+				 ,#SMS_CONT#
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_SUB" compareValue="Y">
+				 ,dbo.FN_MSG_VARIABLE_CUT(#MMS_SUB#,MM.MBR_ID,20) as MMS_SUB
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_SUB" compareValue="N">
+				 ,#MMS_SUB#
+				 </isEqual>
+			  FROM ASW_M_MBR MM  LEFT JOIN ASW_M_MBR_LEV MMV ON MMV.MBR_ID = MM.MBR_ID
+			   LEFT JOIN
+			       (
+				   SELECT OOR.MBR_ID
+				        , SUM(OAH.ORDER_AMT)+SUM(OAH.ORDER_DELI_CHARGE) as ORDER_AMT
+			            , count(*) as MBR_ORDER_COUNT
+			         FROM O_ORDER OOR LEFT JOIN O_ORDER_AMT_HIS OAH ON OOR.ORDER_NO = OAH.ORDER_NO
+			        WHERE OOR.ORDER_STATUS_CD = 'OOS00009' /* 구매(배송)완료기준 */
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="P">
+					    CONVERT(VARCHAR,OOR.ORDER_DT,112) BETWEEN CONVERT(VARCHAR,'$PURCHASE_START_DT$',112) AND CONVERT(VARCHAR,ISNULL('$PURCHASE_END_DT$',GETDATE()),112)
+					  </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="M">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Month, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="D">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Day, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        GROUP BY OOR.MBR_ID
+			       ) OOR
+			       ON OOR.MBR_ID = MM.MBR_ID
+			     ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			       	
+			   </dynamic>
+			  )
+	</insert>
+
+	<insert id="PopupDAO.smsSendInfoHis" parameterClass="map" >
+		INSERT INTO E_SMS_SEND_INFO_HIS ( MSG_SEND_SEQ,RECEIVER_ID,SMS_CONT_HIS )
+		(SELECT #MSG_SEND_SEQ#, MM.MBR_ID, MM.SMS_CONT FROM (SELECT MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+			     ,ISNULL(OOR.MBR_ORDER_COUNT,0) as MBR_ORDER_COUNT
+				 ,MMV.MBR_LEV_CD
+				 ,OOR.ORDER_AMT
+				,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+			  FROM ASW_M_MBR MM  LEFT JOIN ASW_M_MBR_LEV MMV ON MMV.MBR_ID = MM.MBR_ID  AND MMV.MBR_LEV_DT = (SELECT MAX(MBR_LEV_DT) FROM ASW_M_MBR_LEV WHERE MBR_ID = MM.MBR_ID)
+			   LEFT JOIN
+			       (
+				   SELECT OOR.MBR_ID
+				        , SUM(OAH.ORDER_AMT)+SUM(OAH.ORDER_DELI_CHARGE) as ORDER_AMT
+			            , count(*) as MBR_ORDER_COUNT
+			         FROM O_ORDER OOR LEFT JOIN O_ORDER_AMT_HIS OAH ON OOR.ORDER_NO = OAH.ORDER_NO
+			        WHERE OOR.ORDER_STATUS_CD = 'OOS00009' /* 구매완료기준 */
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="P">
+					    CONVERT(VARCHAR,OOR.ORDER_DT,112) BETWEEN CONVERT(VARCHAR,'$PURCHASE_START_DT$',112) AND CONVERT(VARCHAR,ISNULL('$PURCHASE_END_DT$',GETDATE()),112)
+					  </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="M">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Month, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        <isEqual prepend="AND" property="PART_TP_PMDA" compareValue="D">
+					   CONVERT(VARCHAR(8),ISNULL(OOR.ORDER_DT,GETDATE()),112) >= CONVERT(VARCHAR(8), DATEADD(Day, -ISNULL($PERIOD$,0), GETDATE()),112)
+			        </isEqual>
+			        GROUP BY OOR.MBR_ID
+			       ) OOR
+			       ON OOR.MBR_ID = MM.MBR_ID
+			     ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="MAIL">
+			       	 	MM.MBR_EMAIL_RCV_YN = 'Y'
+			   			AND MM.MBR_EMAIL IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+	   					AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+                    	AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+                    	AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			       	
+			   </dynamic>
+		)
+	</insert>
+
+	<insert id="PopupDAO.emailSendInfoHis" parameterClass="map"  >
+		INSERT INTO E_MAIL_SEND_INFO_DTL_HIS (
+		  MSG_SEND_SEQ
+         ,RECEIVER_ID
+         ,NAME
+         ,EMAIL
+         ,PHONE
+         <iterate open="," close="" conjunction="," property="MSG_VARIABLE_LIST" >
+		 ETC$MSG_VARIABLE_LIST[].msgSubstitution$
+		</iterate>
+		)
+		(SELECT #MSG_SEND_SEQ#
+				     , MM.MBR_ID
+				     , MM.MBR_NM
+				     , MM.MBR_EMAIL
+				     , MM.MBR_MOBILE
+				   <iterate open="," close="" conjunction="," property="MSG_VARIABLE_LIST" >
+			       		MM.$MSG_VARIABLE_LIST[].msgVariableMpgColNm$
+			       </iterate>
+				  FROM
+				       (SELECT MM.MBR_ID
+				            ,MM.MBR_NM
+				            ,MM.MBR_SEX_MW
+				            ,MM.MBR_MOBILE
+				            ,MM.MBR_MOBILE_RCV_YN
+				            ,MM.MBR_EMAIL
+				            ,MM.MBR_EMAIL_RCV_YN
+				            ,(CONVERT(CHAR(4), GETDATE(), 112) + '년 ' + SUBSTRING(CONVERT(CHAR(7), GETDATE(), 112), 5, 2)
+				            + '월 ' + SUBSTRING(CONVERT(CHAR(9), GETDATE(), 112), 7, 2) + '일') AS NOW_DATE
+				         FROM ASW_M_MBR MM
+				       ) MM
+			       <dynamic prepend="WHERE">
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="SMS">
+			       	 	MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			       	</isEqual>
+			       	<isEqual prepend="AND" property="CONDI_TP" compareValue="MAIL">
+			       	 	MM.MBR_EMAIL_RCV_YN = 'Y'
+			   			AND MM.MBR_EMAIL IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+	   					AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+                    	AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+                    	AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+			       	</isEqual>
+			       	<isNotEqual  prepend="AND" property="BUYER_SEX_AMW" compareValue="A">
+			   			 MM.MBR_SEX_MW = #BUYER_SEX_AMW#
+			       	</isNotEqual>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_COUNT">
+			   			 MM.MBR_ORDER_COUNT
+			   			 <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="M">
+			   			 	<![CDATA[ >=]]>
+			   			 </isEqual>
+			   			  <isEqual property="PURCHASE_COUNT_TP_ML" compareValue="L">
+			   			 	<![CDATA[ <=]]>
+			   			 </isEqual>
+			   			 $PURCHASE_COUNT$
+			       	</isNotEmpty>
+			       	<isNotEmpty prepend="AND" property="PURCHASE_SUM">
+			   			 ISNULL(MM.ORDER_AMT,0) >= $PURCHASE_SUM$
+			       	</isNotEmpty>
+
+			       	
+			   </dynamic>
+		)
+	</insert>
+
+	<select id="PopupDAO.getMailHoldingCount" resultClass="string">
+		SELECT COUNT(*) FROM E_MAIL_SEND_INFO_MST_HIS WITH(NOLOCK) WHERE MAIL_SEND_YN = 'N'
+	</select>
+
+	<select id="PopupDAO.getMailSendInfoMstHis" resultClass="camelMap">
+		SELECT *
+  			FROM E_MAIL_SEND_INFO_MST_HIS WITH(NOLOCK)
+  			 WHERE MAIL_SEND_YN = 'N'
+	</select>
+
+	<select id="PopupDAO.getCompanyMap" resultClass="camelMap">
+		SELECT TOP 1 COMPANY_NM
+				, COMPANY_OWNER
+				, COMPANY_BIZ_NO
+				, COMPANY_TEL
+				, COMPANY_EMAIL_SENDER
+				, COMPANY_EMAIL
+				, COMPANY_CATEGORY
+				, COMPANY_EVENT
+				, COMPANY_ZIPCODE
+				, COMPANY_ADDR
+				, COMPANY_ADDR_DTL
+				, COMPANY_TELESALES_NO
+				, COMPANY_PRIVACY_ADM
+				, COMPANY_OTHER_REG_NM
+				, COMPANY_OTHER_REG_NO
+				, COMPANY_FAX
+				, COMPANY_CS_TEL
+		FROM ASW_S_COMPANY WITH(NOLOCK)
+		ORDER BY COMPANY_REG_KEY DESC
+	</select>
+
+	<update id="PopupDAO.updateMailSendInfoMstHisRecv" parameterClass="map">
+		UPDATE E_MAIL_SEND_INFO_MST_HIS
+			SET RECV_CD = #recvCd#, RECV_MSG = #recvMsg#
+		WHERE MSG_SEND_SEQ = $msgSendSeq$
+	</update>
+
+	<select id="PopupDAO.mbrSmsTemp" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+			      , EMR.MSG_ROLE_NM
+			      , (CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+			      , EMR.MSG_DIV_RC
+			      , ES.MMS_SUB
+				  , ES.SMS_CONT
+				  , EMR.MSG_ROLE_CD+'_'+ES.SMS_CONT as SMS_ATTR
+			  FROM E_MSG_ROLE EMR  WITH(NOLOCK) left join E_SMS ES  WITH(NOLOCK) ON EMR.MSG_ROLE_CD = ES.MSG_ROLE_CD
+			 WHERE EMR.MSG_ROLE_TP_ASM in ('A','S')
+			   AND EMR.MSG_ROLE_YN = 'Y'
+			  <isNotEmpty  property="MSG_ROLE_CD">
+			  	AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+			  </isNotEmpty>
+			  <isEmpty  property="MSG_ROLE_CD">
+			  	AND EMR.MSG_DIV_RC = 'C'
+			 </isEmpty>
+	</select>
+
+	<insert id="PopupDAO.mbrSmsSend" parameterClass="map">
+		INSERT  sms_duolac.dbo.em_tran
+	       (
+	           tran_phone,
+	           tran_callback,
+	           tran_status,
+	           tran_date,
+	           tran_msg
+	       )
+	      ( SELECT MM.MBR_MOBILE
+				     ,#TRAN_CALLBACK#
+				     ,#TRAN_STATUS#
+				     ,GETDATE()
+	                , MM.SMS_CONT FROM
+	          (SELECT
+			      MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MMV.MBR_LEV_CD
+				,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+			  FROM ASW_M_MBR MM
+			  LEFT JOIN ASW_M_MBR_LEV MMV ON MMV.MBR_ID = MM.MBR_ID  AND MMV.MBR_LEV_DT = (SELECT MAX(MBR_LEV_DT) FROM ASW_M_MBR_LEV WHERE MBR_ID = MM.MBR_ID)
+			   ) MM
+			  WHERE
+			  		MM.MBR_ID IN
+			  		<iterate  property="MBR_ID_LIST" open="(" close=")" conjunction=",">
+			  		 	#MBR_ID_LIST[]#
+					</iterate>
+			       	AND MM.MBR_MOBILE IS NOT NULL
+			       	AND LEN(MM.MBR_MOBILE) > 10
+			  )
+	</insert>
+
+	<insert id="PopupDAO.mbrSmsSendInfoHis" parameterClass="map" >
+		INSERT INTO E_SMS_SEND_INFO_HIS ( MSG_SEND_SEQ,RECEIVER_ID,SMS_CONT_HIS )
+		(SELECT #MSG_SEND_SEQ#, MM.MBR_ID, MM.SMS_CONT FROM (SELECT MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+				 ,MMV.MBR_LEV_CD
+				 ,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+			  FROM ASW_M_MBR MM
+			  LEFT JOIN ASW_M_MBR_LEV MMV ON MMV.MBR_ID = MM.MBR_ID  AND MMV.MBR_LEV_DT = (SELECT MAX(MBR_LEV_DT) FROM ASW_M_MBR_LEV WHERE MBR_ID = MM.MBR_ID)
+			     ) MM
+			  WHERE  MM.MBR_ID IN
+			  		<iterate  property="MBR_ID_LIST" open="(" close=")" conjunction=",">
+			  		 	#MBR_ID_LIST[]#
+					</iterate>
+					AND MM.MBR_MOBILE IS NOT NULL
+       				AND LEN(MM.MBR_MOBILE) > 10
+		)
+	</insert>
+
+	<select id="PopupDAO.mbrTempList" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+			      ,EMR.MSG_ROLE_NM
+			      ,(CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+			      ,EMR.MSG_DIV_RC
+			     , EM.MAIL_TITLE
+				 , EM.MAIL_CONT
+				 , EMR.MSG_ROLE_CD+'_'+(CASE WHEN EM.MAIL_CONT IS NOT NULL THEN EM.MAIL_CONT ELSE 'N/A' END) as MAIL_ATTR
+				 , (SELECT EMF.MAIL_FOOTER_CONT  FROM E_MAIL_FOOTER EMF WHERE EMF.MAIL_FOOTER_DT = (SELECT MAX(MAIL_FOOTER_DT) FROM E_MAIL_FOOTER)) as MAIL_FOOTER_CONT
+  		    FROM E_MSG_ROLE EMR WITH(NOLOCK)
+			   LEFT JOIN E_MAIL EM   WITH(NOLOCK) ON EMR.MSG_ROLE_CD = EM.MSG_ROLE_CD
+			 WHERE EMR.MSG_ROLE_TP_ASM in ( 'A','M' )
+			   AND EMR.MSG_ROLE_YN = 'Y'
+			  <isNotEmpty  property="MSG_ROLE_CD">
+			  	AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+			  </isNotEmpty>
+			  <isEmpty  property="MSG_ROLE_CD">
+			  	AND EMR.MSG_DIV_RC = 'C'
+			 </isEmpty>
+	</select>
+
+	<insert id="PopupDAO.mbrMmsSendTempI" parameterClass="map">
+		INSERT  E_MMS_TEMP
+	       (
+	           FILE_CNT
+	           ,TRAN_PHONE
+	           ,TRAN_CALLBACK
+	           ,TRAN_STATUS
+	           ,TRAN_DATE
+	           ,TRAN_TYPE
+	           ,MMS_BODY
+	           ,MMS_SUBJECT
+	       )
+	      ( SELECT
+	      		 #FILE_CNT#
+			     ,MM.MBR_MOBILE
+			     ,#TRAN_CALLBACK#
+			     ,#TRAN_STATUS#
+			     ,GETDATE()
+			     ,#TRAN_TYPE#
+                 ,MM.SMS_CONT
+                 ,MM.MMS_SUB
+	           FROM
+	          (SELECT
+			      MM.MBR_ID
+			     ,MM.MBR_NM
+			     ,MM.MBR_SEX_MW
+			     ,MM.MBR_MOBILE
+			     ,MM.MBR_MOBILE_RCV_YN
+			     ,MM.MBR_EMAIL
+			     ,MM.MBR_EMAIL_RCV_YN
+				 ,MMV.MBR_LEV_CD
+				 <isEqual property="IS_VARIABLE_CONT" compareValue="Y">
+				 ,dbo.FN_MSG_VARIABLE(#SMS_CONT#,MM.MBR_ID) as SMS_CONT
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_CONT" compareValue="N">
+				 ,#SMS_CONT# as SMS_CONT
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_SUB" compareValue="Y">
+				 ,dbo.FN_MSG_VARIABLE_CUT(#MMS_SUB#,MM.MBR_ID,20) as MMS_SUB
+				 </isEqual>
+				 <isEqual property="IS_VARIABLE_SUB" compareValue="N">
+				 ,#MMS_SUB# as MMS_SUB
+				 </isEqual>
+			  FROM ASW_M_MBR MM  LEFT JOIN ASW_M_MBR_LEV MMV ON MMV.MBR_ID = MM.MBR_ID
+			  AND MMV.MBR_LEV_DT = (SELECT MAX(MBR_LEV_DT) FROM ASW_M_MBR_LEV WHERE MBR_ID = MM.MBR_ID)
+			     ) MM
+			       WHERE
+			       		MM.MBR_ID IN
+						<iterate  property="MBR_ID_LIST" open="(" close=")" conjunction=",">
+							#MBR_ID_LIST[]#
+						</iterate>
+			       	 	AND MM.MBR_MOBILE_RCV_YN = 'Y'
+			       	 	AND MM.MBR_MOBILE IS NOT NULL
+			       	 	AND LEN(MM.MBR_MOBILE) > 10
+			  )
+	</insert>
+
+	<insert id="PopupDAO.mbrMmsSend">
+		INSERT INTO SMS_DUOLAC.DBO.EM_TRAN
+			(tran_phone, tran_callback, tran_status, tran_date, tran_msg , tran_type, tran_etc4)
+			(SELECT TRAN_PHONE, TRAN_CALLBACK, TRAN_STATUS, TRAN_DATE, MMS_SUBJECT, TRAN_TYPE, TRAN_ETC4 FROM E_MMS_TEMP)
+	</insert>
+
+	<select id="PopupDAO.footerCont" parameterClass="map" resultClass="camelMap">
+		SELECT EMF.MAIL_FOOTER_CONT
+		FROM E_MAIL_FOOTER EMF WITH(NOLOCK)
+		WHERE EMF.MAIL_FOOTER_DT = (SELECT MAX(MAIL_FOOTER_DT) FROM E_MAIL_FOOTER)
+	</select>
+
+	<insert id="PopupDAO.mbrEmailSendInfoHis" parameterClass="map"  >
+		INSERT INTO E_MAIL_SEND_INFO_DTL_HIS (
+		  MSG_SEND_SEQ
+         ,RECEIVER_ID
+         ,NAME
+         ,EMAIL
+         ,PHONE
+         <iterate open="," close="" conjunction="," property="MSG_VARIABLE_LIST" >
+		 ETC$MSG_VARIABLE_LIST[].msgSubstitution$
+		</iterate>
+		)
+		(SELECT #MSG_SEND_SEQ#
+				     , MM.MBR_ID
+				     , MM.MBR_NM
+				     , MM.MBR_EMAIL
+				     , MM.MBR_MOBILE
+				   <iterate open="," close="" conjunction="," property="MSG_VARIABLE_LIST" >
+			       		MM.$MSG_VARIABLE_LIST[].msgVariableMpgColNm$
+			       </iterate>
+				  FROM
+				       (SELECT MM.MBR_ID
+				            ,MM.MBR_NM
+				            ,MM.MBR_SEX_MW
+				            ,MM.MBR_MOBILE
+				            ,MM.MBR_MOBILE_RCV_YN
+				            ,MM.MBR_EMAIL
+				            ,MM.MBR_EMAIL_RCV_YN
+				            ,(CONVERT(CHAR(4), GETDATE(), 112) + '년 ' + SUBSTRING(CONVERT(CHAR(7), GETDATE(), 112), 5, 2)
+				            + '월 ' + SUBSTRING(CONVERT(CHAR(9), GETDATE(), 112), 7, 2) + '일') AS NOW_DATE
+				         FROM ASW_M_MBR MM
+				       ) MM
+			       	  WHERE
+			       	  	MM.MBR_ID IN
+				       	  	<iterate  property="MBR_ID_LIST" open="(" close=")" conjunction=",">
+				  		 		#MBR_ID_LIST[]#
+							</iterate>
+			   			AND MM.MBR_EMAIL IS NOT NULL
+				        AND len(MM.MBR_MOBILE) > 10
+	   					AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+                    	AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+                    	AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+                    	AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+			)
+	</insert>
+
+	<select id="PopupDAO.mbrSmtpMailList" parameterClass="map" resultClass="camelMap">
+		SELECT #MSG_SEND_SEQ#
+		 		 	, MM.MBR_ID
+				 	, MM.MBR_EMAIL
+				 	, MM.MAIL_CONT + MM.MAIL_FOOTER_CONT AS MAIL_CONT
+			FROM
+				 		(SELECT MM.MBR_ID
+			     					, MM.MBR_NM
+			     					, MM.MBR_SEX_MW
+			     					, MM.MBR_EMAIL
+			     					, MM.MBR_EMAIL_RCV_YN
+				 					, MMV.MBR_LEV_CD
+				 					, (CONVERT(CHAR(4), GETDATE(), 112) + '년 ' + SUBSTRING(CONVERT(CHAR(7), GETDATE(), 112), 5, 2)
+				            			+ '월 ' + SUBSTRING(CONVERT(CHAR(9), GETDATE(), 112), 7, 2) + '일') AS NOW_DATE
+				 					, dbo.FN_MSG_VARIABLE(#MAIL_CONT#,MM.MBR_ID) as MAIL_CONT
+									, dbo.FN_MSG_VARIABLE(#MAIL_FOOTER_CONT#,MM.MBR_ID) as MAIL_FOOTER_CONT
+						  FROM ASW_M_MBR MM WITH(NOLOCK)
+						  LEFT JOIN ASW_M_MBR_LEV MMV  WITH(NOLOCK) ON MMV.MBR_ID = MM.MBR_ID  AND MMV.MBR_LEV_DT = (SELECT MAX(MBR_LEV_DT) FROM ASW_M_MBR_LEV  WITH(NOLOCK) WHERE MBR_ID = MM.MBR_ID)
+			     	) MM
+			  WHERE MM.MBR_ID IN
+       	  	<iterate  property="MBR_ID_LIST" open="(" close=")" conjunction=",">
+  		 		#MBR_ID_LIST[]#
+			</iterate>
+			  AND MM.MBR_EMAIL IS NOT NULL
+			  AND  LOWER(MM.MBR_EMAIL) like '[a-z,0-9,_,-]%@[a-z,0-9,_,-]%.[a-z][a-z]%'
+			  AND LOWER(MM.MBR_EMAIL)  NOT like '%@%@%'
+			  AND CHARINDEX('.@',LOWER(MM.MBR_EMAIL) ) = 0
+			  AND CHARINDEX('..',LOWER(MM.MBR_EMAIL) ) = 0
+			  AND CHARINDEX(',',LOWER(MM.MBR_EMAIL) ) = 0
+			  AND RIGHT(LOWER(MM.MBR_EMAIL) ,1) between 'a' AND 'z'
+	</select>
+
+</sqlMap>

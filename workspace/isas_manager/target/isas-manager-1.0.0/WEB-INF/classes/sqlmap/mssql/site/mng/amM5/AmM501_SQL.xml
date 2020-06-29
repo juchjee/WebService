@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM501DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM501DAO.amM501L" parameterClass="map" resultClass="camelMap">
+		SELECT a.CS_NO
+	    	   , (SELECT b.CS_TYPE_NM FROM ASW_M_CS_FUNNEL b  WITH(NOLOCK) WHERE b.CS_TYPE_CD = a.CS_FUNNEL) AS CS_FUNNEL_NM
+	    	   , a.CS_FUNNEL
+	   		   , (SELECT c.CS_TYPE_NM FROM ASW_M_CS_TYPE c  WITH(NOLOCK) WHERE c.CS_TYPE_CD = a.CS_TYPE) AS CS_TYPE_NM
+	   		   , a.CS_TYPE
+	   		   , CONVERT(VARCHAR(10), a.CS_DT, 120) AS CS_DT
+	   		   , a.CS_QUESTION
+	   		   , a.CS_CONSULT
+		       , a.CA_NON_MBR_NM
+		       , a.CA_MBR_ID
+		       , a.CS_MBR_ID
+		       , CASE WHEN a.CS_CALL ='I' THEN '인바운드'
+	              	  WHEN a.CS_CALL ='O' THEN '아웃바운드'
+	              	  ELSE ''
+	              END AS CS_CALL
+		        ,a.CA_NON_MBR_TEL
+		       <!-- , (SELECT y.ADM_NAME FROM ASW_S_ADM y WHERE y.ADM_ID = a.CA_MBR_ID) AS ADM_NAME -->
+		FROM ASW_M_CS a WITH(NOLOCK)
+		WHERE 1=1
+		<isNotEmpty  property="MBR_ID" prepend="AND">
+			a.CS_MBR_ID = #MBR_ID#
+		</isNotEmpty>
+		<isNotEmpty  property="CS_FUNNEL" prepend="AND">
+			a.CS_FUNNEL = #CS_FUNNEL#
+		</isNotEmpty>
+		<isNotEmpty  property="CS_TYPE" prepend="AND">
+			a.CS_TYPE = #CS_TYPE#
+		</isNotEmpty>
+
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+  		   a.CS_DT between #TXT_FROM_DT# AND #TXT_TO_DT#+' 23:59:59.999'
+	  	</isNotEmpty>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="0">
+			<isNotEmpty property="SEARCH_TXT">
+				(a.CS_QUESTION like '%' + #SEARCH_TXT# +'%' OR a.CS_CONSULT like '%' + #SEARCH_TXT# +'%')
+			</isNotEmpty>
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+			a.CS_QUESTION like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+			a.CS_CONSULT like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+			a.CS_PROCESS like '%' + #SEARCH_TXT# +'%'
+		</isEqual>
+		ORDER BY a.CS_NO DESC
+	</select>
+
+	<select id="AmM501DAO.amM501FL" parameterClass="map" resultClass="camelMap">
+		SELECt CS_TYPE_CD
+			   , CS_TYPE_NM
+		FROM ASW_M_CS_FUNNEL WITH(NOLOCK)
+		WHERE CS_TYPE_USE_YN = 'Y'
+		ORDER BY CS_TYPE_SORT
+	</select>
+
+	<select id="AmM501DAO.amM501TL" parameterClass="map" resultClass="camelMap">
+		SELECt CS_TYPE_CD
+			   , CS_TYPE_NM
+		FROM ASW_M_CS_TYPE WITH(NOLOCK)
+		WHERE CS_TYPE_USE_YN = 'Y'
+		ORDER BY CS_TYPE_SORT
+	</select>
+
+	<select id="AmM501DAO.amM501R" parameterClass="map" resultClass="camelMap">
+		SELECT a.CS_NO
+	    	   , (SELECT b.CS_TYPE_NM FROM ASW_M_CS_FUNNEL b  WITH(NOLOCK) WHERE b.CS_TYPE_CD = a.CS_FUNNEL) AS CS_FUNNEL_NM
+	    	   , a.CS_FUNNEL
+	   		   , (SELECT c.CS_TYPE_NM FROM ASW_M_CS_TYPE c  WITH(NOLOCK) WHERE c.CS_TYPE_CD = a.CS_TYPE) AS CS_TYPE_NM
+	   		   , a.CS_TYPE
+	   		   , a.CS_DT
+	   		   , a.CS_QUESTION
+	   		   , a.CS_CONSULT
+	   		   , a.CS_PROCESS
+	   		   , a.CA_NON_MBR_NM
+	   		   , a.CA_NON_MBR_TEL
+		       , a.CA_MBR_ID
+		       , a.CS_MBR_ID
+		       , CASE WHEN a.CS_CALL ='I' THEN '인바운드'
+	              	  WHEN a.CS_CALL ='O' THEN '아웃바운드'
+	              	  ELSE ''
+	              END AS CS_CALL_NM
+	           , a.CS_CALL
+		       , DMH.DATA_MOD_DT AS MOD_DT
+			   , DMH.DATA_MOD_ID AS MOD_ID
+		FROM ASW_M_CS a
+		LEFT JOIN (SELECT top 1 DATA_MOD_TBL_KEY
+						  , DATA_MOD_ID
+						  , DATA_USER_TP_MA
+           				  , MAX(DATA_MOD_DT) as DATA_MOD_DT
+           		   FROM ASW_G_DATA_MOD_HIS WITH(NOLOCK)
+           		   WHERE DATA_MOD_TBL = 'M_CS' AND DATA_MOD_TBL_KEY = #CS_NO#
+           		   GROUP BY DATA_MOD_TBL_KEY, DATA_MOD_ID, DATA_USER_TP_MA
+           		   ) DMH
+            ON DATA_MOD_TBL_KEY = a.CS_NO
+		WHERE CS_NO = #CS_NO#
+	</select>
+
+</sqlMap>

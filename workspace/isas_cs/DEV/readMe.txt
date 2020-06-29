@@ -1,0 +1,1 @@
+CentOS 6.8 64bit, WAS : Tomcat 7.0.56, JAVA : JDK 1.7.0_79

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM405DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM405DAO.amM405Search" parameterClass="map" resultClass="camelMap">
+		<![CDATA[
+			SELECT EPP.POPUP_SEQ
+			 	      ,EPP.POPUP_TITLE
+				      ,(CASE WHEN EPP.POPUP_REG_TP_FE = 'F' THEN '파일형' ELSE '에디터형' END) as POPUP_REG_TP_FE
+				      ,CONVERT(VARCHAR(16),EPP.POPUP_START_DT,121) + ' ~ ' + + ISNULL(CONVERT(VARCHAR(16), EPP.POPUP_END_DT, 121),'무제한') as POPUP_DT
+				      ,(CASE WHEN EPP.POPUP_OPEN_TP_WLM = 'W' THEN '일반윈도우' WHEN EPP.POPUP_OPEN_TP_WLM = 'L' THEN '고정레이어' ELSE '이동레이어' END) as POPUP_OPEN_TP_WLM_NM
+				      ,POPUP_OPEN_TP_WLM
+				      ,EPP.POPUP_WIN_TOP
+				      ,EPP.POPUP_WIN_LEFT
+				      ,EPP.POPUP_WIN_WIDTH
+				      ,EPP.POPUP_WIN_HEIGHT
+				      ,EPP.POPUP_CENTER_YES_NO
+					  ,(CASE WHEN EPP.POPUP_STATUS_YN = 'Y' THEN '출력' ELSE '미출력' END) as POPUP_STATUS_YN
+				      ,(SELECT AM.ADM_NAME FROM ASW_S_ADM AM  WITH(NOLOCK) WHERE AM.ADM_ID = EPP.REG_ID) AS REG_NM
+			     	  ,EPP.REG_DT
+			 FROM ASW_POPUP EPP WITH(NOLOCK)
+		]]>
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="POPUP_DT" >
+				<![CDATA[  #POPUP_DT# between CONVERT(VARCHAR(10),EPP.POPUP_START_DT,121)  AND ISNULL(CONVERT(VARCHAR(10),EPP.POPUP_END_DT,121),#POPUP_DT#) ]]>
+			  	</isNotEmpty>
+				<isNotEmpty prepend="AND" property="POPUP_TITLE" >
+		  			<![CDATA[ EPP.POPUP_TITLE like '%'+#POPUP_TITLE#+'%' ]]>
+			  	</isNotEmpty>
+				<isNotEmpty prepend="AND" property="POPUP_STATUS_YN" >
+		  			<![CDATA[ EPP.POPUP_STATUS_YN = #POPUP_STATUS_YN# ]]>
+			  	</isNotEmpty>
+				<isNotEmpty prepend="AND" property="POPUP_OPEN_TP_WLM" >
+		  			<![CDATA[ EPP.POPUP_OPEN_TP_WLM = #POPUP_OPEN_TP_WLM# ]]>
+			  	</isNotEmpty>
+		</dynamic>
+  </select>
+	<select id="AmM405DAO.amM405View" parameterClass="map" resultClass="camelMap">
+		SELECT EPP.POPUP_SEQ
+		 	      ,EPP.POPUP_TITLE
+			      ,EPP.POPUP_REG_TP_FE
+			      ,ATT.ATTCH_FILE_NM
+			      ,ATT.ATTCH_FILE_PATH
+			      ,EPP.POPUP_START_DT
+			      ,EPP.POPUP_END_DT
+			      ,EPP.POPUP_OPEN_TP_WLM
+			      ,EPP.POPUP_STATUS_YN
+			      ,EPP.POPUP_WIN_TOP
+			      ,EPP.POPUP_WIN_LEFT
+			      ,EPP.POPUP_WIN_WIDTH
+			      ,EPP.POPUP_WIN_HEIGHT
+			      ,EPP.POPUP_CONT
+			      ,EPP.POPUP_CENTER_YES_NO
+			      ,EPP.POPUP_CLOSE_DAY
+			      ,EPP.POPUP_CLOSE_COLOR
+			      ,EPP.POPUP_CLOSE_SIZE
+			  FROM ASW_POPUP EPP WITH(NOLOCK)
+			  LEFT JOIN ASW_G_ATTCH ATT ON ATT.ATTCH_CD = EPP.ATTCH_CD
+			 WHERE EPP.POPUP_SEQ = #POPUP_SEQ#
+	</select>
+
+</sqlMap>

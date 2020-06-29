@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CbtsIaAmDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="CbtsIaAmDAO.selectAuthorList" parameterClass="map" resultClass="camelMap">
+		<![CDATA[
+			SELECT ROW_DATA.* FROM(
+			SELECT TOP 10 ROW_NUMBER() OVER(ORDER BY ID DESC) ROW,
+				ID, NAME, DESCRIPTION, USE_YN, REG_USER
+			FROM SAMPLE
+			) ROW_DATA
+		]]>
+	</select>
+
+</sqlMap>

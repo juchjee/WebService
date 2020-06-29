@@ -1,0 +1,1344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.custCard.dao.CustCardDao">
+	<resultMap type="CustCardVO" id="CustCardMap" />
+	
+	<!-- 고객상담카드등록 조회
+	     20181004 EMP_NM : SCU100에서 CCM100으로 테이블 변경
+	 -->
+	<select id="selCustCardR" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selCustCardR */
+	         SEQ = ROW_NUMBER() OVER(ORDER BY A.ORD_NO DESC)
+		   , A.ORD_NO /* 주문번호(PK) */
+	       , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 121),0,11) /* 상담일 */
+		   , A.EMP_NO /* 상담자(사원번호) */
+		   , EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+		   , A.CUST_GUBUN /* 고객구분[AS500] */
+		   , CUST_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS500' AND BASE_CD = A.CUST_GUBUN) /* 고객구분명 */
+		   , A.SD_GUBUN /* 상담구분[AS501] */
+		   , SD_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS501' AND BASE_CD = A.SD_GUBUN)  /* 상담구분명 */
+		   , A.CUST_NM /* 고객명 */
+		   , A.CUST_ADDR /* 고객주소지 */
+		   , CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+		   , A.SITE_TYPE /* 현장유형[AS502] */
+		   , SITE_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS502' AND BASE_CD = A.SITE_TYPE) /* 현장유형명 */
+		   , A.SITE_TYPE_ETC /* 현장유형_기타 */
+		   , A.SITE_ELEVATOR /* 엘리베이터(유/무) */
+		   , A.TYPE_CHK1 /* 시공유형1[덧방시공] */
+		   , TYPE_CHK1_NM = CASE WHEN A.TYPE_CHK1 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , TYPE_CHK1_NM = (SELECT DBO.FNCOLUMNNM('TYPE_CHK1', A.TYPE_CHK1)) */ /* 시공유형1명[덧방시공] */
+		   , A.TYPE_CHK2 /* 시공유형2[타일철거] */
+		   , TYPE_CHK2_NM = CASE WHEN A.TYPE_CHK2 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , TYPE_CHK2_NM = (SELECT DBO.FNCOLUMNNM('TYPE_CHK2', A.TYPE_CHK2)) */ /* 시공유형2명[타일철거] */
+		   , A.TYPE_CHK3 /* 시공유형3[부분철거] */
+		   , TYPE_CHK3_NM = CASE WHEN A.TYPE_CHK3 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , TYPE_CHK3_NM = (SELECT DBO.FNCOLUMNNM('TYPE_CHK3', A.TYPE_CHK3)) */ /* 시공유형3명[부분철거] */
+		   , A.TYPE_CHK4 /* 시공유형4[바닥철거] */
+		   , TYPE_CHK4_NM = CASE WHEN A.TYPE_CHK4 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , TYPE_CHK4_NM = (SELECT DBO.FNCOLUMNNM('TYPE_CHK4', A.TYPE_CHK4)) */ /* 시공유형4명[바닥철거] */
+		   , A.TYPE_CHK5 /* 시공유형5[방수시공] */
+		   , TYPE_CHK5_NM = CASE WHEN A.TYPE_CHK5 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , TYPE_CHK5_NM = (SELECT DBO.FNCOLUMNNM('TYPE_CHK5', A.TYPE_CHK5)) */ /* 시공유형5명[방수시공] */
+		   , A.PRE_BATH_QTY /* 현재욕실수량 */
+		   , PRE_BATH_QTY_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS503' AND BASE_CD = A.PRE_BATH_QTY) /* 현재욕실수량명 */
+		   , A.REQ_BATH_QTY /* 요청욕실수량 */
+		   , REQ_BATH_QTY_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS503' AND BASE_CD = A.REQ_BATH_QTY) /* 요청욕실수량명 */
+		   , A.PRE_BATH_TYPE1 /* 현재욕실타입1[욕조] */
+		   , PRE_BATH_TYPE1_NM = CASE WHEN A.PRE_BATH_TYPE1 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE1_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE1', A.PRE_BATH_TYPE1)) */ /* 현재욕실타입1명[욕조] */
+		   , A.PRE_BATH_TYPE2 /* 현재욕실타입2[샤워파티션] */
+		   , PRE_BATH_TYPE2_NM = CASE WHEN A.PRE_BATH_TYPE2 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE2_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE2', A.PRE_BATH_TYPE2)) */ /* 현재욕실타입2명[샤워파티션] */
+		   , A.PRE_BATH_TYPE3 /* 현재욕실타입3[샤워부스] */
+		   , PRE_BATH_TYPE3_NM = CASE WHEN A.PRE_BATH_TYPE3 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE3_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE3', A.PRE_BATH_TYPE3)) */ /* 현재욕실타입3명[샤워부스] */
+		   , A.PRE_BATH_TYPE4 /* 현재욕실타입4[UBR] */
+		   , PRE_BATH_TYPE4_NM = CASE WHEN A.PRE_BATH_TYPE4 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE4_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE4', A.PRE_BATH_TYPE4)) */ /* 현재욕실타입4명[UBR] */
+		   , A.PRE_BATH_TYPE5 /* 현재욕실타입5[타일] */
+		   , PRE_BATH_TYPE5_NM = CASE WHEN A.PRE_BATH_TYPE5 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE5_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE5', A.PRE_BATH_TYPE5)) */ /* 현재욕실타입5명[타일] */
+		   , A.PRE_BATH_TYPE6 /* 현재욕실타입6[기타] */
+		   , PRE_BATH_TYPE6_NM = CASE WHEN A.PRE_BATH_TYPE6 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , PRE_BATH_TYPE6_NM =(SELECT DBO.FNCOLUMNNM('PRE_BATH_TYPE6', A.PRE_BATH_TYPE6)) */ /* 현재욕실타입6명[기타] */
+		   , A.REQ_BATH_TYPE1 /* 요청욕실타입1[욕조] */
+		   , REQ_BATH_TYPE1_NM = CASE WHEN A.REQ_BATH_TYPE1 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , REQ_BATH_TYPE1_NM =(SELECT DBO.FNCOLUMNNM('REQ_BATH_TYPE1', A.REQ_BATH_TYPE1)) */ /* 요청욕실타입1명[욕조] */
+		   , A.REQ_BATH_TYPE2 /* 요청욕실타입2[샤워파티션] */
+		   , REQ_BATH_TYPE2_NM = CASE WHEN A.REQ_BATH_TYPE2 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , REQ_BATH_TYPE2_NM =(SELECT DBO.FNCOLUMNNM('REQ_BATH_TYPE2', A.REQ_BATH_TYPE2)) */ /* 요청욕실타입2명[샤워파티션] */
+		   , A.REQ_BATH_TYPE3 /* 요청욕실타입3[샤워부스] */
+		   , REQ_BATH_TYPE3_NM = CASE WHEN A.REQ_BATH_TYPE3 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , REQ_BATH_TYPE3_NM =(SELECT DBO.FNCOLUMNNM('REQ_BATH_TYPE3', A.REQ_BATH_TYPE3)) */ /* 요청욕실타입3명[샤워부스] */
+		   , A.REQ_BATH_TYPE4 /* 요청욕실타입4[기타] */
+		   , REQ_BATH_TYPE4_NM = CASE WHEN A.REQ_BATH_TYPE4 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , REQ_BATH_TYPE4_NM =(SELECT DBO.FNCOLUMNNM('REQ_BATH_TYPE4', A.REQ_BATH_TYPE4)) */ /* 요청욕실타입4명[기타] */
+		   , A.REQ_BATH_TYPE_ETC /* 요청욕실타입_기타 */
+		   , A.INPUT_ROUTE /* 유입경로[AS506] */
+		   , INPUT_ROUTE_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS506' AND BASE_CD = A.INPUT_ROUTE) /* 유입경로명 */
+		   , A.INTEREST_PRODUCT1 /* 관심제품1[리모델링] */
+		   , INTEREST_PRODUCT1_NM = CASE WHEN A.INTEREST_PRODUCT1 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , INTEREST_PRODUCT1_NM =(SELECT DBO.FNCOLUMNNM('INTEREST_PRODUCT1', A.INTEREST_PRODUCT1)) */ /* 관심제품1명[리모델링] */
+		   , A.INTEREST_PRODUCT2 /* 관심제품2[위생도기] */
+		   , INTEREST_PRODUCT2_NM = CASE WHEN A.INTEREST_PRODUCT2 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , INTEREST_PRODUCT2_NM =(SELECT DBO.FNCOLUMNNM('INTEREST_PRODUCT2', A.INTEREST_PRODUCT2)) */ /* 관심제품2명[위생도기] */
+		   , A.INTEREST_PRODUCT3 /* 관심제품3[타일] */
+		   , INTEREST_PRODUCT3_NM = CASE WHEN A.INTEREST_PRODUCT3 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , INTEREST_PRODUCT3_NM =(SELECT DBO.FNCOLUMNNM('INTEREST_PRODUCT3', A.INTEREST_PRODUCT3)) */ /* 관심제품3명[타일] */
+		   , A.INTEREST_PRODUCT4 /* 관심제품4[비데] */
+		   , INTEREST_PRODUCT4_NM = CASE WHEN A.INTEREST_PRODUCT4 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , INTEREST_PRODUCT4_NM =(SELECT DBO.FNCOLUMNNM('INTEREST_PRODUCT4', A.INTEREST_PRODUCT4)) */ /* 관심제품4명[비데] */
+		   , A.INTEREST_PRODUCT5 /* 관심제품5[기타] */
+		   , INTEREST_PRODUCT5_NM = CASE WHEN A.INTEREST_PRODUCT5 = 'true' THEN 'Y' ELSE 'N' END
+		   /* , INTEREST_PRODUCT5_NM =(SELECT DBO.FNCOLUMNNM('INTEREST_PRODUCT5', A.INTEREST_PRODUCT5)) */ /* 관심제품5명[기타] */
+		   , A.VISIT_CNT /* 방문인원[AS504] */
+		   , VISIT_CNT_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS504' AND BASE_CD = A.VISIT_CNT) /* 방문인원명 */
+		   , A.COST_TYPE1 /* 가격타입(공용)[SA505] */
+		   , COST_TYPE1_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS505' AND BASE_CD = A.COST_TYPE1) /* 가격타입명(공용)[SA505] */
+		   , A.COST_TYPE2 /* 가격타입(부부)[SA505] */
+		   , COST_TYPE2_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS505' AND BASE_CD = A.COST_TYPE2) /* 가격타입명(부부)[SA505] */
+		   , A.BATH_STYLE1 /* 욕실스타일(공용)[AS508] */
+		   , BATH_STYLE1_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS508' AND BASE_CD = A.BATH_STYLE1) /* 욕실스타일(공용)명[AS508] */
+		   , A.BATH_STYLE2 /* 욕실스타일(부부)[AS508] */
+		   , BATH_STYLE2_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS508' AND BASE_CD = A.BATH_STYLE2) /* 욕실스타일(부부)명[AS508] */
+		   , SURVEY_DT = SUBSTRING(CONVERT(CHAR, A.SURVEY_DT, 121),0,11) /* 현장실측희망일 */
+		   , A.SURVEY_HOUR /* 실측희망시간(시) */
+		   , A.SURVEY_MIN /* 실측희망시간(분) */
+		   , SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 121),0,11) /* 공사희망일 */
+		   , A.CONSULT_CONT1 /* 1차상담내용 */
+		   , A.CONSULT_CONT2 /* 2차상담내용 */
+		   , CALL_DT = SUBSTRING(CONVERT(CHAR, A.CALL_DT, 121),0,11) /* 해피콜일자 */
+		   , A.CALL_STAT /* 해피콜진행상태[AS507] */
+		   , CALL_STAT_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS507' AND BASE_CD = A.CALL_STAT) /* 해피콜진행상태명 */
+		   , A.RESERV_YN /* 상품예약여부 */
+		   , A.SALE_CODE /* 계약상품코드 */
+		   , SALE_NAME = (SELECT SALE_NAME FROM SDH130 WHERE ORD_GUBUN = 'SDH0140' AND SALE_CODE = A.SALE_CODE) /* 계약상품명 */
+		   , A.CID /* 최초등록자 */
+		   , A.CDT /* 최초등록일 */
+		   , A.MID /* 수정등록자 */
+		   , A.MDT /* 수정등록일 */
+		   , A.CUST_CD /* 거래처코드[BCV100] */
+		   , CUST_SAL_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD) 
+		FROM ASA500 A
+	   WHERE 1=1
+		]]>
+		 <if test="ordNo != '' and ordNo != null">
+	     AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	     </if>
+	     <if test="empNo != '' and empNo != null">
+		 AND A.EMP_NO = #{empNo} /* 상담자(사원번호) */
+		 </if>
+		 <if test="custNm != '' and custNm != null">
+		 AND UPPER(A.CUST_NM) LIKE '%' + UPPER(#{custNm}) + '%' /* 고객명 */
+		 </if>
+		 <if test="sdFrDt != '' and sdFrDt != null">
+		 AND A.SD_DT BETWEEN #{sdFrDt} AND #{sdToDt}
+		 </if>
+		 <!-- 여기까지가 조회조건 해당 -->
+		 <if test="sdDt != '' and sdDt != null">
+	     AND A.SD_DT = #{sdDt}	/* 상담일 */
+	     </if>
+		 <if test="surveyDt != '' and surveyDt != null">
+		 AND A.SURVEY_DT = #{surveyDt} /* 현장실측희망일 */
+		 </if>
+		 <if test="callDt != '' and callDt != null">
+		 AND A.CALL_DT = #{callDt} /* 해피콜일자 */
+		 </if>
+		 <if test="callStat != '' and callStat != null">
+		 AND A.CALL_STAT = #{callStat} /* 해피콜진행상태[AS507] */
+		 </if>
+	   ORDER BY A.SD_DT DESC /* 상담일자 최신순 */
+	</select>
+	
+	
+	<!-- 고객상담카드 조회 (출력물) case by case 
+		 20181004 EMP_NM > SCU100 > CCM100으로 테이블 변경
+		 
+		 , SD_GUBUN_NM = ((CASE WHEN A.SD_GUBUN = 'AS501100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501100')) + '  ' 
+	                     + ((CASE WHEN A.SD_GUBUN = 'AS501200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501200')) + '  '
+	       		         + ((CASE WHEN A.SD_GUBUN = 'AS501300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501300')) + '  '
+	       		         + ((CASE WHEN A.SD_GUBUN = 'AS501400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501400')) + '  '
+	       		         + ((CASE WHEN A.SD_GUBUN = 'AS501500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501500')) + '  '
+	-->
+	<select id="selCustCardRPrint" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selCustCardRPrint */
+	         A.ORD_NO /* 상담/주문번호  */
+	       , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 112),0,9) --YYYY년 MM월 DD일
+	       , A.EMP_NO /* 상담자(사원번호) */
+	       , EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+	       , A.CUST_NM
+	       , A.CUST_ADDR
+	       , CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+	       , A.SITE_ELEVATOR
+	       , A.SITE_TYPE
+	       , A.SITE_TYPE_ETC
+	       , A.CUST_GUBUN
+	       , A.SD_GUBUN
+	       , A.TYPE_CHK1
+	       , A.TYPE_CHK2
+	       , A.TYPE_CHK3
+	       , A.TYPE_CHK4
+	       , A.TYPE_CHK5
+	       , A.PRE_BATH_TYPE1
+	       , A.PRE_BATH_TYPE2
+	       , A.PRE_BATH_TYPE3
+	       , A.PRE_BATH_TYPE4
+	       , A.PRE_BATH_TYPE5
+	       , A.PRE_BATH_TYPE6
+	       , A.REQ_BATH_TYPE1
+	       , A.REQ_BATH_TYPE2
+	       , A.REQ_BATH_TYPE3
+	       , A.REQ_BATH_TYPE4
+	       , A.PRE_BATH_QTY
+	       , A.REQ_BATH_TYPE_ETC
+	       , A.INPUT_ROUTE
+	       , A.INTEREST_PRODUCT1
+	       , A.INTEREST_PRODUCT2
+	       , A.INTEREST_PRODUCT3
+	       , A.INTEREST_PRODUCT4
+	       , A.INTEREST_PRODUCT5
+	       , A.VISIT_CNT
+	       , A.COST_TYPE1
+	       , A.COST_TYPE2
+	       , A.BATH_STYLE1
+	       , A.BATH_STYLE2
+	       , SURVEY_DT = SUBSTRING(CONVERT(CHAR, A.SURVEY_DT, 112),0,9) --YYYY년 MM월 DD일
+	       , A.SURVEY_HOUR
+	       , A.SURVEY_MIN
+	       , SURVEY_TIME = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SURVEY_HOUR) + ' ' + (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SURVEY_MIN)
+	       , SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 112),0,9) --YYYY년 MM월 DD일
+	       , A.CONSULT_CONT1
+	       , A.CONSULT_CONT2
+	       , CALL_DT = SUBSTRING(CONVERT(CHAR, A.CALL_DT, 112),0,9) --YYYY년 MM월 DD일
+	       , A.CALL_STAT
+	       , A.RESERV_YN 
+	       , A.SALE_CODE
+		
+	       , SITE_ELEVATOR_NM = CASE WHEN A.SITE_ELEVATOR = '1' THEN '■ 엘리베이터(유/무)' ELSE '□ 엘리베이터(유/무)' END
+	       , SITE_TYPE_NM = ((CASE WHEN A.SITE_TYPE = 'AS502100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502100')) + '  ' 
+	                      + ((CASE WHEN A.SITE_TYPE = 'AS502200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502200')) + '  '
+		       	 		  + ((CASE WHEN A.SITE_TYPE = 'AS502300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502300')) + '  '
+		       			  + ((CASE WHEN A.SITE_TYPE = 'AS502400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502400')) + '  '
+		       			  + ((CASE WHEN A.SITE_TYPE = 'AS502500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE + ' ( ' + A.SITE_TYPE_ETC + ' )  '  FROM BCA200V WHERE BASE_CD = 'AS502500')) 
+	       , CUST_GUBUN_NM = ((CASE WHEN A.CUST_GUBUN = 'AS500100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500100')) + '  ' 
+	                       + ((CASE WHEN A.CUST_GUBUN = 'AS500200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500200')) + '  '
+	       			       + ((CASE WHEN A.CUST_GUBUN = 'AS500300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500300')) + '  '
+	       , SD_GUBUN_NM = ((CASE WHEN A.SD_GUBUN = 'AS518100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS518100')) + '  ' 
+	                     + ((CASE WHEN A.SD_GUBUN = 'AS518200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS518200')) + '  '
+	       , TYPE_CHK = (CASE WHEN A.TYPE_CHK1 = 'true' THEN '■ 덧방시공' ELSE '□ 덧방시공' END) + '  '
+	                  + (CASE WHEN A.TYPE_CHK2 = 'true' THEN '■ 타일철거' ELSE '□ 타일철거' END) + '  '
+	       	          + (CASE WHEN A.TYPE_CHK3 = 'true' THEN '■ 부분철거' ELSE '□ 부분철거' END) + '  '
+			       	  + (CASE WHEN A.TYPE_CHK4 = 'true' THEN '■ 바닥철거' ELSE '□ 바닥철거' END) + '  '
+			       	  + (CASE WHEN A.TYPE_CHK5 = 'true' THEN '■ 방수시공' ELSE '□ 방수시공' END) + '  '
+	       , PRE_BATH_QTY_NM = ((CASE WHEN A.PRE_BATH_QTY = 'AS503100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503100')) + '  ' 
+	                         + ((CASE WHEN A.PRE_BATH_QTY = 'AS503200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503200')) + '  '
+	       					 + ((CASE WHEN A.PRE_BATH_QTY = 'AS503300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503300')) + '  '
+	       , PRE_BATH_TYPE = (CASE WHEN A.PRE_BATH_TYPE1 = 'true' THEN '■ 욕조' ELSE '□ 욕조' END) + '  '
+	                       + (CASE WHEN A.PRE_BATH_TYPE2 = 'true' THEN '■ 샤워파티션' ELSE '□ 샤워파티션' END) + '  '
+			       	       + (CASE WHEN A.PRE_BATH_TYPE3 = 'true' THEN '■ 샤워 부스' ELSE '□ 샤워부스' END) + '  '
+			       	       + (CASE WHEN A.PRE_BATH_TYPE4 = 'true' THEN '■ UBR' ELSE '□ UBR' END) + '  '
+			       	       + (CASE WHEN A.PRE_BATH_TYPE5 = 'true' THEN '■ 타일' ELSE '□ 타일' END) + '  '
+			       		   + (CASE WHEN A.PRE_BATH_TYPE6 = 'true' THEN '■ 기타' ELSE '□ 기타' END) + '  '
+	       , REQ_BATH_QTY_NM = ((CASE WHEN A.REQ_BATH_QTY = 'AS503100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503100')) + '  ' 
+	                         + ((CASE WHEN A.REQ_BATH_QTY = 'AS503200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503200')) + '  '
+	       					 + ((CASE WHEN A.REQ_BATH_QTY = 'AS503300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503300')) + '  ' 
+	       , REQ_BATH_TYPE = (CASE WHEN A.REQ_BATH_TYPE1 = 'true' THEN '■ 욕조' ELSE '□ 욕조' END) + '  '
+	                       + (CASE WHEN A.REQ_BATH_TYPE2 = 'true' THEN '■ 샤워파티션' ELSE '□ 샤워파티션' END) + '  '
+			       	       + (CASE WHEN A.REQ_BATH_TYPE3 = 'true' THEN '■ 샤워 부스' ELSE '□ 샤워 부스 ' END) + '  '
+			       		   + (CASE WHEN A.REQ_BATH_TYPE4 = 'true' THEN '■ 기타' + ' ( ' + A.REQ_BATH_TYPE_ETC + ' )  ' ELSE '□ 기타' + ' (  ) ' END)
+	       , INPUT_ROUTE_NM = ((CASE WHEN A.INPUT_ROUTE = 'AS506100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506100')) + '  ' 
+	                        + ((CASE WHEN A.INPUT_ROUTE = 'AS506200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506200')) + '  '
+			       		    + ((CASE WHEN A.INPUT_ROUTE = 'AS506300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506300')) + '  '
+			       		    + ((CASE WHEN A.INPUT_ROUTE = 'AS506400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506400')) + '  '
+			       		    + ((CASE WHEN A.INPUT_ROUTE = 'AS506500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506500')) + '  '
+			       		    + ((CASE WHEN A.INPUT_ROUTE = 'AS506600' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506600')) + '  '
+	       , INTEREST_PRODUCT = (CASE WHEN A.INTEREST_PRODUCT1 = 'true' THEN '■ 리모델링' ELSE '□ 리모델링' END) + '  '
+	                          + (CASE WHEN A.INTEREST_PRODUCT2 = 'true' THEN '■ 위생도기' ELSE '□ 위생도기' END) + '  '
+			       	          + (CASE WHEN A.INTEREST_PRODUCT3 = 'true' THEN '■ 타일' ELSE '□ 타일' END) + '  '
+			       	          + (CASE WHEN A.INTEREST_PRODUCT4 = 'true' THEN '■ 비데' ELSE '□ 비데' END) + '  '
+			       	          + (CASE WHEN A.INTEREST_PRODUCT5 = 'true' THEN '■ 기타' ELSE '□ 기타' END) + '  '
+	       , VISIT_CNT_NM = ((CASE WHEN A.VISIT_CNT = 'AS504100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS504100')) + '  ' 
+	                      + ((CASE WHEN A.VISIT_CNT = 'AS504200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS504200')) + '  '
+			       		  + ((CASE WHEN A.VISIT_CNT = 'AS504300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS504300')) + '  '
+			       		  + ((CASE WHEN A.VISIT_CNT = 'AS504400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS504400')) + '  '
+	       , COST_TYPE1_NM = ((CASE WHEN A.COST_TYPE1 = 'AS505100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505100')) + '  ' 
+	                       + ((CASE WHEN A.COST_TYPE1 = 'AS505200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505200')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE1 = 'AS505300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505300')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE1 = 'AS505400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505400')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE1 = 'AS505500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505500')) + '  '
+	       , COST_TYPE2_NM = ((CASE WHEN A.COST_TYPE2 = 'AS505100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505100')) + '  ' 
+	                       + ((CASE WHEN A.COST_TYPE2 = 'AS505200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505200')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE2 = 'AS505300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505300')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE2 = 'AS505400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505400')) + '  '
+			       		   + ((CASE WHEN A.COST_TYPE2 = 'AS505500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505500')) + '  '
+	       , BATH_STYLE1_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.BATH_STYLE1)
+	       , BATH_STYLE2_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.BATH_STYLE2)
+	       , CALL_STAT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CALL_STAT)
+	       , RESERV_YN_NM = (CASE WHEN A.RESERV_YN = '1' THEN '계약' ELSE '미계약' END)
+	       , SALE_NAME = (SELECT SALE_NAME FROM SDH130 WHERE ORD_GUBUN = 'SDH0140' AND SALE_CODE = A.SALE_CODE) /* 계약상품명 */
+		  FROM ASA500 A
+		 WHERE 1=1
+		   AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	  ]]>
+	</select>
+	
+	
+	<!--
+		설명 : 공통코드 콤보박스 구성용[BCA200V]
+	-->
+	<select id="selBaseCd" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selBaseCd */
+	         A.BASE_CD
+	       , A.TITLE
+	       , A.MAIN_CD
+	       , A.SUB_CD
+	       , USE_YN = ISNULL(USE_YN,0) --사용(1), 미사용(0)
+	    FROM BCA200V A
+	   WHERE A.MAIN_CD = #{mainCd}
+	     AND ISNULL(USE_YN,0) = '1' --사용중인 것만
+	   ORDER BY ORD_SQ 
+		]]>
+	</select>
+	
+	<!--
+		설명 : 상담자(사원번호) 검색팝업
+			, CUST_CD = (CASE WHEN T.CUST_CD = 'A' THEN 'i00000' ELSE T.CUST_CD END )
+	  	    , CUST_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = (CASE WHEN T.CUST_CD = 'A' THEN 'i00000' ELSE T.CUST_CD END ))
+	-->
+	<select id="selEmpInfo" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* custCardDao.selEmpInfo */
+	          SEQ = ROW_NUMBER() OVER(ORDER BY T.ID)
+            , EMP_NO = T.ID
+	        , EMP_NM = T.USER_NM
+	  	    , T.DEPT_CD
+	  	    , DEPT_NM = (SELECT DEPT_NM FROM HRA200 WHERE DEPT_CD = T.DEPT_CD)
+	    FROM (SELECT A.ID
+	               , A.USER_NM
+	  	           , A.CUST_CD
+	  	           , A.GR_ID
+	  	           , DEPT_CD = (SELECT DEPT_CD FROM HRA100 WHERE EMP_NO = A.ID)
+	            FROM CCM100 A
+	           WHERE 1=1
+	             AND CUST_CD IN (SELECT CUST_CD FROM CCM100 WHERE ID = #{id})
+	             AND ISNULL(A.USE_YN,'0') = '1' 
+	           ) T
+	   WHERE 1=1
+	   ]]>
+	   <if test="empNo != '' and empNo != null">
+		 AND (T.ID LIKE '%' + #{empNo} + '%' OR UPPER(T.USER_NM) LIKE '%' + UPPER(#{empNo}) + '%')
+	   </if>
+	   <if test="deptCd != '' and deptCd != null">
+		 AND T.DEPT_CD = #{deptCd}
+	   </if>
+	   <if test="grId != '' and grId != null">
+		 AND T.GR_ID = #{grId}
+	   </if>
+	   <if test="menucd != '' and menucd != null">
+		 AND T.GR_ID IN (SELECT GR_ID FROM CCM107 WHERE MENUCD = #{menucd}) /* 메뉴별 권한 갖고 있는 사람들 보여주도록 */
+	   </if>
+	  <![CDATA[
+	  ORDER BY T.ID
+	  ]]>
+	</select>
+
+	<!--
+		설명 : 상품코드 검색 팝업 [SDH500]
+	-->
+	<select id="selSaleCode" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* custCardDao.selSaleCode */
+	         DISTINCT SEQ = ROW_NUMBER() OVER (ORDER BY A.SALE_CODE) 
+	       , A.SALE_CODE
+	       , A.SALE_NAME
+		FROM SDH130 A /* 상품코드등록 MASTER */
+	   WHERE 1=1
+	     AND A.ORD_GUBUN = 'SDH0140' /* 결제사이트 - INUS BATH */
+	   ]]>
+	   <if test="saleCode != '' and saleCode != null">
+		 AND (A.SALE_CODE LIKE '%' + #{saleCode} + '%' OR UPPER(A.SALE_NAME) LIKE '%' + UPPER(#{saleCode}) + '%') /* 상품코드 */
+	   </if>
+	  <![CDATA[
+	   ORDER BY A.SALE_CODE
+	  ]]>
+	</select>
+	
+	
+	<!--
+		설명 : dbo.fnCodeNo2(tableNm, outDt, outFac)
+	-->
+	<select id="selCodeNo2" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* custCardDao.selCodeNo2 */
+	         VAL = dbo.fnCodeNo2(#{tableNm}, #{sdDt}, '')
+		FROM DUAL
+		]]>
+	</select>
+	
+	<!--
+		설명 : 고객상담내역 저장
+	-->
+	<insert id="insAsa500" parameterType="CustCardVO">
+	<![CDATA[
+	    INSERT INTO ASA500 ( ORD_NO /* 상담/주문번호 */
+					       , SD_DT /* 상담일 */
+					       , EMP_NO /* 상담자(사원번호) */
+					       , CUST_GUBUN /* [AS500]고객구분 */
+					       , SD_GUBUN /* [AS501]상담구분 */
+					       , CUST_NM /* 고객명 */
+					       , CUST_ADDR /* 주소지 */
+					       , CUST_TEL /* 연락처 */
+					       , SITE_TYPE /* [AS502]현장유형 */
+					       , SITE_TYPE_ETC /* 현장유형_기타 */
+					       , SITE_ELEVATOR /* 엘리베이터(유/무) */
+					       , TYPE_CHK1 /* 시공유형1 */
+					       , TYPE_CHK2 /* 시공유형2 */
+					       , TYPE_CHK3 /* 시공유형3 */
+					       , TYPE_CHK4 /* 시공유형4 */
+					       , TYPE_CHK5 /* 시공유형5 */
+					       , PRE_BATH_QTY /* 현재욕실수량 */
+					       , REQ_BATH_QTY /* 요청욕실수량 */
+					       , PRE_BATH_TYPE1 /* 현재욕실타입1 */
+					       , PRE_BATH_TYPE2 /* 현재욕실타입2 */
+					       , PRE_BATH_TYPE3 /* 현재욕실타입3 */
+					       , PRE_BATH_TYPE4 /* 현재욕실타입4 */
+					       , PRE_BATH_TYPE5 /* 현재욕실타입5 */
+					       , PRE_BATH_TYPE6 /* 현재욕실타입6 */
+					       , REQ_BATH_TYPE1 /* 요청욕실타입1 */
+					       , REQ_BATH_TYPE2 /* 요청욕실타입2 */
+					       , REQ_BATH_TYPE3 /* 요청욕실타입3 */
+					       , REQ_BATH_TYPE4 /* 요청욕실타입4 */
+					       , REQ_BATH_TYPE_ETC /* 요청욕실타입_기타 */
+					       , INPUT_ROUTE /* [AS506]유입경로 */
+					       , INTEREST_PRODUCT1 /* 관심제품1 */
+					       , INTEREST_PRODUCT2 /* 관심제품2 */
+					       , INTEREST_PRODUCT3 /* 관심제품3 */
+					       , INTEREST_PRODUCT4 /* 관심제품4 */
+					       , INTEREST_PRODUCT5 /* 관심제품5 */
+					       , VISIT_CNT /* [AS504]방문인원 */
+					       , COST_TYPE1 /* [AS505]가격타입(공용) */
+					       , COST_TYPE2 /* [AS505]가격타입(부부) */
+					       , BATH_STYLE1 /* 욕실스타일(공용) */
+					       , BATH_STYLE2 /* 욕실스타일(부부) */
+					       , SURVEY_DT /* 현장실측희망일 */
+					       , SURVEY_HOUR /* 실측희망시간(시) */
+					       , SURVEY_MIN /* 실측희망시간(분) */
+					       , SIGONG_DT /* 공사희망일 */
+					       , CONSULT_CONT1 /* 1차상담내용 */
+					       , CONSULT_CONT2 /* 2차상담내용 */
+					       , CALL_DT /* 해피콜일자 */
+					       , CALL_STAT /* [AS507]해피콜진행상태 */
+					       , RESERV_YN /* 상품계약여부 */
+					       , SALE_CODE /* 계약상품코드 */
+					       , CID /* 최초등록자 */
+					       , CDT /* 최초등록일자 */
+					       , MID /* 수정등록자 */
+					       , MDT /* 수정등록일자 */
+					       , CUST_CD /* 거래처코드[BCV100] */
+	    				   )
+	    			VALUES ( #{ordNo}
+					       , #{sdDt}
+					       , #{empNo}
+					       , #{custGubun}
+					       , #{sdGubun}
+					       , #{custNm}
+					       , #{custAddr}
+					       , dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+					       , #{siteType}
+					       , #{siteTypeEtc}
+					       , #{siteElevator}
+					       , #{typeChk1}
+					       , #{typeChk2}
+					       , #{typeChk3}
+					       , #{typeChk4}
+					       , #{typeChk5}
+					       , #{preBathQty}
+					       , #{reqBathQty}
+					       , #{preBathType1}
+					       , #{preBathType2}
+					       , #{preBathType3}
+					       , #{preBathType4}
+					       , #{preBathType5}
+					       , #{preBathType6}
+					       , #{reqBathType1}
+					       , #{reqBathType2}
+					       , #{reqBathType3}
+					       , #{reqBathType4}
+					       , #{reqBathTypeEtc}
+					       , #{inputRoute}
+					       , #{interestProduct1}
+					       , #{interestProduct2}
+					       , #{interestProduct3}
+					       , #{interestProduct4}
+					       , #{interestProduct5}
+					       , #{visitCnt}
+					       , #{costType1}
+					       , #{costType2}
+					       , #{bathStyle1}
+					       , #{bathStyle2}
+					       , CASE WHEN #{surveyDt} = '' THEN NULL ELSE #{surveyDt} END 
+					       , #{surveyHour}
+					       , #{surveyMin}
+					       , CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END
+					       , #{consultCont1}
+					       , #{consultCont2}
+					       , CASE WHEN #{callDt} = '' THEN NULL ELSE #{callDt} END
+					       , #{callStat}
+					       , #{reservYn}
+					       , #{saleCode}
+					       , #{regId}
+					       , GETDATE()
+					       , #{regId}
+					       , GETDATE()
+					       , #{custCd}
+	    			        )
+	    ]]>
+	</insert>
+	
+	<!--
+		설명 : 고객상담내역 저장
+		pk인 고객/주문번호[ord_no]와 상담일자[sd_dt], [emp_no], [cust_cd]는 수정제외
+		, CUST_CD = CASE WHEN #{custCd} = 'a' THEN 'i00000' ELSE #{custCd} END /* 거래처코드가 'a'인 것만 논현동 직영점으로 설정 */
+	-->
+	<update id="updAsa500" parameterType="CustCardVO">
+	<![CDATA[
+	    UPDATE ASA500
+	       SET CUST_GUBUN = #{custGubun}
+			 , SD_GUBUN = #{sdGubun}
+			 , CUST_NM = #{custNm}
+			 , CUST_ADDR = #{custAddr}
+			 , CUST_TEL = dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+			 , SITE_TYPE = #{siteType}
+			 , SITE_TYPE_ETC = #{siteTypeEtc}
+			 , SITE_ELEVATOR = #{siteElevator}
+			 , TYPE_CHK1 = #{typeChk1}
+			 , TYPE_CHK2 = #{typeChk2}
+			 , TYPE_CHK3 = #{typeChk3}
+			 , TYPE_CHK4 = #{typeChk4}
+			 , TYPE_CHK5 = #{typeChk5}
+			 , PRE_BATH_QTY = #{preBathQty}
+			 , REQ_BATH_QTY = #{reqBathQty}
+			 , PRE_BATH_TYPE1 = #{preBathType1}
+			 , PRE_BATH_TYPE2 = #{preBathType2}
+			 , PRE_BATH_TYPE3 = #{preBathType3}
+			 , PRE_BATH_TYPE4 = #{preBathType4}
+			 , PRE_BATH_TYPE5 = #{preBathType5}
+			 , PRE_BATH_TYPE6 = #{preBathType6}
+			 , REQ_BATH_TYPE1 = #{reqBathType1}
+			 , REQ_BATH_TYPE2 = #{reqBathType2}
+			 , REQ_BATH_TYPE3 = #{reqBathType3}
+			 , REQ_BATH_TYPE4 = #{reqBathType4}
+			 , REQ_BATH_TYPE_ETC = #{reqBathTypeEtc}
+			 , INPUT_ROUTE = #{inputRoute}
+			 , INTEREST_PRODUCT1 = #{interestProduct1}
+			 , INTEREST_PRODUCT2 = #{interestProduct2}
+			 , INTEREST_PRODUCT3 = #{interestProduct3}
+			 , INTEREST_PRODUCT4 = #{interestProduct4}
+			 , INTEREST_PRODUCT5 = #{interestProduct5}
+			 , VISIT_CNT = #{visitCnt}
+			 , COST_TYPE1 = #{costType1}
+			 , COST_TYPE2 = #{costType2}
+			 , BATH_STYLE1 = #{bathStyle1}
+			 , BATH_STYLE2 = #{bathStyle2}
+			 , SURVEY_DT = CASE WHEN #{surveyDt} = '' THEN NULL ELSE #{surveyDt} END 
+			 , SURVEY_HOUR = #{surveyHour}
+			 , SURVEY_MIN = #{surveyMin}
+			 , SIGONG_DT = CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END 
+			 , CONSULT_CONT1 = #{consultCont1}
+			 , CONSULT_CONT2 = #{consultCont2}
+			 , CALL_DT = CASE WHEN #{callDt} = '' THEN NULL ELSE #{callDt} END 
+			 , CALL_STAT = #{callStat}
+			 , RESERV_YN = #{reservYn}
+			 , SALE_CODE = #{saleCode}
+			 , MID = #{regId}
+			 , MDT = GETDATE()
+	     WHERE ORD_NO = #{ordNo}					       
+	    ]]>
+	</update>
+	
+	<!-- 고객상담내역 삭제 -->
+	<delete id="delAsa500" parameterType="TempData">
+    	DELETE FROM ASA500
+    	WHERE ORD_NO = #{ordNo}
+    </delete>
+    
+    
+    <!--
+		설명 : 고객카드 삭제 전, inusbath 계약등록 테이블[SDH100]에 동일한 고객/주문번호가 존재하는지 확인 
+	-->
+	<select id="getCntOrdNo" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardVO.getCntOrdNo */
+	         ORD_CNT = COUNT(A.ORD_NO)
+		FROM SDH100 A
+	   WHERE A.ORD_NO = #{ordNo}
+		]]>
+	</select>
+
+    <!--
+		설명 : 로그인 당시에 가져오는 사용자의 id, 명, custCd, 재직여부
+		, CUST_CD = (CASE WHEN T.CUST_CD = 'a' THEN 'i00000' ELSE T.CUST_CD END )
+	  	, CUST_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = (CASE WHEN T.CUST_CD = 'A' THEN 'i00000' ELSE T.CUST_CD END )) 
+	-->
+	<select id="getScmUserInfo" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardVO.getUserInfo */
+	         EMP_NO = T.ID
+	       , EMP_NM = T.USER_NM
+	  	   , WORK_YN = (CASE WHEN T.CUST_CD != 'a' THEN T.USE_YN /* 외주사용자는 SCM 의 사용여부를 바라봄 */
+	  				 	     WHEN T.CUST_CD  = 'a' AND (SELECT EMP_NO FROM HRA100 WHERE STAT_BC <> 'HR125300' /* 퇴직 */  AND EMP_NO = T.ID) IS NOT NULL THEN '1'
+	  					     ELSE '0' END )
+	    FROM CCM100 T
+	   WHERE ISNULL(T.USE_YN,'0') = '1'
+	     AND T.ID = #{id}
+		]]>
+	</select>
+	
+	<!-- 
+		설명 : 상담고객카드등록 시에 신규/수정할 때, SDH100에 데이터 넘어주도록 프로시저 호출
+		파라미터 : 고객/주문번호, 등록자ID
+	 -->
+	<select id="selAsa500WorkD" statementType="CALLABLE" parameterType="CustCardVO"  resultMap="CustCardMap" resultType="ResultSet">
+	  	{call ASA500_Work_D(#{ordNo,jdbcType=VARCHAR},#{regId,jdbcType=VARCHAR})}
+	</select>
+	
+	<!--
+		설명 : 거래처코드 팝업 (팝업코드 : 701 참조)
+	-->
+	<select id="selCustInfoPOP" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardVO.selCustInfoPOP */
+	         TOP 100
+	         A.CUST_CD
+	       , A.CUST_NM
+	       --, A.DE_BC
+		   , DE_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.DE_BC)
+	       , BIZ_NO = DBO.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.BIZ_NO,'')
+	       , A.CEO_NM
+	       --, TAX_BC = ISNULL(A.TAX_BC,'FA630200')
+		   , TAX_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.TAX_BC)
+	       --, A.NAT_CD
+		   , NAT_NM = (SELECT NAT_NM FROM BCN100 WHERE NAT_CD = A.NAT_CD)
+	       --, A.CURY_BC
+		   , CURY_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CURY_BC)
+	       --, A.SAL_CUST
+	       , SAL_CUST_NM = B.CUST_NM
+	       --, A.RPT_BC
+		   , RPT_NM = (SELECT RPT_NM FROM SCN100 WHERE RPT_CD LIKE 'LEB160_%' AND RPT_CD = A.RPT_BC)
+	       --, A.CREDIT_BC
+		   , CREDIT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CREDIT_BC)
+	    FROM BCV100 A
+             LEFT JOIN BCV100 B ON B.CUST_CD = A.SAL_CUST
+	   WHERE A.SAL_YN = '1'
+	     AND A.USE_YN = '1'
+	     ]]>
+	     <if test="custCd != '' and custCd != null">
+		 AND (A.CUST_CD LIKE '%' + #{custCd} + '%' OR UPPER(A.CUST_NM) LIKE '%' + UPPER(#{custCd}) + '%') /* 거래처코드 */
+	   </if>
+	   <![CDATA[
+	   ORDER BY A.CUST_CD
+	   ]]>
+	</select>
+	
+	
+	
+	
+	<!-- 세트 고객상담카드등록 조회 
+	     20181004 EMP_NM : SCU100에서 CCM100으로 테이블 변경
+	-->
+	<select id="selSetCustCardR" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selSetCustCardR */
+	         SEQ = ROW_NUMBER() OVER(ORDER BY A.ORD_NO DESC)
+		   , A.ORD_NO /* 주문번호(PK) */
+	       , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 121),0,11) /* 상담일 */ 
+		   , A.EMP_NO /* 상담자(사원번호) */
+		   , EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+		   , A.CUST_GUBUN /* 고객구분[AS500] */
+		   , CUST_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CUST_GUBUN) /* 고객구분명 */
+		   , A.SD_GUBUN /* 상담구분[AS501] */
+		   , SD_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SD_GUBUN) /* 상담구분명 */
+		   , A.SD_GUBUN_ETC /* 상담구분(기타) */
+		   , A.CUST_NM /* 고객명 */
+		   , A.CUST_ADDR /* 고객주소지 */
+		   , CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+		   , A.INPUT_ROUTE /* 유입경로[AS506] */
+		   , INPUT_ROUTE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.INPUT_ROUTE) /* 유입경로명 */
+		   , A.SITE_TYPE /* 현장유형[AS502] */
+		   , SITE_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SITE_TYPE) /* 현장유형명 */
+		   , A.SITE_ELEVATOR /* 엘리베이터(유/무) */
+		   , SITE_ELEVATOR_NM = CASE WHEN A.SITE_ELEVATOR = '1' THEN '있음' ELSE '없음' END
+		   , A.CONSTRUCT_TYPE /* [AS509]공사유형 */
+		   , CONSTRUCT_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CONSTRUCT_TYPE) /* 공사유형명 */
+		   , A.TYPE_CHK /* 시공유형 */
+		   , TYPE_CHK_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.TYPE_CHK) /* 시공유형명 */
+		   , A.PRE_BATH_QTY /* 현재욕실수량 */
+		   , PRE_BATH_QTY_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.PRE_BATH_QTY) /* 현재욕실수량명 */
+		   , A.PRE_BATH_TYPE1 /* 현재욕실타입1[욕조] */
+		   , PRE_BATH_TYPE1_NM = CASE WHEN A.PRE_BATH_TYPE1 = 'true' THEN 'Y' ELSE 'N' END	/* 현재욕실타입1[욕조] */
+		   , A.PRE_BATH_TYPE2 /* 현재욕실타입2[파티션] */
+		   , PRE_BATH_TYPE2_NM = CASE WHEN A.PRE_BATH_TYPE2 = 'true' THEN 'Y' ELSE 'N' END /* 현재욕실타입2[파티션] */
+		   , A.PRE_BATH_TYPE3 /* 현재욕실타입3[샤워부스] */
+		   , PRE_BATH_TYPE3_NM = CASE WHEN A.PRE_BATH_TYPE3 = 'true' THEN 'Y' ELSE 'N' END /* 현재욕실타입3[샤워부스] */
+		   , A.PRE_BATH_TYPE4 /* 현재욕실타입4[없음] */
+		   , PRE_BATH_TYPE4_NM = CASE WHEN A.PRE_BATH_TYPE4 = 'true' THEN 'Y' ELSE 'N' END /* 현재욕실타입4[없음] */
+		   , A.PRE_BATH_TYPE5 /* 현재욕실타입5[기타] */
+		   , PRE_BATH_TYPE5_NM = CASE WHEN A.PRE_BATH_TYPE5 = 'true' THEN 'Y' ELSE 'N' END /* 현재욕실타입5[기타] */
+		   , A.PRE_BATH_TYPE_ETC /* 현재욕실타입_기타 */
+		   , A.REQ_BATH_QTY /* [AS503]요청욕실수량 */
+		   , REQ_BATH_QTY_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQ_BATH_QTY) /* 요청욕실수량명 */
+		   , A.REQ_BATH_TYPE1 /* 요청욕실타입1[욕조] */
+		   , REQ_BATH_TYPE1_NM = CASE WHEN A.REQ_BATH_TYPE1 = 'true' THEN 'Y' ELSE 'N' END /* 요청욕실타입1[욕조] */
+		   , A.REQ_BATH_TYPE2 /* 요청욕실타입2[파티션] */
+		   , REQ_BATH_TYPE2_NM = CASE WHEN A.REQ_BATH_TYPE2 = 'true' THEN 'Y' ELSE 'N' END /* 요청욕실타입2[파티션] */
+		   , A.REQ_BATH_TYPE3 /* 요청욕실타입3[샤워부스] */
+		   , REQ_BATH_TYPE3_NM = CASE WHEN A.REQ_BATH_TYPE3 = 'true' THEN 'Y' ELSE 'N' END /* 요청욕실타입3[샤워부스] */
+		   , A.REQ_BATH_TYPE4 /* 요청욕실타입4[없음] */
+		   , REQ_BATH_TYPE4_NM = CASE WHEN A.REQ_BATH_TYPE4 = 'true' THEN 'Y' ELSE 'N' END /* 요청욕실타입4[없음] */
+		   , A.REQ_BATH_TYPE5 /* 요청욕실타입5[기타] */
+		   , REQ_BATH_TYPE5_NM = CASE WHEN A.REQ_BATH_TYPE5 = 'true' THEN 'Y' ELSE 'N' END /* 요청욕실타입5[기타] */
+		   , A.REQ_BATH_TYPE_ETC /* 요청욕실타입_기타 */
+		   , A.CUST_STAT /* [AS511]고객진행상태 */
+		   , CUST_STAT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CUST_STAT) /* 고객진행상태명 */
+		   , REQUEST_DT = SUBSTRING(CONVERT(CHAR, A.REQUEST_DT, 121),0,11) /* 실측요청일자 */
+		   , A.REQUEST_TIME_DIV /* [AS513]실측요청시간구분 */
+		   , REQUEST_TIME_DIV_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_TIME_DIV) /* 실측요청시간구분명 */
+		   , A.REQUEST_HOUR /* [SD613]실측희망시간(시) */
+		   , A.REQUEST_MIN /* [SD614]실측희망시간(분) */
+		   , REQUEST_TIME = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_HOUR) + ' ' + (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_MIN)
+		   , SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 121),0,11) /* 시공희망일자 */
+		   , A.COST_TYPE1 /* 가격타입(공용)[SA505] */
+		   , COST_TYPE1_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS505' AND BASE_CD = A.COST_TYPE1) /* 가격타입명(공용)[SA505] */
+		   , A.COST_TYPE2 /* 가격타입(부부)[SA505] */
+		   , COST_TYPE2_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS505' AND BASE_CD = A.COST_TYPE2) /* 가격타입명(부부)[SA505] */
+		   , A.BATH_STYLE1 /* 욕실스타일(공용)[AS508] */
+		   , BATH_STYLE1_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS508' AND BASE_CD = A.BATH_STYLE1) /* 욕실스타일(공용)명[AS508] */
+		   , A.BATH_STYLE2 /* 욕실스타일(부부)[AS508] */
+		   , BATH_STYLE2_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'AS508' AND BASE_CD = A.BATH_STYLE2) /* 욕실스타일(부부)명[AS508] */
+		   , A.CALL_STAT /* 해피콜진행상태[AS507] */
+		   , CALL_STAT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CALL_STAT) /* 해피콜진행상태명 */
+		   , A.LIFE_TYPE /* [AS514]주거유형 */
+		   , LIFE_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.LIFE_TYPE) /* 주거유형명 */
+		   , A.LIFE_TYPE_ETC /* 주거유형(기타) */
+		   , A.INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+		   , INFO_AGRE_YN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.INFO_AGRE_YN) /* 고객정보활용동의여부명 */
+		   , A.CONSULT_CONT /* 상담내용 */
+		   , A.SALE_CODE /* 계약상품코드 */
+		   , A.CID /* 최초등록자 */
+		   , A.CDT /* 최초등록일 */
+		   , A.MID /* 수정등록자 */
+		   , A.MDT /* 수정등록일 */
+		   , A.CUST_CD /* 거래처코드[BCV100] */
+		   , CUST_SAL_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD) 
+		FROM ASA510 A
+	   WHERE 1=1
+		]]>
+		 <if test="ordNo != '' and ordNo != null">
+	     AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	     </if>
+	     <if test="empNo != '' and empNo != null">
+		 AND A.EMP_NO = #{empNo} /* 상담자(사원번호) */
+		 </if>
+		 <if test="custNm != '' and custNm != null">
+		 AND UPPER(A.CUST_NM) LIKE '%' + UPPER(#{custNm}) + '%' /* 고객명 */
+		 </if>
+		 <if test="sdFrDt != '' and sdFrDt != null">
+		 AND A.SD_DT BETWEEN #{sdFrDt} AND #{sdToDt}
+		 </if>
+		 <if test="sdDt != '' and sdDt != null">
+	     AND A.SD_DT = #{sdDt}	/* 상담일 */
+	     </if>
+	   ORDER BY A.ORD_NO DESC /* 상담일자 최신순 */
+	</select>
+	
+	<!--
+		설명 : 세트 고객상담내역 저장
+	-->
+	<insert id="insAsa510" parameterType="CustCardVO">
+	<![CDATA[
+	    INSERT INTO ASA510 ( ORD_NO /* 주문번호(PK) */
+					       , SD_DT /* 상담일 */
+					       , EMP_NO /* 상담자 */
+					       , CUST_GUBUN /* [AS500]고객구분 */
+					       , SD_GUBUN /* [AS501]상담구분 */
+					       , SD_GUBUN_ETC /* 상담구분(기타) */
+					       , CUST_NM /* 고객명 */
+					       , CUST_ADDR /* 주소지 */
+					       , CUST_TEL /* 연락처 */
+					       , INPUT_ROUTE /* [AS506]유입경로 */
+					       , SITE_TYPE /* [AS502]현장유형 */
+					       , SITE_ELEVATOR /* 엘리베이터(유/무) */
+					       , CONSTRUCT_TYPE /* [AS509]공사유형 */
+					       , TYPE_CHK /* [AS510]시공유형 */
+					       , PRE_BATH_QTY /* [AS503]현재욕실수량 */
+					       , PRE_BATH_TYPE1 /* 현재욕실유형1 */
+					       , PRE_BATH_TYPE2 /* 현재욕실유형2 */
+					       , PRE_BATH_TYPE3 /* 현재욕실유형3 */
+					       , PRE_BATH_TYPE4 /* 현재욕실유형4 */
+					       , PRE_BATH_TYPE5 /* 현재욕실유형5 */
+					       , PRE_BATH_TYPE_ETC /* 현재욕실유형(기타) */
+					       , REQ_BATH_QTY /* [AS503]요청욕실수량 */
+					       , REQ_BATH_TYPE1 /* 요청욕실유형1 */
+					       , REQ_BATH_TYPE2 /* 요청욕실유형2 */
+					       , REQ_BATH_TYPE3 /* 요청욕실유형3 */
+					       , REQ_BATH_TYPE4 /* 요청욕실유형4 */
+					       , REQ_BATH_TYPE5 /* 요청욕실유형5 */
+					       , REQ_BATH_TYPE_ETC /* 요청욕실유형(기타) */
+					       , CUST_STAT /* [AS511]고객진행상태 */
+					       , REQUEST_DT /* 실측요청일자 */
+					       , REQUEST_TIME_DIV /* [AS513]실측요청시간구분 */
+					       , REQUEST_HOUR /* [SD613]실측 요청 시간 (시) */
+					       , REQUEST_MIN /* [SD614]실측 요청 시간 (분) */
+					       , SIGONG_DT /* 시공 희망 일자 */
+					       , COST_TYPE1 /* [AS505]가격 타입 유형 (거실) */
+					       , COST_TYPE2 /* [AS505]가격 타입 유형 (부부) */
+					       , BATH_STYLE1 /* [AS508]욕실 스타일(공용) */
+					       , BATH_STYLE2 /* [AS508]욕실 스타일(부부) */
+					       , CALL_STAT /* [AS507]해피콜진행상태 */
+					       , LIFE_TYPE /* [AS514]주거유형 */
+					       , LIFE_TYPE_ETC /* 주거유형(기타) */
+					       , INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+					       , CONSULT_CONT /* 상담내용 */
+					       , SALE_CODE /* 상품코드 */
+					       , CID /* 최초등록자 */
+					       , CDT /* 최초등록일자 */
+					       , MID /* 수정등록일자 */
+					       , MDT /* 수정등록일자 */
+					       , CUST_CD /* 거래처코드 */
+	    				   )
+	    			VALUES ( #{ordNo}
+					       , #{sdDt}
+					       , #{empNo}
+					       , #{custGubun}
+					       , #{sdGubun}
+					       , CASE WHEN #{sdGubunEtc} = '' THEN NULL ELSE #{sdGubunEtc} END
+					       , #{custNm}
+					       , #{custAddr}
+					       , dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+					       , #{inputRoute}
+					       , #{siteType}
+					       , CASE WHEN #{siteElevator} = '' THEN NULL ELSE #{siteElevator} END
+					       , #{constructType}
+					       , #{typeChk}
+					       , CASE WHEN #{preBathQty} = '' THEN NULL ELSE #{preBathQty} END
+					       , #{preBathType1}
+					       , #{preBathType2}
+					       , #{preBathType3}
+					       , #{preBathType4}
+					       , #{preBathType5}
+					       , CASE WHEN #{preBathTypeEtc} = '' THEN NULL ELSE #{preBathTypeEtc} END
+					       , CASE WHEN #{reqBathQty} = '' THEN NULL ELSE #{reqBathQty} END 
+					       , #{reqBathType1}
+					       , #{reqBathType2}
+					       , #{reqBathType3}
+					       , #{reqBathType4}
+					       , #{reqBathType5}
+					       , CASE WHEN #{reqBathTypeEtc} = '' THEN NULL ELSE #{reqBathTypeEtc} END 
+					       , #{custStat}
+						   , CASE WHEN #{requestDt} = '' THEN NULL ELSE #{requestDt} END
+					       , CASE WHEN #{requestTimeDiv} = '' THEN NULL ELSE #{requestTimeDiv} END 
+					       , CASE WHEN #{requestHour} = '' THEN NULL ELSE #{requestHour} END 
+					       , CASE WHEN #{requestMin} = '' THEN NULL ELSE #{requestMin} END
+					       , CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END
+					       , CASE WHEN #{costType1} = '' THEN NULL ELSE #{costType1} END
+					       , CASE WHEN #{costType2} = '' THEN NULL ELSE #{costType2} END
+					       , CASE WHEN #{bathStyle1} = '' THEN NULL ELSE #{bathStyle1} END
+					       , CASE WHEN #{bathStyle2} = '' THEN NULL ELSE #{bathStyle2} END
+					       , CASE WHEN #{callStat} = '' THEN NULL ELSE #{callStat} END
+					       , CASE WHEN #{lifeType} = '' THEN NULL ELSE #{lifeType} END
+					       , CASE WHEN #{lifeTypeEtc} = '' THEN NULL ELSE #{lifeTypeEtc} END
+					       , #{infoAgreYn}
+					       , CASE WHEN #{consultCont} = '' THEN NULL ELSE #{consultCont} END
+					       , null /* 상품코드[sale_code]는 우선 NULL로 입력(미사용) */
+					       , #{regId}
+					       , GETDATE()
+					       , #{regId}
+					       , GETDATE()
+					       , #{custCd}
+	    			        )
+	    ]]>
+	</insert>
+	
+	<!--
+		설명 : 세트고객상담내역 저장
+		pk인 고객/주문번호[ord_no]와 상담일자[sd_dt], [emp_no], [cust_cd]는 수정제외
+		, CUST_CD = CASE WHEN #{custCd} = 'a' THEN 'i00000' ELSE #{custCd} END /* 거래처코드가 'a'인 것만 논현동 직영점으로 설정 */
+	-->
+	<update id="updAsa510" parameterType="CustCardVO">
+	<![CDATA[
+	    UPDATE ASA510
+	       SET CUST_GUBUN = #{custGubun}
+	         , SD_GUBUN = #{sdGubun}
+	         , SD_GUBUN_ETC = CASE WHEN #{sdGubunEtc} = '' THEN NULL ELSE #{sdGubunEtc} END
+	         , CUST_NM = #{custNm}
+	         , CUST_ADDR = #{custAddr}
+	         , CUST_TEL = dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+	         , INPUT_ROUTE = #{inputRoute}
+	         , SITE_TYPE = #{siteType}
+	         , SITE_ELEVATOR = CASE WHEN #{siteElevator} = '' THEN NULL ELSE #{siteElevator} END
+	         , CONSTRUCT_TYPE = #{constructType}
+	         , TYPE_CHK = #{typeChk}
+	         , PRE_BATH_QTY = CASE WHEN #{preBathQty} = '' THEN NULL ELSE #{preBathQty} END
+	         , PRE_BATH_TYPE1 = #{preBathType1}
+	         , PRE_BATH_TYPE2 = #{preBathType2}
+	         , PRE_BATH_TYPE3 = #{preBathType3}
+	         , PRE_BATH_TYPE4 = #{preBathType4}
+	         , PRE_BATH_TYPE5 = #{preBathType5}
+	         , PRE_BATH_TYPE_ETC = CASE WHEN #{preBathTypeEtc} = '' THEN NULL ELSE #{preBathTypeEtc} END
+	         , REQ_BATH_QTY = CASE WHEN #{reqBathQty} = '' THEN NULL ELSE #{reqBathQty} END 
+	         , REQ_BATH_TYPE1 = #{reqBathType1}
+	         , REQ_BATH_TYPE2 = #{reqBathType2}
+	         , REQ_BATH_TYPE3 = #{reqBathType3}
+	         , REQ_BATH_TYPE4 = #{reqBathType4}
+	         , REQ_BATH_TYPE5 = #{reqBathType5}
+	         , REQ_BATH_TYPE_ETC = CASE WHEN #{reqBathTypeEtc} = '' THEN NULL ELSE #{reqBathTypeEtc} END 
+	         , CUST_STAT = #{custStat}
+	         , REQUEST_DT = CASE WHEN #{requestDt} = '' THEN NULL ELSE #{requestDt} END
+	         , REQUEST_TIME_DIV = CASE WHEN #{requestTimeDiv} = '' THEN NULL ELSE #{requestTimeDiv} END 
+	         , REQUEST_HOUR = CASE WHEN #{requestHour} = '' THEN NULL ELSE #{requestHour} END 
+	         , REQUEST_MIN = CASE WHEN #{requestMin} = '' THEN NULL ELSE #{requestMin} END
+	         , SIGONG_DT = CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END
+	         , COST_TYPE1 = CASE WHEN #{costType1} = '' THEN NULL ELSE #{costType1} END
+	         , COST_TYPE2 = CASE WHEN #{costType2} = '' THEN NULL ELSE #{costType2} END
+	         , BATH_STYLE1 = CASE WHEN #{bathStyle1} = '' THEN NULL ELSE #{bathStyle1} END
+	         , BATH_STYLE2 = CASE WHEN #{bathStyle2} = '' THEN NULL ELSE #{bathStyle2} END
+	         , CALL_STAT = CASE WHEN #{callStat} = '' THEN NULL ELSE #{callStat} END
+	         , LIFE_TYPE = CASE WHEN #{lifeType} = '' THEN NULL ELSE #{lifeType} END
+	         , LIFE_TYPE_ETC = CASE WHEN #{lifeTypeEtc} = '' THEN NULL ELSE #{lifeTypeEtc} END
+	         , INFO_AGRE_YN = #{infoAgreYn}
+	         , CONSULT_CONT = CASE WHEN #{consultCont} = '' THEN NULL ELSE #{consultCont} END
+	         , SALE_CODE = null
+			 , MID = #{regId}
+			 , MDT = GETDATE()
+	     WHERE ORD_NO = #{ordNo}					       
+	    ]]>
+	</update>
+	
+	<!-- 세트 고객상담내역 삭제 -->
+	<delete id="delAsa510" parameterType="TempData">
+    	DELETE FROM ASA510
+    	WHERE ORD_NO = #{ordNo}
+    </delete>
+    
+    
+    <!-- 세트 고객상담카드 조회 (출력물) case by case 
+    	 , SD_GUBUN_NM = ((CASE WHEN A.SD_GUBUN = 'AS501100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501100')) + '  ' 
+	                     + ((CASE WHEN A.SD_GUBUN = 'AS501200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501200')) + '  '
+	              		 + ((CASE WHEN A.SD_GUBUN = 'AS501300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501300')) + '  '
+	              		 + ((CASE WHEN A.SD_GUBUN = 'AS501400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501400')) + '  '
+	              		 + ((CASE WHEN A.SD_GUBUN = 'AS501500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS501500')) + '  '
+    -->
+	<select id="selSetCustCardRPrint" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selSetCustCardRPrint */
+	         A.ORD_NO /* 주문번호(PK) */
+	       , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 112),0,9) /* 상담일 : YYYY년 MM월 DD일 */ 
+	       , A.EMP_NO /* 상담자(사원번호) */
+	       , EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+	       , A.CUST_GUBUN /* 고객구분[AS500] */
+	       , A.SD_GUBUN /* 상담구분[AS501] */
+	       , A.CUST_NM /* 고객명 */
+	       , A.CUST_ADDR /* 고객주소지 */
+	       , CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+	       , A.INPUT_ROUTE /* 유입경로[AS506] */
+	       , A.SITE_TYPE /* 현장유형[AS502] */
+	       , A.SITE_ELEVATOR /* 엘리베이터(유/무) */
+	       , A.CONSTRUCT_TYPE /* [AS509]공사유형 */
+	       , A.TYPE_CHK /* 시공유형 */
+	       , A.PRE_BATH_QTY /* 현재욕실수량 */
+	       , A.PRE_BATH_TYPE1 /* 현재욕실타입1[욕조] */
+	       , A.PRE_BATH_TYPE2 /* 현재욕실타입2[파티션] */
+	       , A.PRE_BATH_TYPE3 /* 현재욕실타입3[샤워부스] */
+	       , A.PRE_BATH_TYPE4 /* 현재욕실타입4[없음] */
+	       , A.PRE_BATH_TYPE5 /* 현재욕실타입5[기타] */
+	       , A.PRE_BATH_TYPE_ETC /* 현재욕실타입_기타 */
+	       , A.REQ_BATH_QTY /* [AS503]요청욕실수량 */
+	       , A.REQ_BATH_TYPE1 /* 요청욕실타입1[욕조] */
+	       , A.REQ_BATH_TYPE2 /* 요청욕실타입2[파티션] */
+	       , A.REQ_BATH_TYPE3 /* 요청욕실타입3[샤워부스] */
+	       , A.REQ_BATH_TYPE4 /* 요청욕실타입4[없음] */
+	       , A.REQ_BATH_TYPE5 /* 요청욕실타입5[기타] */
+	       , A.REQ_BATH_TYPE_ETC /* 요청욕실타입_기타 */
+	       , A.CUST_STAT /* [AS511]고객진행상태 */
+	       , REQUEST_DT = SUBSTRING(CONVERT(CHAR, A.REQUEST_DT, 112),0,9) /* 실측요청일자 : YYYY년 MM월 DD일 */
+	       , A.REQUEST_TIME_DIV /* [AS513]실측요청시간구분 */
+	       , A.REQUEST_HOUR /* [SD613]실측희망시간(시) */
+	       , A.REQUEST_MIN /* [SD614]실측희망시간(분) */
+	       , REQUEST_TIME = ((CASE WHEN A.REQUEST_TIME_DIV = 'AS513100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS513100')) + '  ' 
+	                      + ((CASE WHEN A.REQUEST_TIME_DIV = 'AS513200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS513200')) + '  '
+	                     /* + isnull((SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_HOUR),'') + ' ' */ 
+	                     /* + isnull((SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_MIN),'') + ' ' */ 
+	       , SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 112),0,9) /* 시공희망일자 : YYYY년 MM월 DD일 */
+	       , A.COST_TYPE1 /* 가격타입(공용)[SA505] */
+	       , A.COST_TYPE2 /* 가격타입(부부)[SA505] */
+	       , A.BATH_STYLE1 /* 욕실스타일(공용)[AS508] */
+	       , A.BATH_STYLE2 /* 욕실스타일(부부)[AS508] */
+	       , BATH_STYLE1_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.BATH_STYLE1)
+	       , BATH_STYLE2_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.BATH_STYLE2)
+	       , A.CALL_STAT /* 해피콜진행상태[AS507] */
+	       , A.LIFE_TYPE /* [AS514]주거유형 */
+	       , A.LIFE_TYPE_ETC /* 주거유형(기타) */
+	       , A.INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+	       , A.CONSULT_CONT /* 상담내용 */
+	       , A.SALE_CODE /* 계약상품코드 */
+	       , A.CUST_CD /* 거래처코드[BCV100] */
+	       , CUST_SAL_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD) 
+	       , CUST_GUBUN_NM = ((CASE WHEN A.CUST_GUBUN = 'AS500100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500100')) + '  ' 
+	                       + ((CASE WHEN A.CUST_GUBUN = 'AS500200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500200')) + '  '
+	              		   + ((CASE WHEN A.CUST_GUBUN = 'AS500300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500300')) + '  '
+	       , SD_GUBUN_NM = ((CASE WHEN A.SD_GUBUN = 'AS518100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS518100')) + '  ' 
+	                     + ((CASE WHEN A.SD_GUBUN = 'AS518200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE + ' ( ' + isnull(A.SD_GUBUN_ETC,'') + ' )' FROM BCA200V WHERE BASE_CD = 'AS518200')) + '  '
+	       , INPUT_ROUTE_NM = ((CASE WHEN A.INPUT_ROUTE = 'AS506100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506100')) + '  ' 
+	                       + ((CASE WHEN A.INPUT_ROUTE = 'AS506200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506200')) + '  '
+	       		       	   + ((CASE WHEN A.INPUT_ROUTE = 'AS506300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506300')) + '  '
+	       		       	   + ((CASE WHEN A.INPUT_ROUTE = 'AS506400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506400')) + '  '
+	       		       	   + ((CASE WHEN A.INPUT_ROUTE = 'AS506500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506500')) + '  '
+	       		       	   + ((CASE WHEN A.INPUT_ROUTE = 'AS506600' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506600')) + '  '
+	       , SITE_TYPE_NM = ((CASE WHEN A.SITE_TYPE = 'AS502100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502100')) + '  ' 
+	       				  + ((CASE WHEN A.SITE_TYPE = 'AS502200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502200')) + '  '
+	       	       		  + ((CASE WHEN A.SITE_TYPE = 'AS502300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502300')) + '  '
+	       	       		  + ((CASE WHEN A.SITE_TYPE = 'AS502400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502400')) + '  '
+	       	       		  + ((CASE WHEN A.SITE_TYPE = 'AS502500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE  FROM BCA200V WHERE BASE_CD = 'AS502500')) + '  '
+	       , SITE_ELEVATOR_NM = CASE WHEN A.SITE_ELEVATOR = '1' THEN '■ 엘리베이터(유/무)' ELSE '□ 엘리베이터(유/무)' END
+	       , CONSTRUCT_TYPE_NM = ((CASE WHEN A.SITE_TYPE = 'AS509100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS509100')) + '  ' 
+	       				       + ((CASE WHEN A.SITE_TYPE = 'AS509200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS509200')) + '  '
+	       , TYPE_CHK_NM = ((CASE WHEN A.SITE_TYPE = 'AS510100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS510100')) + '  ' 
+	       				 + ((CASE WHEN A.SITE_TYPE = 'AS510200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS510200')) + '  '
+	       				 + ((CASE WHEN A.SITE_TYPE = 'AS510300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS510300')) + '  '
+	       , PRE_BATH_QTY_NM = ((CASE WHEN A.PRE_BATH_QTY = 'AS503100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503100')) + '  ' 
+	                         + ((CASE WHEN A.PRE_BATH_QTY = 'AS503200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503200')) + '  '
+	              			 + ((CASE WHEN A.PRE_BATH_QTY = 'AS503300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503300')) + '  '
+	       , PRE_BATH_TYPE = (CASE WHEN A.PRE_BATH_TYPE1 = 'true' THEN '■ 욕조' ELSE '□ 욕조' END) + '  '
+	                       + (CASE WHEN A.PRE_BATH_TYPE2 = 'true' THEN '■ 파티션' ELSE '□ 파티션' END) + '  '
+	       		       	   + (CASE WHEN A.PRE_BATH_TYPE3 = 'true' THEN '■ 샤워부스' ELSE '□ 샤워부스 ' END) + '  '
+	       		       	   + (CASE WHEN A.PRE_BATH_TYPE4 = 'true' THEN '■ 없음' ELSE '□ 없음' END) + '  '
+	       				   + (CASE WHEN A.PRE_BATH_TYPE5 = 'true' THEN '■ 기타' + ' ( ' + isnull(A.PRE_BATH_TYPE_ETC,'') + ' )  ' ELSE '□ 기타' + ' (  ) ' END)
+	       , REQ_BATH_QTY_NM = ((CASE WHEN A.REQ_BATH_QTY = 'AS503100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503100')) + '  ' 
+	                         + ((CASE WHEN A.REQ_BATH_QTY = 'AS503200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503200')) + '  '
+	              			 + ((CASE WHEN A.REQ_BATH_QTY = 'AS503300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS503300')) + '  ' 
+	       , REQ_BATH_TYPE = (CASE WHEN A.REQ_BATH_TYPE1 = 'true' THEN '■ 욕조' ELSE '□ 욕조' END) + '  '
+	                       + (CASE WHEN A.REQ_BATH_TYPE2 = 'true' THEN '■ 파티션' ELSE '□ 파티션' END) + '  '
+	       		       	   + (CASE WHEN A.REQ_BATH_TYPE3 = 'true' THEN '■ 샤워부스' ELSE '□ 샤워부스 ' END) + '  '
+	       		       	   + (CASE WHEN A.REQ_BATH_TYPE4 = 'true' THEN '■ 없음' ELSE '□ 없음' END) + '  '
+	       				   + (CASE WHEN A.REQ_BATH_TYPE5 = 'true' THEN '■ 기타' + ' ( ' + isnull(A.REQ_BATH_TYPE_ETC,'') + ' )  ' ELSE '□ 기타' + ' (  ) ' END) + '  '
+	       , CUST_STAT_NM = ((CASE WHEN A.CUST_STAT = 'AS511100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS511100')) + '  ' 
+	                      + ((CASE WHEN A.CUST_STAT = 'AS511200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS511200')) + '  '
+	             		  + ((CASE WHEN A.CUST_STAT = 'AS511300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS511300')) + '  '
+	       , REQUEST_TIME_DIV_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.REQUEST_TIME_DIV) /* 실측요청시간구분명 */
+	       , COST_TYPE1_NM = ((CASE WHEN A.COST_TYPE1 = 'AS505100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505100')) + '  ' 
+	                       + ((CASE WHEN A.COST_TYPE1 = 'AS505200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505200')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE1 = 'AS505300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505300')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE1 = 'AS505400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505400')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE1 = 'AS505500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505500')) + '  '
+	       , COST_TYPE2_NM = ((CASE WHEN A.COST_TYPE2 = 'AS505100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505100')) + '  ' 
+	                       + ((CASE WHEN A.COST_TYPE2 = 'AS505200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505200')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE2 = 'AS505300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505300')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE2 = 'AS505400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505400')) + '  '
+	       		       	   + ((CASE WHEN A.COST_TYPE2 = 'AS505500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS505500')) + '  '
+	       , CALL_STAT_NM = ((CASE WHEN A.CALL_STAT = 'AS507100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507100')) + '  ' 
+	                      + ((CASE WHEN A.CALL_STAT = 'AS507200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507200')) + '  '
+	       		       	  + ((CASE WHEN A.CALL_STAT = 'AS507300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507300')) + '  '
+	       		       	  + ((CASE WHEN A.CALL_STAT = 'AS507400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507400')) + '  '
+	       		       	  + ((CASE WHEN A.CALL_STAT = 'AS507500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507500')) + '  '
+	       , LIFE_TYPE_NM = ((CASE WHEN A.LIFE_TYPE = 'AS514100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514100')) + '  ' 
+	       				  + ((CASE WHEN A.LIFE_TYPE = 'AS514200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514200')) + '  '
+	       	       		  + ((CASE WHEN A.LIFE_TYPE = 'AS514300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514300')) + '  '
+	       	       		  + ((CASE WHEN A.LIFE_TYPE = 'AS514400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514400')) + '  '
+	       	       		  + ((CASE WHEN A.LIFE_TYPE = 'AS514500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE + ' ( ' + isnull(A.LIFE_TYPE_ETC,'') + ' )' FROM BCA200V WHERE BASE_CD = 'AS514500')) + '  '
+	       , INFO_AGRE_YN_NM = ((CASE WHEN A.INFO_AGRE_YN = 'AS515100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515100')) + '  ' 
+	                         + ((CASE WHEN A.INFO_AGRE_YN = 'AS515200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515200')) + '  '
+		FROM ASA510 A
+		WHERE 1=1
+		   AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	  ]]>
+	</select>
+	
+	
+	<!-- 단품 고객상담카드등록 조회
+	     20181004 EMP_NM : SCU100에서 CCM100으로 테이블 변경
+	 -->
+	<select id="selPrdCustCardR" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selPrdCustCardR */
+	         SEQ = ROW_NUMBER() OVER(ORDER BY A.ORD_NO DESC)
+		   , A.ORD_NO /* 주문번호(PK) */
+           , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 121),0,11) /* 상담일 */ 
+	       , A.EMP_NO /* 상담자(사원번호) */
+	       , EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+	       , A.CUST_GUBUN /* 고객구분[AS500] */
+	       , CUST_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CUST_GUBUN) /* 고객구분명 */
+	       , A.SD_GUBUN /* 상담구분[AS501] */
+	       , SD_GUBUN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SD_GUBUN) /* 상담구분명 */
+	       , A.SD_GUBUN_ETC /* 상담구분(기타) */
+	       , A.CUST_NM /* 고객명 */
+	       , A.CUST_ADDR /* 고객주소지 */
+	       , CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+	       , A.INPUT_ROUTE /* 유입경로[AS506] */
+	       , INPUT_ROUTE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.INPUT_ROUTE) /* 유입경로명 */
+	       , A.SITE_TYPE /* 현장유형[AS502] */
+	       , SITE_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SITE_TYPE) /* 현장유형명 */
+	       , A.SITE_ELEVATOR /* 엘리베이터(유/무) */
+	       , SITE_ELEVATOR_NM = CASE WHEN A.SITE_ELEVATOR = '1' THEN '있음' ELSE '없음' END
+	       , A.CONSULT_PRODUCT1 /* [AS516]상담제품1 */
+	       , CONSULT_PRODUCT1_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CONSULT_PRODUCT1) /* 상담제품1 */
+	       , A.CONSULT_PRODUCT2 /* [AS516]상담제품2 */
+	       , CONSULT_PRODUCT2_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CONSULT_PRODUCT2) /* 상담제품2 */
+	       , A.CONSULT_PRODUCT3 /* [AS516]상담제품3 */
+	       , CONSULT_PRODUCT3_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CONSULT_PRODUCT3) /* 상담제품3 */
+	       , A.CONSULT_PRODUCT4 /* [AS516]상담제품4 */
+	       , CONSULT_PRODUCT4_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CONSULT_PRODUCT4) /* 상담제품4 */
+	       , A.CONSULT_PRODUCT_ETC /* 상담제품(기타) */
+	       , A.CUST_STAT /* [AS517]고객진행상태 */
+	       , CUST_STAT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CUST_STAT) /* 고객진행상태명 */
+	       , DELIVERY_DT = SUBSTRING(CONVERT(CHAR, A.DELIVERY_DT, 121),0,11) /* 제품배송일자 */
+	       , A.SIGONG_YN /* [AS515]시공진행여부 */
+	       , SIGONG_YN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SIGONG_YN) /* 시공진행여부명 */
+	       , A.SIGONG_PAY_YN /* [AS517]시공비결재여부 */
+	       , SIGONG_PAY_YN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.SIGONG_PAY_YN) /* 시공비결재여부명 */
+	       , SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 121),0,11) /* 시공진행일자 */
+	       , A.CALL_STAT /* 해피콜진행상태[AS507] */
+	       , CALL_STAT_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.CALL_STAT) /* 해피콜진행상태명 */
+	       , A.LIFE_TYPE /* [AS514]주거유형 */
+	       , LIFE_TYPE_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.LIFE_TYPE) /* 주거유형명 */
+	       , A.LIFE_TYPE_ETC /* 주거유형(기타) */
+	       , A.INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+	       , INFO_AGRE_YN_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = A.INFO_AGRE_YN) /* 고객정보활용동의여부명 */
+	       , A.CONSULT_CONT /* 상담내용 */
+	       , A.SALE_CODE /* 계약상품코드 */
+	       , A.CID /* 최초등록자 */
+	       , A.CDT /* 최초등록일 */
+	       , A.MID /* 수정등록자 */
+	       , A.MDT /* 수정등록일 */
+	       , A.CUST_CD /* 거래처코드[BCV100] */
+	       , CUST_SAL_NM = (SELECT CUST_NM FROM BCV100 WHERE CUST_CD = A.CUST_CD) 
+		FROM ASA520 A
+	   WHERE 1=1
+		]]>
+		 <if test="ordNo != '' and ordNo != null">
+	     AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	     </if>
+	     <if test="empNo != '' and empNo != null">
+		 AND A.EMP_NO = #{empNo} /* 상담자(사원번호) */
+		 </if>
+		 <if test="custNm != '' and custNm != null">
+		 AND UPPER(A.CUST_NM) LIKE '%' + UPPER(#{custNm}) + '%' /* 고객명 */
+		 </if>
+		 <if test="sdFrDt != '' and sdFrDt != null">
+		 AND A.SD_DT BETWEEN #{sdFrDt} AND #{sdToDt}
+		 </if>
+		 <if test="sdDt != '' and sdDt != null">
+	     AND A.SD_DT = #{sdDt}	/* 상담일 */
+	     </if>
+	   ORDER BY A.ORD_NO DESC /* 상담일자 최신순 */
+	</select>
+	
+	
+	<!--
+		설명 : 단품 고객상담내역 저장
+	-->
+	<insert id="insAsa520" parameterType="CustCardVO">
+	<![CDATA[
+	    INSERT INTO ASA520 ( ORD_NO /* 주문번호(PK) */
+					       , SD_DT /* 상담일 */
+					       , EMP_NO /* 상담자 */
+					       , CUST_GUBUN /* [AS500]고객구분 */
+					       , SD_GUBUN /* [AS501]상담구분 */
+					       , SD_GUBUN_ETC /* 상담구분(기타) */
+					       , CUST_NM /* 고객명 */
+					       , CUST_ADDR /* 주소지 */
+					       , CUST_TEL /* 연락처 */
+					       , INPUT_ROUTE /* [AS506]유입경로 */
+					       , SITE_TYPE /* [AS502]현장유형 */
+					       , SITE_ELEVATOR /* 엘리베이터(유/무) */
+					       , CONSULT_PRODUCT1 /* 상담제품1 */
+					       , CONSULT_PRODUCT2 /* 상담제품2 */
+					       , CONSULT_PRODUCT3 /* 상담제품3 */
+					       , CONSULT_PRODUCT4 /* 상담제품4 */
+					       , CONSULT_PRODUCT_ETC /* [AS515]시공진행여부 */
+					       , CUST_STAT /* [AS517]고객 진행 상태 */
+					       , DELIVERY_DT /* 제품배송일자 */
+					       , SIGONG_YN /* [AS515]시공진행여부 */
+					       , SIGONG_PAY_YN /* [AS517]시공비결재여부 */
+					       , SIGONG_DT /* 시공진행일자 */
+					       , CALL_STAT /* [AS507]해피진행상태 */
+					       , LIFE_TYPE /* [AS514]주거유형 */
+					       , LIFE_TYPE_ETC /* 주거유형(기타) */
+					       , INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+					       , CONSULT_CONT /* 상담내용 */
+					       , SALE_CODE /* 상품코드 */
+					       , CID /* 최초등록자 */
+					       , CDT /* 최초등록일자 */
+					       , MID /* 수정등록일자 */
+					       , MDT /* 수정등록일자 */
+					       , CUST_CD /* 거래처코드 */
+	    				   )
+	    			VALUES ( #{ordNo}
+					       , #{sdDt}
+					       , #{empNo}
+					       , #{custGubun}
+					       , #{sdGubun}
+					       , CASE WHEN #{sdGubunEtc} = '' THEN NULL ELSE #{sdGubunEtc} END
+					       , #{custNm}
+					       , #{custAddr}
+					       , dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+					       , #{inputRoute}
+					       , #{siteType}
+					       , CASE WHEN #{siteElevator} = '' THEN NULL ELSE #{siteElevator} END
+					       , #{consultProduct1}
+					       , #{consultProduct2}
+					       , #{consultProduct3}
+					       , #{consultProduct4}
+					       , CASE WHEN #{consultProductEtc} = '' THEN NULL ELSE #{consultProductEtc} END 
+					       , #{custStat}
+					       , CASE WHEN #{deliveryDt} = '' THEN NULL ELSE #{deliveryDt} END
+					       , CASE WHEN #{sigongYn} = '' THEN NULL ELSE #{sigongYn} END
+					       , CASE WHEN #{sigongPayYn} = '' THEN NULL ELSE #{sigongPayYn} END
+					       , CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END
+					       , CASE WHEN #{callStat} = '' THEN NULL ELSE #{callStat} END
+					       , CASE WHEN #{lifeType} = '' THEN NULL ELSE #{lifeType} END
+       					   , CASE WHEN #{lifeTypeEtc} = '' THEN NULL ELSE #{lifeTypeEtc} END
+					       , #{infoAgreYn}
+					       , CASE WHEN #{consultCont} = '' THEN NULL ELSE #{consultCont} END
+					       , null /* 상품코드[sale_code]는 우선 NULL로 입력(미사용) */
+					       , #{regId}
+					       , GETDATE()
+					       , #{regId}
+					       , GETDATE()
+					       , #{custCd}
+	    			        )
+	    ]]>
+	</insert>
+	
+	
+	<!--
+		설명 : 단품고객상담내역 저장
+		pk인 고객/주문번호[ord_no]와 상담일자[sd_dt], [emp_no], [cust_cd]는 수정제외
+	-->
+	<update id="updAsa520" parameterType="CustCardVO">
+	<![CDATA[
+	    UPDATE ASA520
+	       SET CUST_GUBUN = #{custGubun}
+		     , SD_GUBUN = #{sdGubun}
+		     , SD_GUBUN_ETC = CASE WHEN #{sdGubunEtc} = '' THEN NULL ELSE #{sdGubunEtc} END
+		     , CUST_NM = #{custNm}
+		     , CUST_ADDR = #{custAddr}
+		     , CUST_TEL = dbo.SAFEDB_ENC('SAFEDB.POLICY','ARIA256',REPLACE(#{custTel},'-',''),'' )
+		     , INPUT_ROUTE = #{inputRoute}
+		     , SITE_TYPE = #{siteType}
+		     , SITE_ELEVATOR = CASE WHEN #{siteElevator} = '' THEN NULL ELSE #{siteElevator} END
+		     , CONSULT_PRODUCT1 = #{consultProduct1}
+		     , CONSULT_PRODUCT2 = #{consultProduct2}
+		     , CONSULT_PRODUCT3 = #{consultProduct3}
+		     , CONSULT_PRODUCT4 = #{consultProduct4}
+		     , CONSULT_PRODUCT_ETC = CASE WHEN #{consultProductEtc} = '' THEN NULL ELSE #{consultProductEtc} END 
+		     , CUST_STAT = CASE WHEN #{custStat} = '' THEN NULL ELSE #{custStat} END
+		     , DELIVERY_DT = CASE WHEN #{deliveryDt} = '' THEN NULL ELSE #{deliveryDt} END
+		     , SIGONG_YN = CASE WHEN #{sigongYn} = '' THEN NULL ELSE #{sigongYn} END
+		     , SIGONG_PAY_YN = CASE WHEN #{sigongPayYn} = '' THEN NULL ELSE #{sigongPayYn} END
+		     , SIGONG_DT = CASE WHEN #{sigongDt} = '' THEN NULL ELSE #{sigongDt} END
+		     , CALL_STAT = CASE WHEN #{callStat} = '' THEN NULL ELSE #{callStat} END
+		     , LIFE_TYPE = CASE WHEN #{lifeType} = '' THEN NULL ELSE #{lifeType} END
+		     , LIFE_TYPE_ETC = CASE WHEN #{lifeTypeEtc} = '' THEN NULL ELSE #{lifeTypeEtc} END
+		     , INFO_AGRE_YN = #{infoAgreYn}
+		     , CONSULT_CONT = CASE WHEN #{consultCont} = '' THEN NULL ELSE #{consultCont} END
+		     , SALE_CODE = null
+		     , MID = #{regId}
+		     , MDT = GETDATE()
+	     WHERE ORD_NO = #{ordNo}					       
+	    ]]>
+	</update>
+	
+	<!-- 단품 고객상담내역 삭제 -->
+	<delete id="delAsa520" parameterType="TempData">
+    	DELETE FROM ASA520
+    	WHERE ORD_NO = #{ordNo}
+    </delete>
+    
+    
+    <!-- 단품 고객상담카드 조회 (출력물) case by case -->
+	<select id="selPrdCustCardRPrint" parameterType="CustCardVO"  resultType="CustCardVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selPrdCustCardRPrint */
+			  A.ORD_NO /* 주문번호(PK) */
+		    , SD_DT = SUBSTRING(CONVERT(CHAR, A.SD_DT, 112),0,9) /* 상담일 */ 
+			, A.EMP_NO /* 상담자(사원번호) */
+			, EMP_NM = (SELECT USER_NM FROM CCM100 WHERE ID = A.EMP_NO) /* 상담자명 (사원명) */
+			, A.CUST_GUBUN /* 고객구분[AS500] */
+			, A.SD_GUBUN /* 상담구분[AS501] */
+			, A.SD_GUBUN_ETC /* 상담구분(기타) */
+			, A.CUST_NM /* 고객명 */
+			, A.CUST_ADDR /* 고객주소지 */
+			, CUST_TEL = (SELECT dbo.SAFEDB_DEC('SAFEDB.POLICY','ARIA256',A.CUST_TEL,'')) /* 고객연락처 */
+			, A.INPUT_ROUTE /* 유입경로[AS506] */
+			, A.SITE_TYPE /* 현장유형[AS502] */
+			, A.SITE_ELEVATOR /* 엘리베이터(유/무) */
+			, A.CONSULT_PRODUCT1 /* [AS516]상담제품1 */
+			, A.CONSULT_PRODUCT2 /* [AS516]상담제품2 */
+			, A.CONSULT_PRODUCT3 /* [AS516]상담제품3 */
+			, A.CONSULT_PRODUCT4 /* [AS516]상담제품4 */
+			, A.CONSULT_PRODUCT_ETC /* 상담제품(기타) */ 
+			, A.CUST_STAT /* [AS517]고객진행상태 */
+			, DELIVERY_DT = SUBSTRING(CONVERT(CHAR, A.DELIVERY_DT, 112),0,9) /* 제품배송일자 */
+			, A.SIGONG_YN /* [AS515]시공진행여부 */
+			, A.SIGONG_PAY_YN /* [AS517]시공비결재여부 */
+			, SIGONG_DT = SUBSTRING(CONVERT(CHAR, A.SIGONG_DT, 112),0,9) /* 시공진행일자 */
+			, A.CALL_STAT /* 해피콜진행상태[AS507] */
+			, A.LIFE_TYPE /* [AS514]주거유형 */
+			, A.LIFE_TYPE_ETC /* 주거유형(기타) */
+			, A.INFO_AGRE_YN /* [AS515]고객정보활용동의여부 */
+			, INFO_AGRE_YN_NM = ((CASE WHEN A.INFO_AGRE_YN = 'AS515100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515100')) + '  ' 
+			                  + ((CASE WHEN A.INFO_AGRE_YN = 'AS515200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515200')) + '  '
+			, A.CONSULT_CONT /* 상담내용 */
+			, CUST_GUBUN_NM = ((CASE WHEN A.CUST_GUBUN = 'AS500100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500100')) + '  ' 
+			                + ((CASE WHEN A.CUST_GUBUN = 'AS500200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500200')) + '  '
+			              	+ ((CASE WHEN A.CUST_GUBUN = 'AS500300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS500300')) + '  '
+			, SD_GUBUN_NM = ((CASE WHEN A.SD_GUBUN = 'AS518100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS518100')) + '  ' 
+			              + ((CASE WHEN A.SD_GUBUN = 'AS518200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE + ' ( ' + isnull(A.SD_GUBUN_ETC,'') + ' )' FROM BCA200V WHERE BASE_CD = 'AS518200')) + '  '
+			, INPUT_ROUTE_NM = ((CASE WHEN A.INPUT_ROUTE = 'AS506100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506100')) + '  ' 
+	                         + ((CASE WHEN A.INPUT_ROUTE = 'AS506200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506200')) + '  '
+	       		       	     + ((CASE WHEN A.INPUT_ROUTE = 'AS506300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506300')) + '  '
+	       		       	     + ((CASE WHEN A.INPUT_ROUTE = 'AS506400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506400')) + '  '
+	       		       	     + ((CASE WHEN A.INPUT_ROUTE = 'AS506500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506500')) + '  '
+	       		       	     + ((CASE WHEN A.INPUT_ROUTE = 'AS506600' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS506600')) + '  '
+	        , SITE_TYPE_NM = ((CASE WHEN A.SITE_TYPE = 'AS502100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502100')) + '  ' 
+	       				   + ((CASE WHEN A.SITE_TYPE = 'AS502200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502200')) + '  '
+	       	       		   + ((CASE WHEN A.SITE_TYPE = 'AS502300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502300')) + '  '
+	       	       		   + ((CASE WHEN A.SITE_TYPE = 'AS502400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS502400')) + '  '
+	       	       		   + ((CASE WHEN A.SITE_TYPE = 'AS502500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE  FROM BCA200V WHERE BASE_CD = 'AS502500')) + '  '
+	       	, CONSULT_PRODUCT_NM = ((CASE WHEN 'AS516100' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516100')) + '  ' 
+			       				 + ((CASE WHEN 'AS516200' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516200')) + '  ' 
+			       				 + ((CASE WHEN 'AS516300' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516300')) + '  ' 
+			       				 + ((CASE WHEN 'AS516400' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516400')) + '  ' 
+			       				 + ((CASE WHEN 'AS516500' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516500')) + '  ' 
+								 + ((CASE WHEN 'AS516600' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516600')) + '  ' 
+								 + ((CASE WHEN 'AS516700' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516700')) + '  ' 
+								 + ((CASE WHEN 'AS516800' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516800')) + '  ' 
+								 + ((CASE WHEN 'AS516900' IN (A.CONSULT_PRODUCT1, A.CONSULT_PRODUCT2, A.CONSULT_PRODUCT3, A.CONSULT_PRODUCT4) THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS516900')) + '  '
+		     , SITE_ELEVATOR_NM = CASE WHEN A.SITE_ELEVATOR = '1' THEN '■ 엘리베이터(유/무)' ELSE '□ 엘리베이터(유/무)' END
+		     , CUST_STAT_NM = ((CASE WHEN A.CUST_STAT = 'AS512100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS512100')) + '  ' 
+			                + ((CASE WHEN A.CUST_STAT = 'AS512200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS512200')) + '  '
+			                + ((CASE WHEN A.CUST_STAT = 'AS512300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS512300')) + '  '
+			 , SIGONG_YN_NM = ((CASE WHEN A.SIGONG_YN = 'AS515100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515100')) + '  ' 
+			                + ((CASE WHEN A.SIGONG_YN = 'AS515200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS515200')) + '  '
+			 , SIGONG_PAY_YN_NM = ((CASE WHEN A.SIGONG_PAY_YN = 'AS517100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS517100')) + '  ' 
+			                    + ((CASE WHEN A.SIGONG_PAY_YN = 'AS517200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS517200')) + '  '
+			 , CALL_STAT_NM = ((CASE WHEN A.CALL_STAT = 'AS507100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507100')) + '  ' 
+			                + ((CASE WHEN A.CALL_STAT = 'AS507200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507200')) + '  '
+			       		    + ((CASE WHEN A.CALL_STAT = 'AS507300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507300')) + '  '
+			       		    + ((CASE WHEN A.CALL_STAT = 'AS507400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507400')) + '  '
+			       		    + ((CASE WHEN A.CALL_STAT = 'AS507500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS507500')) + '  '
+			  , LIFE_TYPE_NM = ((CASE WHEN A.LIFE_TYPE = 'AS514100' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514100')) + '  ' 
+			       			 + ((CASE WHEN A.LIFE_TYPE = 'AS514200' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514200')) + '  '
+			       	       	 + ((CASE WHEN A.LIFE_TYPE = 'AS514300' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514300')) + '  '
+			       	       	 + ((CASE WHEN A.LIFE_TYPE = 'AS514400' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE FROM BCA200V WHERE BASE_CD = 'AS514400')) + '  '
+			       	       	 + ((CASE WHEN A.LIFE_TYPE = 'AS514500' THEN '■ ' ELSE '□ ' END) +  (SELECT TITLE + ' ( ' + isnull(A.LIFE_TYPE_ETC,'') + ' )' FROM BCA200V WHERE BASE_CD = 'AS514500')) + '  '
+		FROM ASA520 A
+		WHERE 1=1
+		   AND A.ORD_NO = #{ordNo}	/* 상담/주문번호 */
+	  ]]>
+	</select>
+</mapper>

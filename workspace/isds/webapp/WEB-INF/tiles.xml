@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+	<!-- tiles //타일즈 적용 -->
+	<definition name="web_layout" template="/WEB-INF/layout/default.jsp">
+		<put-attribute name="header" value="/WEB-INF/layout/header.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="mobile_layout" template="/WEB-INF/layout/mobileDefault.jsp">
+		<put-attribute name="mobileHeader" value="/WEB-INF/layout/mobileHeader.jsp" />
+		<put-attribute name="mobileBody" value="" />
+	</definition>
+
+    <definition name="/erp/*/*.do" extends="web_layout">
+        <put-attribute name="body" value="/WEB-INF/jsp/erp/{1}/{2}.jsp" />
+    </definition>
+    <definition name="/erp/*/*/*.do" extends="web_layout">
+        <put-attribute name="body" value="/WEB-INF/jsp/erp/{1}/{2}/{3}.jsp" />
+    </definition>
+    <definition name="/erp/*/*/*/*.do" extends="web_layout">
+        <put-attribute name="body" value="/WEB-INF/jsp/erp/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="/erp/*/*/*/*/*.do" extends="web_layout">
+        <put-attribute name="body" value="/WEB-INF/jsp/erp/{1}/{2}/{3}/{4}/{5}.jsp" />
+    </definition>
+
+    <definition name="/mobile/*/*/*.do" extends="mobile_layout">
+        <put-attribute name="mobileBody" value="/WEB-INF/jsp/mobile/{1}/{2}/{3}.jsp" />
+    </definition>
+    
+    <definition name="/mobile/*/*/*/*.do" extends="mobile_layout">
+        <put-attribute name="mobileBody" value="/WEB-INF/jsp/mobile/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    
+    <definition name="/mobile/*/*/*/*/*.do" extends="mobile_layout">
+        <put-attribute name="mobileBody" value="/WEB-INF/jsp/mobile/{1}/{2}/{3}/{4}/{5}.jsp" />
+    </definition>
+    
+</tiles-definitions>

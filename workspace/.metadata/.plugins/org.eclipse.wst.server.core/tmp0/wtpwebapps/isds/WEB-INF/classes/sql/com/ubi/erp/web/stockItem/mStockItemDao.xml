@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.stockItem.dao.MStockItemDao">
+	<resultMap type="MStockItemVO" id="MStockItemMap" />
+	
+	<!--
+		설명 : 모바일-inus 품목 재고현황
+		20181129 ITM_BC 항목 튜닝
+		, ITM_BC = (SELECT Y.ITM_BC FROM DMA100 Y WHERE Y.ITM_ID = X.ITM_ID) /* 구분 */
+	       , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM100' AND BASE_CD = (SELECT Y.ITM_BC FROM DMA100 Y WHERE Y.ITM_ID = X.ITM_ID)) /* 구분명 */
+	-->
+	<select id="selMobileStockItemList" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* stockItemDao.selMobileStockItemList */
+	         X.BIZ_AREA /* 사업군 */
+	       , BIZ_AREA_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM130' AND BASE_CD = X.BIZ_AREA) /* 사업군명 */
+	       , X.ITM_ID /* 품목ID */
+	       , X.GRP3_CD /* 소분류코드 */
+ 	       , X.ITM_CD /* 품목코드 */
+	       , X.ITM_NM /* 품목명 */
+	       , X.SPEC /* 규격 */
+	       , X.ITM_BC /* 20181129 추가 */
+	       , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = X.ITM_BC) /* 20181129 추가 */	
+	       , TOT = SUM(B_QTY) + SUM(L_QTY) + SUM(C_QTY) + SUM(J_QTY) + SUM(Y_QTY) + SUM(E_QTY) /* 재고_합계 */
+	       , B_QTY = SUM(B_QTY) /* 재고_진주영업 */
+	       , L_QTY = SUM(L_QTY) /* 재고_아산영업 */
+	       , C_QTY = SUM(C_QTY) /* 재고_전시장창고 */
+	       , J_QTY = SUM(J_QTY) /* 재고_괴산영업 */
+	       , Y_QTY = SUM(Y_QTY) /* 재고_용인물류 */
+	       , E_QTY = SUM(E_QTY) /* 재고_예산완제품 */
+	       , P_QTY = SUM(P_QTY) /* 재고_부산물류기지 */
+	   FROM ( SELECT A.ITM_ID /* 품목ID */
+	               , C.ITM_BC /* 20181129 추가 */
+	               , C.ITM_CD /* 품목코드 */
+	      		   , C.GRP3_CD /* 소분류코드 */
+	      		   , C.ITM_NM /* 품목명 */
+	      		   , C.SPEC /* 규격 */ 
+	      		   , C.BIZ_AREA /* 사업군 */   
+	      		   , B_QTY = CASE WHEN A.WH_CD = '100' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 진주영업 /* 재고_진주영업 */
+	      		   , L_QTY = CASE WHEN A.WH_CD = '280' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 괴산영업 /* 재고_괴산영업 */
+	      		   , C_QTY = CASE WHEN A.WH_CD = '130' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 아산영업 /* 재고_아산영업 */
+	      		   , J_QTY = CASE WHEN A.WH_CD = '131' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 전시장(아산) /* 재고_전시장 */
+	      		   , Y_QTY = CASE WHEN A.WH_CD = '381' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 용인물류(아산) /* 재고_용인물류 */
+	      		   , E_QTY = CASE WHEN A.WH_CD = 'A565' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 예산완제품 /* 재고_예산완제품 */
+	      		   , P_QTY = CASE WHEN A.WH_CD = '155' THEN SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0)) ELSE 0 END -- 예산완제품 /* 재고_부산물류기지 */
+	      		FROM LES200 A 
+	   		    JOIN DMA100 C ON A.ITM_ID = C.ITM_ID
+	   		    JOIN BCW100 D ON A.WH_CD  = D.WH_CD AND D.SAL_YN <> '1'  -- 매출창고가아닌것제외
+	   		    LEFT JOIN DMA210 B ON A.ITM_ID = B.ITM_ID AND A.WH_CD = B.WH_CD AND B.BS_CD IN ('02','03','08','15','14')  -- 이누스바스모든재고는아산에서관리하기에'03' 조건반영 (14[강남직영점] 추가)
+	      WHERE A.SUM_MON  = LEFT(#{stdDt} ,4) + '-00'
+	      ]]>
+	      <if test="facCd != '' and facCd != null">
+		   AND A.FAC_CD = #{facCd} /* 사업장 */
+	     </if>
+	     <if test="itmInfo != '' and itmInfo != null">
+		   AND (UPPER(C.ITM_CD) LIKE '%' + UPPER(#{itmInfo}) + '%'  OR UPPER(C.ITM_NM) LIKE '%' + UPPER(#{itmInfo}) + '%') /* 품목코드/명 */
+	     </if>
+	     <if test="itmCd != '' and itmCd != null">
+		   AND C.ITM_CD = #{itmCd} /* 모바일 화면세어 콤보박스에서 필터링 된 것을 선택 후 조회 */
+	     </if>
+	     <![CDATA[
+	       /* AND A.FAC_CD IN ('100', '150', '400', '600') */
+	       /* AND A.WH_CD  IN ('100', '130', '131', '156', '280', 'A565') */
+	       /* 20181019 150 > 550 / 156 > 381 */
+	       /* 20181106 아산공장(150 / 156)  추가 */
+	       /* 20181109 아산-부산물류기지 (155) 추가 */
+	       AND A.FAC_CD IN ('100', '550', '400', '600', '150')
+	       AND A.WH_CD  IN ('100', '130', '131', '381', '280', 'A565', '156', '155')
+	     GROUP BY C.GRP3_CD, A.WH_CD, A.ITM_ID, C.ITM_CD, C.ITM_BC, C.ITM_NM, C.SPEC, C.BIZ_AREA
+	     ) X
+	 GROUP BY X.ITM_ID, X.ITM_CD, X.ITM_BC, X.GRP3_CD, X.ITM_NM, X.SPEC, X.BIZ_AREA
+	 ORDER BY X.BIZ_AREA, X.ITM_CD
+	   ]]>
+	</select>
+	
+	<!--
+		설명 : 모바일-inus 품목 재고현황 - 사업장 추가된 공장별 재고현황
+		20181129 itm_bc 항목 쿼리 튜닝
+		, ITM_BC = (SELECT Y.ITM_BC FROM DMA100 Y WHERE Y.ITM_ID = X.ITM_ID) /* 구분 */ 
+	       , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM100' AND BASE_CD = (SELECT Y.ITM_BC FROM DMA100 Y WHERE Y.ITM_ID = X.ITM_ID)) /* 구분명 */
+	-->
+	<select id="selMobileStockItemByFacList" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* stockItemDao.selMobileStockItemByFacList */
+	         X.BIZ_AREA /* 사업군 */ 
+	       , BIZ_AREA_NM = (SELECT TITLE FROM BCA200V WHERE MAIN_CD = 'DM130' AND BASE_CD = X.BIZ_AREA) /* 사업군명 */ 
+	       , X.ITM_ID /* 품목ID */ 
+	       , X.GRP3_CD /* 소분류코드 */ 
+	       , X.ITM_CD /* 품목코드 */ 
+	       , X.ITM_NM /* 품목명 */ 
+	       , X.SPEC /* 규격 */ 
+	       , X.ITM_BC /* 20181129 추가 */
+	       , ITM_BC_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = X.ITM_BC) /* 20181129 추가 */
+	       , X.FAC_CD
+	       , X.WH_CD
+	       , WH_NM = MAX(X.WH_NM)
+	       , X.QTY
+	       , TOT = SUM(X.QTY) OVER (PARTITION BY X.ITM_CD ORDER BY X.ITM_CD)
+	       , X.CHK_END /* 사용제한 */
+	       , CHK_END_NM = (SELECT TITLE FROM BCA200V WHERE BASE_CD = X.CHK_END) /* 사용제한명 */
+        FROM ( SELECT A.ITM_ID /* 품목ID */ 
+                    , C.ITM_BC /* 20181129 추가 */
+			        , C.ITM_CD /* 품목코드 */ 
+					, C.GRP3_CD /* 소분류코드 */ 
+					, C.ITM_NM /* 품목명 */ 
+					, C.SPEC /* 규격 */ 
+					, C.BIZ_AREA /* 사업군 */ 
+					, A.FAC_CD
+					, A.WH_CD
+					, WH_NM = MAX(D.WH_NM)
+					, QTY = SUM(ISNULL(A.BAS_QTY,0)+ ISNULL(A.IN_QTY,0) - ISNULL(A.OUT_QTY,0))
+					, T.CHK_END /* 사용제한 */
+			     FROM LES200 A JOIN DMA100 C ON A.ITM_ID = C.ITM_ID JOIN BCW100 D ON A.WH_CD = D.WH_CD AND D.SAL_YN <> '1' -- 매출창고가아닌것제외 
+			          LEFT JOIN DMA210 B ON A.ITM_ID = B.ITM_ID AND A.WH_CD = B.WH_CD AND B.BS_CD IN ('02','03','08','15','14') -- 이누스바스모든재고는아산에서관리하기에'03' 조건반영 (14[강남직영점] 추가) 
+				      /* 20181122 사용제한 추가 */
+				      LEFT OUTER JOIN (SELECT DISTINCT ITM_CD, CHK_END
+									     FROM TS_CMP_AUTHORITY
+									    WHERE TEAM_CHK = '1'
+									    GROUP BY ITM_CD, CHK_END ) T ON C.ITM_CD = T.ITM_CD
+			    WHERE A.SUM_MON  = LEFT(#{stdDt} ,4) + '-00'
+			      /* AND A.FAC_CD IN ('100', '150', '400', '600') */ 
+			      /* AND A.WH_CD IN ('100', '130', '131', '156', '280', 'A565') */
+			      /* 20181019 150 > 550 / 156 > 381 */
+			      /* 20181106 아산공장(150 / 156)  추가 */
+			      /* 20181109 아산-부산물류기지 (155) 추가 */  
+			      AND A.FAC_CD IN ('100', '550', '400', '600','150') 
+			      AND A.WH_CD IN ('100', '130', '131', '381', '280', 'A565','156','155')
+			      ]]>
+			     <if test="facCd != '' and facCd != null">
+				  AND A.FAC_CD = #{facCd} /* 사업장 */
+			     </if>
+			     <if test="itmInfo != '' and itmInfo != null">
+				  AND (UPPER(C.ITM_CD) LIKE '%' + UPPER(#{itmInfo}) + '%'  OR UPPER(C.ITM_NM) LIKE '%' + UPPER(#{itmInfo}) + '%') /* 품목코드/명 */
+			     </if>
+			     <if test="itmCd != '' and itmCd != null">
+				  AND C.ITM_CD = #{itmCd} /* 모바일 화면세어 콤보박스에서 필터링 된 것을 선택 후 조회 */
+			     </if>
+			     <![CDATA[
+	            GROUP BY C.GRP3_CD, A.WH_CD, A.ITM_ID, C.ITM_CD, C.ITM_BC, C.ITM_NM, C.SPEC, C.BIZ_AREA, A.FAC_CD, T.CHK_END ) X 
+          WHERE X.QTY > 0
+          GROUP BY X.ITM_ID, X.ITM_CD, X.ITM_BC, X.GRP3_CD, X.ITM_NM, X.SPEC, X.BIZ_AREA , X.FAC_CD, X.WH_CD, X.QTY, X.CHK_END
+          ORDER BY X.BIZ_AREA, X.ITM_CD 
+	   ]]>
+	</select>
+
+	<!--
+		설명 : 모바일-inus 품목 재고현황 [품목코드 콤보박스]
+	-->
+	<select id="selMobileItemCdList" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* stockItemDao.selMobileItemCdList */
+	         ID = X.ITM_CD /* 품목코드 */ 
+     	   , VALUE = X.ITM_CD + ' : ' + X.ITM_NM /* 품목명 */
+	    FROM ( SELECT C.ITM_CD /* 품목코드 */ 
+			        , ITM_NM = MAX(C.ITM_NM) /* 품목명 */ 
+			        , BIZ_AREA = MAX(C.BIZ_AREA)
+                 FROM LES200 A 
+		              JOIN DMA100 C ON A.ITM_ID = C.ITM_ID 
+			          JOIN BCW100 D ON A.WH_CD = D.WH_CD AND D.SAL_YN <> '1' -- 매출창고가아닌것제외 
+                      LEFT JOIN DMA210 B ON A.ITM_ID = B.ITM_ID AND A.WH_CD = B.WH_CD AND B.BS_CD IN ('02','03','08','15','14') -- 이누스바스모든재고는아산에서관리하기에'03' 조건반영 (14[강남직영점] 추가) 
+        WHERE A.SUM_MON = LEFT(SUBSTRING(CONVERT(CHAR, GETDATE(), 121),0,11) ,4) + '-00'  /* 현재날짜 기준 */
+          /* AND A.FAC_CD IN ('100', '150', '400', '600') */
+		  /* AND A.WH_CD IN ('100', '130', '131', '156', '280', 'A565') */ 
+		  /* 20181019 150 > 550 / 156 > 381 */
+		  /* 20181106 아산공장(150 / 156)  추가 */
+		  /* 20181109 아산-부산물류기지 (155) 추가 */ 
+	      AND A.FAC_CD IN ('100', '550', '400', '600','150') 
+	      AND A.WH_CD IN ('100', '130', '131', '381', '280', 'A565','156','155')
+		GROUP BY C.ITM_CD ) X 
+        ORDER BY X.BIZ_AREA, X.ITM_CD 
+	   ]]>
+	</select>
+
+	<!--
+		설명 : 모바일-inus 품목 재고현황 [사업장 콤보박스]
+	-->
+	<select id="selBsCdByFacCd" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* stockItemDao.selBsCdByFacCd */
+	         A.BS_CD
+	       , A.BS_NM
+	    FROM BCC200 A
+	   WHERE EXISTS (SELECT BS_CD FROM BCC300 WHERE FAC_CD = #{facCd} AND BS_CD = A.BS_CD)
+	   ]]>
+	</select>
+
+	<!--
+		설명 : 프로시저 호출 전, facCd가지고 bsCd get
+	-->
+	<select id="selMobileFacCdList" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* stockItemDao.selMobileFacCdList */
+	         ID = A.FAC_CD 
+     	   , VALUE = A.FAC_NM
+	    FROM BCC300 A
+	   /* WHERE A.FAC_CD IN ('100', '150', '400', '600') */
+	   /* 20181019 150 > 550 */
+	   /* 20181106 아산공장(150 / 156)  추가 */
+	   /* 20181109 아산-부산물류기지 (155) 추가 */ 
+       WHERE A.FAC_CD IN ('100', '550', '400', '600','150','155') 
+       ORDER BY A.FAC_CD 
+	   ]]>
+	</select>
+	
+	<!--
+		설명 : baseCd에 따른 title get
+	-->
+	<select id="selTitleByBaseCd" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selTitleByBaseCd */
+	         A.BASE_CD
+	       , A.TITLE
+	    FROM BCA200V A
+	   WHERE A.BASE_CD = #{baseCd}
+	     AND ISNULL(USE_YN,0) = '1' --사용중인 것만
+	   ORDER BY ORD_SQ 
+		]]>
+	</select>
+
+	<!--
+		설명 : 창고코드에 따른 창고명 GET
+	-->
+	<select id="selWhNmByWhCd" parameterType="MStockItemVO"  resultType="MStockItemVO">
+	  <![CDATA[
+	  SELECT /* CustCardDao.selWhNmByWhCd */
+	         A.WH_CD
+	       , A.WH_NM
+	    FROM BCW100 A
+	   WHERE 1=1
+	   ]]>
+     <if test="whCd != '' and whCd != null">
+	  AND A.WH_CD = #{whCd}
+     </if>
+	</select>
+	
+	<!-- 
+		설명 : 타일쪽 선택된 품목별로 색상, 크기, 등급 정보 보여줄 화면 프로시저
+		파라미터 : 기간시작(stdDt), 기간종료(stdDt), 공장코드(facCd), 품목코드(itmCd)
+		20181002 ryul LES104S_Query > LES104M_Query 변경
+	 -->
+	<select id="selLes104SQuery" statementType="CALLABLE" parameterType="MStockItemVO"  resultMap="MStockItemMap" resultType="ResultSet">
+	<![CDATA[
+	  	{call LES104M_Query(#{frDt,jdbcType=VARCHAR}
+	  	                   ,#{toDt,jdbcType=VARCHAR}
+	  	                   ,#{bsCd,jdbcType=VARCHAR}
+	  	                   ,#{facCd,jdbcType=VARCHAR}
+	  	                   ,#{whCd,jdbcType=VARCHAR}
+	  	                   ,#{itmBc,jdbcType=VARCHAR}
+	  	                   ,#{itmCd,jdbcType=VARCHAR}
+	  	                   ,#{itmNm,jdbcType=VARCHAR}
+	  	                   ,#{grp1Cd,jdbcType=VARCHAR}
+	  	                   ,#{grp2Cd,jdbcType=VARCHAR}
+	  	                   ,#{grp3Cd,jdbcType=VARCHAR}
+	  	                   ,#{modelCd,jdbcType=VARCHAR}
+	  	                   ,#{spec1,jdbcType=VARCHAR}
+	  	                   ,#{chkIo,jdbcType=VARCHAR}
+	  	                   ,#{chkLot,jdbcType=VARCHAR})}
+	]]>
+	</select>
+</mapper>

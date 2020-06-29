@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ubi.erp.orderDelivery.dao.MOrderDeliveryDao">
+	<resultMap type="MOrderDeliveryVO" id="MOrderDeliveryMap" />
+	
+    <!-- 공사 / 제조 팝업 및 기타 -->
+    <select id="selFacCd" resultType="MOrderDeliveryVO">
+       SELECT A.FAC_CD, A.FAC_NM FROM BCC300 A INNER JOIN MMB100 B ON (A.FAC_CD = B.PO_FAC) GROUP BY A.FAC_CD, A.FAC_NM
+    </select>
+    
+    <select id="selManuDeliverySeq" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+    	SELECT right('00000' + convert(varchar, isnull(convert(int, max(DELI_SEQ)), 0) + 1), 5) AS DELI_SEQ FROM CCM110 WHERE DELI_DATE = #{deliDate}
+    </select>
+    
+    <select id="selManuDeliveryNo" parameterType="MOrderDeliveryVO" resultType="String">
+    	SELECT right('00000' + convert(varchar, isnull(convert(int, max(DELI_NO)), 0) + 1), 5) AS DELI_NO FROM CCM110 WHERE DELI_DATE = #{deliDate} AND DELI_SEQ = #{deliSeq}
+    </select>
+   
+	<!-- 제조 발주확인 / 현황   -->
+	<select id="selManuOrderChkS" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+		SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN ('100') AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND B.SCM_YN = '1' AND A.OUTS_CON = '0' 
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} AND B.PO_DT = #{poDt}
+	</select>
+
+    <insert id="prcsManuOrderChkS" parameterType="MOrderDeliveryVO">
+       UPDATE MMB150 SET OUTS_CON = '1', OUTS_CON_ID = #{id}, OUTS_CON_DT = GETDATE()
+        WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} AND CUST_CD = #{custCd} AND DLV_DT = #{dlvDt}
+    </insert>
+	
+	<select id="selManuOrderChkR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	  SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN ('100') AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND B.SCM_YN = '1'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} 
+	       AND B.PO_DT BETWEEN #{stPoDt} AND #{edPoDt}
+	       AND A.OUTS_CON LIKE  #{outsCon}
+	</select>
+	
+	<!--  공사 납품등록 / 현황 -->
+	<select id="selManuDeliverySMst" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	   SELECT A.PO_NO, A.PO_SQ, A.CUST_CD, A.ITM_ID, A.PO_QTY, A.PO_UP, A.PO_AMT, Convert(varchar(10),A.DLV_DT,112) AS DLV_DT, A.RMKS, A.OUTS_CON, A.OUTS_DELI_QTY,
+		       Convert(varchar(10),B.PO_DT,112) as PO_DT, B.URG_BC, B.IN_WH,B.PO_FAC,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM, G.NM AS URG_BC_NM,
+		       (A.PO_QTY-A.OUTS_DELI_QTY) AS MI_DELI_QTY, (A.PO_NO+CAST(A.PO_SQ as nvarchar(2))) AS MASTER_KEY
+	      FROM MMB150 A, MMB100 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, BCA200L G
+	     WHERE A.PO_NO = B.PO_NO AND A.CUST_CD = B.CUST_CD AND A.CUST_CD = C.CUST_CD 
+	       AND A.ITM_ID = D.ITM_ID 
+	       AND B.IN_WH = E.WH_CD AND E.FAC_CD IN ('100') AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+	       AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+	       AND B.URG_BC = G.BASE_CD AND G.LAN_ID = '1'
+	       AND B.SCM_YN = '1' AND A.OUTS_CON  = '1'
+	       AND A.CUST_CD = #{custCd} AND B.PO_FAC = #{facCd} 
+           AND A.PO_QTY - A.OUTS_DELI_QTY > 0
+	</select>
+	
+	<select id="selManuDeliverySSub" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+		SELECT A.DELI_KEY, A.DELI_DATE, A.DELI_SEQ, A.DELI_NO, A.CUST_CD, A.PO_FAC, A.IN_WH, A.ITM_ID, A.DELI_QTY, A.DELI_QTY AS OLD_DELI_QTY, 
+		       A.PO_NO, A.PO_SEQ AS PO_SQ, 
+		       B.PO_QTY, (B.PO_QTY - A.DELI_QTY) AS MI_DELI_QTY,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM,
+		       Convert(varchar(10), G.PO_DT,112) as PO_DT
+		FROM CCM110 A, MMB150 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F, MMB100 G
+		WHERE A.PO_NO = B.PO_NO AND A.PO_SEQ = B.PO_SQ AND A.CUST_CD = C.CUST_CD AND A.ITM_ID = D.ITM_ID
+		  AND A.IN_WH = E.WH_CD AND E.FAC_CD IN ('100') AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+		  AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+		  AND A.PO_NO = G.PO_NO AND A.CUST_CD = G.CUST_CD AND G.SCM_YN = '1'
+		  AND A.DELI_DATE = #{deliDate} AND A.DELI_SEQ = #{deliSeq} AND A.PO_FAC = #{facCd} AND A.CUST_CD = #{custCd}
+	</select>
+	
+	<insert id="prcsManuDeliveryS" parameterType="MOrderDeliveryVO" >
+	   <if test="cudKey == 'INSERT'">         
+        <![CDATA[ INSERT INTO CCM110 (DELI_KEY, DELI_DATE, DELI_SEQ, DELI_NO, CUST_CD, PO_FAC, IN_WH, ITM_ID, DELI_QTY, PO_NO, PO_SEQ, OUT_CID, OUT_CDT)
+                  VALUES(#{deliDate}+#{deliSeq}+#{deliNo}, #{deliDate}, #{deliSeq},#{deliNo}, #{custCd}, #{poFac},#{inWh}, #{itmId}, #{deliQty}, #{poNo}, 
+                             #{poSq},#{id},GETDATE())        
+            
+            UPDATE MMB150 SET OUTS_DELI_QTY = OUTS_DELI_QTY + #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]>                              
+	    </if>
+	    <if test="cudKey == 'UPDATE'">                       
+         <![CDATA[ UPDATE CCM110  SET  DELI_QTY = #{deliQty}, OUT_MID = #{id}, OUT_MDT = GETDATE() WHERE DELI_KEY = #{deliKey}
+          
+          UPDATE MMB150 SET OUTS_DELI_QTY = (OUTS_DELI_QTY-#{oldDeliQty}) + #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]>
+        </if>  
+        <if test="cudKey == 'DELETE'">        
+          DELETE FROM CCM110 WHERE DELI_KEY = #{deliKey}
+          
+           <![CDATA[UPDATE MMB150 SET OUTS_DELI_QTY = OUTS_DELI_QTY- #{deliQty} WHERE PO_NO = #{poNo} AND PO_SQ = #{poSq} ]]> 
+        </if>
+	</insert>
+	
+	<select id="selManuDeliveryR" parameterType="MOrderDeliveryVO" resultType="MOrderDeliveryVO">
+	    SELECT A.DELI_KEY, A.DELI_DATE, A.DELI_SEQ, A.DELI_NO, A.CUST_CD, A.PO_FAC, A.IN_WH, A.ITM_ID, A.DELI_QTY, 
+		       A.PO_NO, A.PO_SEQ AS PO_SQ, 
+		       B.PO_QTY, Convert(varchar(10),B.DLV_DT,112) AS DLV_DT,
+		       C.CUST_NM,
+		       D.ITM_CD, D.ITM_NM, D.SPEC, D.UM_BC,
+		       E.WH_NM, F.TITLE AS UM_BC_NM
+		FROM CCM110 A, MMB150 B, BCV100 C, DMA100 D, BCW100 E, BCA200 F
+		WHERE A.PO_NO = B.PO_NO AND A.PO_SEQ = B.PO_SQ AND A.CUST_CD = C.CUST_CD AND A.ITM_ID = D.ITM_ID
+		  AND A.IN_WH = E.WH_CD AND E.FAC_CD IN ('100') AND (E.PART_YN = '1' OR E.SUB_YN = '1') AND E.USE_YN = '1'
+		  AND D.UM_BC = F.BASE_CD AND F.MAIN_CD LIKE 'DM150%'
+		  AND A.DELI_DATE BETWEEN #{stDeliDate} AND #{edDeliDate} AND A.PO_FAC = #{facCd} AND A.CUST_CD = #{custCd}
+	</select>
+
+</mapper>

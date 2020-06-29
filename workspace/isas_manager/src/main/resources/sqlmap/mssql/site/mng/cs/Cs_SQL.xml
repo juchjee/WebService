@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CsDAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+
+	<select id="calendarList" parameterClass="map" resultClass="camelMap">
+		SELECT
+	        CONVERT(VARCHAR(2), work_dt, 106) AS work_dd
+		FROM GAZ500_MB
+		WHERE dt_bc = 'GA120400'
+		<isNotEmpty prepend="AND" property="CALENDAR_DT" >
+			CONVERT(VARCHAR(6), work_dt, 112)  = #CALENDAR_DT#
+		</isNotEmpty>
+		 AND  CONVERT(VARCHAR(8), work_dt, 112) NOT in (select CONVERT(VARCHAR(8), aps.PLAN_DT, 112) AS work_dd from   ASW_PLAN_SWITCH aps where  aps.FLAG_ON_OFF = 'ON')
+		UNION
+		select CONVERT(VARCHAR(2), aps.PLAN_DT, 106) AS work_dd
+		from   ASW_PLAN_SWITCH aps
+		where  aps.FLAG_ON_OFF = 'OFF'
+		<isNotEmpty prepend="AND" property="CALENDAR_DT" >
+			CONVERT(VARCHAR(6), aps.PLAN_DT, 112)  = #CALENDAR_DT#
+		</isNotEmpty>
+	</select>
+
+
+	<select id="ascodeList" parameterClass="map" resultClass="camelMap">
+
+		<isEqual  property="CODE_TP" compareValue="L" >
+
+
+			select  a.pcd as value,  b.title as label
+		  from  asz160 a
+		  join  bca200v  b  on a.pcd = b.base_cd
+	  	 where  itm_gubun = #ITM_GUBUN#
+	  	   and  as_bc = #AS_BC#
+		</isEqual>
+
+		<isEqual  property="CODE_TP" compareValue="M" >
+
+
+			select   a.ccd as value,   b.title as label
+				from    asz170  a
+				        join  bca200v  b  on a.ccd = b.base_cd
+				where   itm_gubun =  #ITM_GUBUN#
+				and     pcd       = #LVALUE#
+				and     as_bc = #AS_BC#
+		</isEqual>
+
+	</select>
+
+	<select id="mbrDiSearchForAsa010" parameterClass="map" resultClass="String">
+		SELECT cs_no from asa010 where
+		<isNotEmpty  property="MBR_ID" >
+			mbr_di = (SELECT MBR_DI from ASW_M_MBR_LOGIN WHERE MBR_ID = #MBR_ID#)
+		</isNotEmpty>
+
+		<isNotEmpty  property="MBR_DI" >
+			mbr_di = #MBR_DI#
+		</isNotEmpty>
+	</select>
+
+
+	<select id="asa050SeqSearch" parameterClass="String" resultClass="String">
+		SELECT isnull(max(seq+1),1) as seq from asa050 where cs_no = #csNo#
+	</select>
+	
+	
+	<select id="asNoSearchForAsa200" parameterClass="String" resultClass="String">
+		SELECT dbo.fnCodeNo2 ('ASA200_A', getdate(), null ) 
+	</select>
+
+
+	<select id="csTimeTableList"  resultClass="camelMap">
+		SELECT a.CS_TIME_SEQ,
+		       a.CS_TIME_VALUE,
+		       a.CS_TIME_TP
+		FROM   ASW_CS_TIME_TABLE a
+		ORDER BY CS_TIME_ORDER
+	</select>
+
+
+	<select id="csTimeMpgList"  parameterClass="map" resultClass="camelMap">
+	<![CDATA[
+		SELECT   a.CS_TIME_SEQ,
+		         a.CS_TIME_VALUE,
+		         case
+		                  when a.CS_TIME_LIMIT > count(b.CS_TIME_SEQ)
+		                  then 'Y'
+		                  else 'N'
+		         END as CS_TIME_LIMIT
+		FROM     ASW_CS_TIME_TABLE a
+		         LEFT JOIN ASW_CS_MST b
+		         ON  a.CS_TIME_SEQ                           = b.CS_TIME_SEQ
+		         and CONVERT(VARCHAR(10), b.BOOKING_DT, 120) = #BOOKING_DT#
+				 and b.STAT_BC <> 'AS204900'
+		GROUP BY a.CS_TIME_SEQ,
+		         a.CS_TIME_VALUE,
+		         a.CS_TIME_LIMIT
+	]]>
+	</select>
+
+	<select id="csInfo"  parameterClass="map" resultClass="camelMap">
+		SELECT a.AS_TEMP_NO,
+		       a.AS_NO,
+		       case when (select count(*) from ASW_M_MBR_LOGIN where MBR_DI = (SELECT mbr_di FROM asa010 WHERE   CS_NO = a.CS_NO)) = 1 then '회원' else '비회원'end as MBR_TP,
+		       a.CS_NO,
+		       a.MODEL,
+		       a.ASCODE_LEV1,
+		       a.ASCODE_LEV2,
+		       a.COMMENT, 
+		       a.ITM_GUBUN,
+		       CONVERT(VARCHAR(10), a.BOOKING_DT, 120) as BOOKING_DT,
+		       a.STAT_BC,
+		       a.INP_BC,
+		       a.MODEL_ITEM_CD,
+		       a.CS_TIME_SEQ,
+		       CONVERT(VARCHAR(10), a.REG_DT, 120) as REG_DT,
+		       case when a.CS_TYPE = 'TEL' then '전화상담' else '출장서비스' end as CS_TYPE_NM,
+		       (select CS_TIME_VALUE from ASW_CS_TIME_TABLE where CS_TIME_SEQ = a.CS_TIME_SEQ) as CS_TIME_VALUE,
+			    a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   a.ZIP_CD as T_ZIP_CD,
+			   a.ADDR as T_ADDR,
+			   a.ADDR2 as T_ADDR2,
+			   a.RE_AREA,
+			   a.AS_ADV,
+			   a.OEM_BC,
+			   a.CUST_CD,
+			   a.OEM_BC,
+			   a.REJECT_MSG
+			   
+		FROM   ASW_CS_MST a
+       WHERE   a.AS_TEMP_NO = #AS_TEMP_NO#
+
+	</select>
+
+	<select id="csInfoList"  parameterClass="map" resultClass="camelMap">
+		SELECT * FROM (
+		<![CDATA[ 
+		SELECT ROW_NUMBER() OVER( ORDER BY A.REG_DT desc ) AS NUM,
+		       a.AS_TEMP_NO,
+		       a.AS_NO,
+		       a.CS_NO,
+		       a.ITM_GUBUN,
+		       a.MODEL,
+		       (select top 1 bb.spec from asz200 aa join dma100 bb on aa.itm_pid = bb.itm_id where aa.itm_pid  = a.MODEL) as MODEL_NM,
+		       (select count(*) from ASW_CS_MST where CONVERT(VARCHAR(10), REG_DT, 120)  = CONVERT(VARCHAR(10), a.REG_DT, 120) and CS_NO = a.CS_NO and CS_TYPE = a.CS_TYPE) as AS_DAY_COUNT,
+		       (select top 1 title as label from BCA200V where base_cd = a.ASCODE_LEV1) +'&nbsp;&gt;&nbsp;'+ (select title as label from BCA200V where base_cd = a.ASCODE_LEV2) as ASCODE_NM,
+		       a.CS_TIME_SEQ,
+		       a.COMMENT,
+		       CONVERT(VARCHAR(10), a.BOOKING_DT, 120) as BOOKING_DT,
+		       case when a.STAT_BC = '0' then '처리대기' 
+		            when a.STAT_BC = 'AS204100' then '접수'
+		            when a.STAT_BC = 'AS204200' then '수리진행'
+		            when a.STAT_BC = 'AS204300' then '수리완료'
+		            when a.STAT_BC = 'AS204400' then '정산'
+		            when a.STAT_BC = 'AS204800' then '상담처리'end as STATUS,
+		       CONVERT(VARCHAR(10), a.REG_DT, 120) as REG_DT,
+		       case when a.CS_TYPE = 'TEL' then '전화상담' else '출장서비스' end as CS_TYPE_NM,
+		       (select CS_TIME_VALUE from ASW_CS_TIME_TABLE where CS_TIME_SEQ = a.CS_TIME_SEQ) as CS_TIME_VALUE,
+		       case when a.MODEL_ITEM_CD = '0' then '비데'
+		            when a.MODEL_ITEM_CD = '1' then '위생도기'
+		            when a.MODEL_ITEM_CD = '2' then '수전'
+		            when a.MODEL_ITEM_CD = '3' then '블렌더'
+		            when a.MODEL_ITEM_CD = '4' then '이누스바스'
+		      		  end as PROD_NM,
+			   a.CS_NM as T_NM,
+			   a.HP as T_HP,
+			   a.TEL as T_TEL,
+			   case when  (select count(*) from ASW_M_MBR_LOGIN
+                                          where   MBR_DI =
+                                                  (SELECT b.mbr_di from asa010 b
+                                                  where b.cs_no = a.cs_no
+                                                  )
+								  ) > 0  then '회원' else '비회원' end as CS_TP,
+			   a.ZIP_CD +'&nbsp;'+ a.ADDR +'&nbsp;' +isnull(a.ADDR2,'') as T_ADDR_NM
+		]]>
+		FROM   ASW_CS_MST a 
+      	WHERE a.CS_TYPE = #CS_TYPE#
+      	
+      	<isNotEmpty  property="MODEL_ITEM_CD" prepend="AND">
+			a.MODEL_ITEM_CD = #MODEL_ITEM_CD#
+		</isNotEmpty>
+      	<isNotEmpty  property="STAT_BC" prepend="AND">
+			a.STAT_BC = #STAT_BC#
+		</isNotEmpty>
+		
+		<isNotEmpty property="SEARCH_TXT">
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+				 a.CS_NM like '%' + #SEARCH_TXT# +'%'
+			</isEqual>
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+				 REPLACE(a.HP,'-','') like '%' +  REPLACE(#SEARCH_TXT#,'-','') +'%'
+			</isEqual>
+			<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="3">
+				<![CDATA[  a.ZIP_CD +'&nbsp;'+ a.ADDR +'&nbsp;' +isnull(a.ADDR2,'') like '%' + #SEARCH_TXT# +'%']]>
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), a.REG_DT, 120) >= #TXT_FROM_DT# ]]>
+	  	</isNotEmpty>
+		<isNotEmpty prepend="AND" property="TXT_TO_DT" >
+ 			<![CDATA[ CONVERT(VARCHAR(10), a.REG_DT, 120) <= #TXT_TO_DT# ]]>
+	  	</isNotEmpty>
+      ) x
+		ORDER BY  x.NUM ASC
+	</select>
+
+	<select id="csInfoListCount"  parameterClass="map" resultClass="int">
+		SELECT count(*)
+		FROM   ASW_CS_MST a
+      	WHERE  a.CS_NO        = (SELECT cs_no
+							        FROM    asa010
+							        WHERE   mbr_di =
+							                ( SELECT MBR_DI
+							                FROM    ASW_M_MBR_LOGIN
+							                WHERE   MBR_ID = #MBR_ID#
+							                )
+							        )
+	</select>
+
+	<select id="modelList"  parameterClass="map" resultClass="camelMap">
+		   select  a.itm_pid as value, b.itm_cd, isnull(b.spec ,'') as label, b.um_bc
+			 from asz200 a
+			  join dma100 b on a.itm_pid = b.itm_id
+			where 1=1
+			and    a.itm_gubun  = #ITM_GUBUN#
+			order by b.itm_cd
+	</select>
+	
+	<select id="modelInfo"  parameterClass="map" resultClass="camelMap">
+		   select  b.itm_cd, isnull(b.itm_nm ,'') as itm_nm
+			 from asz200 a
+			  join dma100 b on a.itm_pid = b.itm_id
+			where 1=1
+			and    a.itm_gubun  = #ITM_GUBUN#
+			and   a.itm_pid = #MODEL#
+	</select>
+	
+	
+	<select id="custCdList"  parameterClass="map" resultClass="camelMap">
+		select DISTINCT a.cust_cd as value, a.cust_nm as label
+		  from  bcv100 a , ASW_AUTO_RECEIPT b 
+		 where  1=1 
+		   and a.cust_cd = b.cust_cd
+		   and  ( a.cust_cd = 'y' or a.cust_bc = 'BC500500'  ) 
+		/*  and  a.cust_cd = 'h21353'*/ /*임시*/
+		   order by a.cust_nm
+	</select>
+	
+	<select id="csFileList"  parameterClass="map" resultClass="camelMap">
+		 SELECT a.AS_TEMP_NO
+		       , a.ATTCH_CD
+		       , b.ATTCH_FILE_NM AS ATTCH_FILE_NM
+	   		   , b.ATTCH_FILE_PATH AS ATTCH_FILE_PATH
+	   		   , b.ATTCH_REAL_ABSOLUTE_PATH AS ATTCH_REAL_ABSOLUTE_PATH
+	   		   , b.ATTCH_ID
+		FROM ASW_CS_ATTCH a WITH(NOLOCK)
+		LEFT OUTER JOIN ASW_G_ATTCH b
+		ON b.ATTCH_CD = a.ATTCH_CD
+		WHERE a.AS_TEMP_NO = #AS_TEMP_NO#
+	</select>
+
+	<select id="itmGubunList"  parameterClass="map" resultClass="camelMap">
+		 select base_cd as value, title as label
+			from bca200v
+			where main_cd ='SDH08'
+			and use_yn ='1'
+			<isNotEmpty property="ITM_GUBUN">
+			and base_cd = #ITM_GUBUN#
+			</isNotEmpty>
+	</select>
+
+	<select id="custInfo"  parameterClass="String" resultClass="camelMap">
+			select top 1 drv_nm, hp  from Asz130 where top_yn = '1' and cust_cd = #custCd#
+	</select>
+
+	<select id="asa200_new_work" parameterClass="map" >
+		{call asa200_new_work(#asNo#,#mbrNm#,#mbrMobile#,#drvNm#,#hp#,'')}
+	</select>
+	
+	<select id="asa200_new_work_cs" parameterClass="map" >
+		{call asa200_new_work_cs(#asNo#,#mbrNm#,#mbrMobile#,#tel#,#addr#,#itmCd#,#itmNm#,#reNm#,#drvHp#)}
+	</select>
+
+
+</sqlMap>

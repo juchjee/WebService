@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM104DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<select id="AmM104DAO.amM104" parameterClass="map" resultClass="camelMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY B.MBR_JOIN_DT DESC) AS ROW_NUM,
+	   		   B.*
+		FROM
+			   (SELECT A.MBR_ID,
+			 		   A.MBR_NM,
+			  		   A.MBR_SCORE,
+			 		   A.MBR_JOIN_DT,
+					   A.MBR_RSG_DT,
+					   A.MBR_REC,
+					   A.MBR_JOIN_CHN,
+					   LI.MBR_LOGIN_STATUS_YHN
+		 		FROM ASW_M_RSG_MBR A  WITH(NOLOCK) LEFT OUTER JOIN ASW_M_MBR_LOGIN LI ON A.MBR_ID = LI.MBR_ID
+				WHERE 1=1
+		 		AND LI.MBR_LOGIN_STATUS_YHN = 'N'
+		 		<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="1">
+		         	<isNotEmpty property="SEARCH_TXT">
+					A.MBR_NM like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="2">
+					<isNotEmpty property="SEARCH_TXT">
+					A.MBR_ID like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+				<isEqual property="SEARCH_TYPE" prepend="AND" compareValue="4">
+					<isNotEmpty property="SEARCH_TXT">
+					A.MBR_REC like '%' + #SEARCH_TXT# +'%'
+					</isNotEmpty>
+				</isEqual>
+		         <isNotEmpty prepend="AND" property="TXT_FROM_DT" >
+					<isNotEmpty property="TXT_TO_DT" >
+							A.MBR_JOIN_DT between #TXT_FROM_DT# AND DATEADD(DAY, 1, #TXT_TO_DT#)
+					</isNotEmpty>
+			  	</isNotEmpty>
+				<isNotEmpty prepend="AND" property="MBR_TP_BTE" >
+		    		MBR_TP_BTE = #MBR_TP_BTE#
+				</isNotEmpty>
+			) B
+		WHERE 1=1
+		<isNotEmpty prepend="AND" property="MBR_LEV_CD" >
+ 			MBR_LEV_CD = #MBR_LEV_CD#
+	  	</isNotEmpty>
+        <isEqual property="ORDER_CNT" prepend="AND" compareValue="1">
+	        ORDER_CNT <![CDATA[<>]]> 0
+	    </isEqual>
+	    <isEqual property="ORDER_CNT" prepend="AND" compareValue="2">
+		    ORDER_CNT = 0
+	    </isEqual>
+	</select>
+
+	<select id="AmM104DAO.dCount"  parameterClass="map" resultClass="int">
+		SELECT count(*) FROM ASW_M_RSG_MBR A  WITH(NOLOCK)
+		LEFT OUTER JOIN ASW_M_MBR_LOGIN L  WITH(NOLOCK) ON L.MBR_ID = A.MBR_ID
+		WHERE L.MBR_LOGIN_STATUS_YHN = 'N'
+	</select>
+
+</sqlMap>

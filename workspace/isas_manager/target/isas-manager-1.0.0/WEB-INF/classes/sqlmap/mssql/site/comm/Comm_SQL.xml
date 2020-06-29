@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CommDAO">
+
+	<typeAlias alias="map" type="java.util.Map"/>
+	<typeAlias alias="hashmap" type="java.util.HashMap"/>
+	<typeAlias alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap" />
+	<typeAlias alias="string" type="java.lang.String"/>
+	<typeAlias alias="object" type="java.lang.Object"/>
+	<typeAlias alias="tableVO" type="egovframework.cmmn.vo.TableColumnVO"/>
+
+	<!-- 오늘 날짜를 가지고 온다 -->
+	<select id="CommDAO.getToday" resultClass="string">
+		SELECT GETDATE()
+	</select>
+
+	<select id="CommDAO.getMaxNumber" parameterClass="map" resultClass="string">
+        SELECT ISNULL(MAX($commColumnNm$), 0) + 1 AS SEQ
+          FROM $commTableNm$ WITH(NOLOCK)
+          <isNotEmpty property="commWhere">
+          	WHERE $commWhere$
+         </isNotEmpty>
+    </select>
+
+	<select id="CommDAO.getGSiteCode" parameterClass="map" resultClass="camelMap">
+        SELECT SITE_ID,
+		       SITE_PW
+		  FROM ASW_G_SITE_CODE  WITH(NOLOCK)
+          <dynamic prepend="WHERE">
+          	<isNotEmpty prepend="AND" property="SITE_CD">
+				SITE_CD = #SITE_CD#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="SITE_NM">
+				SITE_NM = #SITE_NM#
+			</isNotEmpty>
+          </dynamic>
+    </select>
+
+	<select id="CommDAO.getTableList" parameterClass="map" resultClass="camelMap">
+		SELECT
+			*
+		FROM
+			$commTableNm$ WITH (NOLOCK)
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</select>
+
+	<!-- 동적 Procedure 실행 -->
+	<select id="CommDAO.getProcedureToList" parameterClass="map" resultClass="camelMap" remapResults="true">
+		{call $commProcedureName$(<iterate conjunction="," property="commParams" ><isNull property="commParams[]">null</isNull><isNotNull property="commParams[]">#commParams[]#</isNotNull></iterate>)}
+	</select>
+
+	<!-- 동적 Procedure 실행 -->
+	<select id="CommDAO.getProcedureToObject" parameterClass="map" resultClass="object" remapResults="true">
+		{call $commProcedureName$(<iterate conjunction="," property="commParams" ><isNull property="commParams[]">null</isNull><isNotNull property="commParams[]">#commParams[]#</isNotNull></iterate>)}
+	</select>
+
+	<!-- 해댱 권한에 대한 Menu Category list를 가지고 온다 -->
+	<select id="CommDAO.getCategoryList" parameterClass="map" resultClass="camelMap">
+		<![CDATA[
+		WITH ASW_S_ADM_MENU_LIST  AS
+			(SELECT  1 AS LEVEL
+			      ,SAM.ADM_MENU_CD
+			      ,SAM.ADM_MENU_GROUP
+			      ,SAM.ADM_MENU_NM
+			      ,SAM.ADM_URL
+				  ,CONVERT(VARCHAR(255), SAM.ADM_SORT ) as  SORT
+			  FROM ASW_S_ADM_MENU SAM WITH (NOLOCK)
+			 WHERE SAM.ADM_MENU_GROUP = 'root'
+			UNION ALL
+			 SELECT  LEVEL+1
+			      ,SAM_M.ADM_MENU_CD
+			      ,SAM_M.ADM_MENU_GROUP
+			      ,SAM_M.ADM_MENU_NM
+			      ,SAM_M.ADM_URL
+				  ,CONVERT(VARCHAR(255), CONVERT(NVARCHAR,SAM_L.SORT) + '-' +  CONVERT(VARCHAR(255), SAM_M.ADM_SORT)) SORT
+			  FROM ASW_S_ADM_MENU SAM_M WITH (NOLOCK) INNER JOIN ASW_S_ADM_MENU_LIST SAM_L ON SAM_M.ADM_MENU_GROUP = SAM_L.ADM_MENU_CD
+			 
+			UNION ALL
+			
+			SELECT LEVEL+1 ,
+			       BBM.BOARD_MST_CD AS ADM_MENU_CD ,
+			       BBM.ADM_MENU_CD  AS ADM_MENU_GROUP ,
+			       BBM.BOARD_MST_NM AS ADM_MENU_NM ,
+			       CONVERT(VARCHAR(200) ,
+			       (SELECT  BBT.BOARD_TP_URL + #boardMstCdParam# + BBM.BOARD_MST_CD
+			       FROM    ASW_BOARD_TP BBT
+			       WHERE   BBT.BOARD_TP_CD = BBM.BOARD_TP_CD
+			       )
+			       ) AS ADM_URL ,
+			       CONVERT(VARCHAR(255), CONVERT(NVARCHAR, SAM_L.SORT) + '-' + CONVERT(VARCHAR(255), BBM.BOARD_SORT)) SORT
+			FROM   ASW_BOARD_MST BBM WITH (NOLOCK)
+			       INNER JOIN ASW_S_ADM_MENU_LIST SAM_L
+			       ON     BBM.ADM_MENU_CD = SAM_L.ADM_MENU_CD
+			)
+			  
+		
+		SELECT   AML.LEVEL,
+				 AML.ADM_MENU_CD ,
+		         AML.ADM_MENU_GROUP,
+				 AML.ADM_MENU_NM,
+			     AML.ADM_URL,
+				 AML.SORT,
+		         SUBSTRING(AML.ADM_URL, 0, CHARINDEX('.do', AML.ADM_URL)) + REPLACE(SUBSTRING(AML.ADM_URL, CHARINDEX('.do', AML.ADM_URL) + 3, len(AML.ADM_URL)), #boardMstCdParam# , '') AS TEST_URL
+		FROM     ASW_S_ADM_MENU_LIST AML WITH (NOLOCK)
+		         INNER JOIN ASW_S_ADM_AUTH_MENU AAM WITH (NOLOCK)
+		         ON       AML.ADM_MENU_CD = AAM.ADM_MENU_CD
+		where    AAM.ADM_AUTH_CD          = #admAuthCd#
+		AND AML.ADM_MENU_CD NOT IN (SELECT  BM.BOARD_MST_CD FROM ASW_BOARD_MST BM WITH (NOLOCK) WHERE BOARD_STATUS_YN ='N' )
+		ORDER BY SORT
+		]]>
+	</select>
+
+	<!-- 테이블의 해당 컬럼들을 가져온다 -->
+	<select id="CommDAO.getTableColumnList" parameterClass="string" resultClass="tableVO">
+		SELECT
+			COLUMN_NAME AS NAME,
+			DATA_TYPE AS TYPE,
+			IS_NULLABLE AS ISNULL,
+			COLUMN_DEFAULT AS DEFAULTVAL
+		FROM
+			INFORMATION_SCHEMA.COLUMNS WITH (NOLOCK)
+		WHERE
+			TABLE_NAME = #commTableNm#
+	</select>
+
+	<select id="CommDAO.getRowCount" parameterClass="map" resultClass="int">
+		SELECT COUNT(*)
+		FROM $commTableNm$ WITH (NOLOCK)
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				1=1
+				<isNotEmpty property="strQuery">
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</select>
+
+	<insert id="CommDAO.tableInsert" parameterClass="map" >
+		INSERT INTO $commTableNm$ (
+		<iterate conjunction="," property="columName" >$columName[]$</iterate>
+		) VALUES (
+		 	<iterate conjunction="," property="columValue" >$columValue[]$</iterate>
+		 )
+	</insert>
+
+	<update id="CommDAO.tableUpdate" parameterClass="map" >
+		UPDATE $commTableNm$ SET
+			<iterate conjunction="," property="columList" >$columList[].name$ = $columList[].value$</iterate>
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</update>
+
+	<delete id="CommDAO.tableDelete" parameterClass="map" >
+		DELETE FROM $commTableNm$
+		WHERE
+			<isNotEmpty property="whereColumList">
+				<iterate conjunction="AND" property="whereColumList">
+					$whereColumList[].name$ = #whereColumList[].value#
+				</iterate>
+				<isNotEmpty property="strQuery">
+					$strQuery$
+	         	</isNotEmpty>
+			</isNotEmpty>
+			<isEmpty property="whereColumList">
+				<isNotEmpty property="strQuery">
+					1=1
+					$strQuery$
+         		</isNotEmpty>
+			</isEmpty>
+	</delete>
+
+	<select id="CommDAO.getGAttch" parameterClass="map" resultClass="camelMap">
+		SELECT ATTCH_FILE_NM, ATTCH_ABSOLUTE_PATH, ATTCH_REAL_ABSOLUTE_PATH
+		  FROM ASW_G_ATTCH  WITH (NOLOCK)
+		WHERE ATTCH_CD = #ATTCH_CD#
+	</select>
+
+	<select id="CommDAO.msgVariableList" parameterClass="map" resultClass="camelMap">
+		SELECT EMV.MSG_VARIABLE_CD
+		       ,EMV.MSG_VARIABLE_NM
+		       ,EMV.MSG_VARIABLE_MPG_COL_NM
+		       ,EMV.MSG_VARIABLE_DIV_RC
+		       ,EMV.MSG_SUBSTITUTION
+		 FROM E_MSG_VARIABLE EMV  WITH (NOLOCK)
+		 <dynamic prepend="WHERE">
+			 <isEqual prepend="AND" property="MSG_DIV_RC" compareValue="R">
+			 	EMV.MSG_VARIABLE_DIV_RC  in ('R','C')
+			 </isEqual>
+			 <isEqual prepend="AND" property="MSG_DIV_RC" compareValue="C">
+			 	EMV.MSG_VARIABLE_DIV_RC = 'C'
+			 </isEqual>
+		 </dynamic>
+		 ORDER BY MSG_SUBSTITUTION ASC
+  	</select>
+
+
+
+	<select id="CommDAO.mbrSmsCont" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+				      , EMR.MSG_ROLE_NM
+				      , (CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+				      , EMR.MSG_DIV_RC
+				      , ES.MMS_SUB
+					  , ES.SMS_CONT
+				  FROM E_MSG_ROLE EMR LEFT JOIN E_SMS ES ON EMR.MSG_ROLE_CD = ES.MSG_ROLE_CD
+				 WHERE EMR.MSG_ROLE_TP_ASM in ('A','S')
+				   AND EMR.MSG_ROLE_YN = 'Y'
+				   <isNotEmpty  property="MSG_ROLE_CD">
+				   	  AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+				   </isNotEmpty>
+	</select>
+
+	<insert id="CommDAO.mbrSmsSend" parameterClass="map">
+		INSERT  sms_duolac.dbo.em_tran
+	       (
+	           tran_phone,
+	           tran_callback,
+	           tran_status,
+	           tran_date,
+	           tran_msg
+	       )
+	       VALUES
+	       (
+			  #TRAN_PHONE#,
+	          #TRAN_CALLBACK#,
+	          #TRAN_STATUS#,
+	          GETDATE(),
+	          #TRAN_MSG#
+		   )
+	</insert>
+
+	<insert id="CommDAO.mbrMmsSend" parameterClass="map">
+		INSERT  sms_duolac.dbo.em_tran
+	       (
+	           tran_phone,
+	           tran_callback,
+	           tran_status,
+	           tran_date,
+	           tran_msg
+	       )
+	       VALUES
+	       (
+			  #TRAN_PHONE#,
+	          #TRAN_CALLBACK#,
+	          #TRAN_STATUS#,
+	          GETDATE(),
+	          #TRAN_MSG#
+		   )
+	</insert>
+
+	<select id="CommDAO.orderInfoMap" parameterClass="string" resultClass="camelMap">
+		SELECT ORA.RECEIPT_NM
+				   , ORA.RECEIPT_ZIPCODE
+				   , ORA.RECEIPT_ADDR
+				   , ORA.RECEIPT_ADDR_DTL
+				   , ORA.RECEIPT_TEL
+				   , ORA.RECEIPT_MOBILE
+				   , ORA.RECEIPT_REQ_CONT
+				   , OOA.ORDERS_NM
+				   , OOA.ORDERS_EMAIL
+				   , OOA.ORDERS_TEL
+				   , OOA.ORDERS_MOBILE
+				   , CONVERT(VARCHAR(10), GETDATE(), 120) AS NOW_GET_DATE
+		FROM O_RECEIPT_ADDR ORA WITH (NOLOCK)
+		INNER JOIN O_ORDERS_ADDR OOA
+		ON ORA.ORDER_NO = OOA.ORDER_NO
+		WHERE ORA.ORDER_NO = #ORDER_NO#
+	</select>
+
+	<insert id="CommDAO.stackPoints" parameterClass="map">
+		INSERT INTO ASW_M_MBR_PT_LIST(PT_CD, MBR_ID, MBR_PT_SEQ, MBR_PT_SCORE, MBR_PT_ACC_DT)
+		VALUES (#PT_CD#,#MBR_ID#, #MBR_PT_SEQ#, (SELECT PT_SCORE FROM ASW_M_MBR_PT_PLC WHERE PT_RFCT_YN = 'Y' AND PT_CD = #PT_CD#), GETDATE())
+	</insert>
+
+	<select id="CommDAO.mbrMailCont" parameterClass="map" resultClass="camelMap">
+		SELECT EMR.MSG_ROLE_CD
+				  ,EMR.MSG_ROLE_NM
+				  ,(CASE WHEN EMR.MSG_DIV_RC = 'R' THEN '시스템' ELSE '수동' END) as MSG_DIV_RC_NM
+				  ,EMR.MSG_DIV_RC
+				 , EM.MAIL_TITLE
+				 , EM.MAIL_CONT
+				 , (SELECT EMF.MAIL_FOOTER_CONT  FROM E_MAIL_FOOTER EMF WHERE EMF.MAIL_FOOTER_DT = (SELECT MAX(MAIL_FOOTER_DT) FROM E_MAIL_FOOTER)) as MAIL_FOOTER_CONT
+			FROM E_MSG_ROLE EMR
+			   LEFT JOIN E_MAIL EM  ON EMR.MSG_ROLE_CD = EM.MSG_ROLE_CD
+			 WHERE EMR.MSG_ROLE_TP_ASM in ( 'A','M' )
+			   AND EMR.MSG_ROLE_YN = 'Y'
+			  <isNotEmpty  property="MSG_ROLE_CD">
+				AND EMR.MSG_ROLE_CD = #MSG_ROLE_CD#
+			  </isNotEmpty>
+	</select>
+
+	<insert id="CommDAO.insertIniStdMap" parameterClass="map">
+		INSERT INTO O_ODER_PROD_PAY_TEMP (ORDER_NO, PROD_JSON_STR, PROD_MAP_STR)
+		VALUES (#ORDER_NO#, #PROD_JSON_STR#, #PROD_MAP_STR#)
+	</insert>
+
+	<!-- <delete id="CommDAO.deleteIniStdMap" parameterClass="string" >
+		DELETE FROM O_ODER_PROD_PAY_TEMP WHERE ORDER_NO = #ORDER_NO#
+	</delete> -->
+
+	<select id="CommDAO.selectIniStdMap" parameterClass="string" resultClass="hashMap">
+		SELECT OPPT.PROD_JSON_STR
+		  FROM
+		       (SELECT ORDER_NO,
+		              MAX(ORDER_DT) AS ORDER_DT
+		         FROM O_ODER_PROD_PAY_TEMP WITH (NOLOCK)
+		        WHERE ORDER_NO = #ORDER_NO#
+		        GROUP BY ORDER_NO
+		       ) OPPTG
+		   INNER JOIN O_ODER_PROD_PAY_TEMP OPPT WITH (NOLOCK)
+		       ON OPPTG.ORDER_NO = OPPT.ORDER_NO
+		       AND OPPTG.ORDER_DT = OPPT.ORDER_DT
+	</select>
+
+	<select id="CommDAO.stackUseOnOff" parameterClass="map" resultClass="int">
+		SELECT COUNT(a.PT_CD) AS PT_COUNT
+		  FROM ASW_M_MBR_PT_PLC a
+	   		WHERE a.PT_CD = #PT_CD#
+		     AND a.PT_RFCT_YN = 'Y'
+	</select>
+
+	<select id="CommDAO.fristCOPN" parameterClass="camelMap" resultClass="int">
+	<![CDATA[
+	SELECT OOR.MBR_ID FROM O_ORDER OOR
+				LEFT JOIN O_ORDER_SEND OOS
+				ON OOR.ORDER_NO = OOS.ORDER_NO
+		 WHERE OOS.ORDER_PACKING_DT BETWEEN CONVERT(DATETIME, CONVERT (VARCHAR(10), GETDATE(), 121)) AND CONVERT (DATETIME, DATEADD(MS, -3, CONVERT(VARCHAR, DATEADD(DAY, 1, GETDATE()), 112)))
+		AND OOR.MBR_ID IN (
+		SELECT A.MBR_ID FROM (
+		SELECT OOR.MBR_ID, count(*) as test
+				FROM O_ORDER OOR
+				LEFT JOIN O_ORDER_SEND OOS
+				ON OOR.ORDER_NO = OOS.ORDER_NO
+			WHERE OOS.ORDER_PACKING_DT IS NOT NULL
+			  AND OOR.CLAIM_YN = 'N'
+		GROUP BY OOR.MBR_ID
+		) A
+		WHERE test = 1
+		)
+		AND OOR.MBR_ID NOT IN (SELECT distinct MCL.MBR_ID FROM ASW_M_MBR_COPN_LIST MCL
+	 WHERE MCL.MBR_ID = OOR.MBR_ID
+	  AND  MCL.COPN_CD = 'ECN00059')
+		]]>
+	</select>
+
+	<select id="CommDAO.sendBirthList" parameterClass="map" resultClass="hashMap">
+	  	SELECT OO.MBR_ID, MLMML.MBR_LEV_CD
+		FROM
+			(SELECT MMA.*
+				FROM ASW_M_MBR MMA WITH (NOLOCK)
+				WHERE RIGHT(CONVERT (VARCHAR(8), MMA.MBR_BIRTHDT, 112), 4) = RIGHT(CONVERT (VARCHAR(8), GETDATE(), 112), 4)
+					AND MMA.MBR_BIRTHDT_TYPE_GL = 'G'
+					AND MMA.MBR_MOBILE_RCV_YN = 'Y'
+					AND MMA.MBR_MOBILE IS NOT NULL
+					AND LEN(MMA.MBR_MOBILE) > 10
+			UNION
+			SELECT MMB.*
+				FROM ASW_M_MBR MMB WITH (NOLOCK)
+				WHERE RIGHT(CONVERT(VARCHAR(8), MMB.MBR_BIRTHDT, 112), 4) = #L_MONTH_DAY#
+					AND MMB.MBR_BIRTHDT_TYPE_GL = 'L'
+					AND MMB.MBR_MOBILE_RCV_YN = 'Y'
+					AND MMB.MBR_MOBILE IS NOT NULL
+					AND LEN(MMB.MBR_MOBILE) > 10
+			) OO
+		LEFT JOIN (
+			SELECT
+				ML.MBR_ID,
+				ML.MBR_LEV_CD
+			FROM
+				M_MBR_LEV ML WITH (NOLOCK)
+			INNER JOIN (
+				SELECT
+					MBR_ID,
+					MAX (MBR_LEV_DT) AS MBR_LEV_DT
+				FROM
+					M_MBR_LEV WITH (NOLOCK)
+				GROUP BY
+					MBR_ID
+			) MLM ON ML.MBR_ID = MLM.MBR_ID
+			AND ML.MBR_LEV_DT = MLM.MBR_LEV_DT
+		) MLMML ON OO.MBR_ID = MLMML.MBR_ID
+		INNER JOIN (
+			SELECT
+				MBR_LEV_CD
+			FROM
+				M_MBR_LEV_PLICY
+			WHERE
+				MBR_LEV_NO > 1
+		) MLP ON MLP.MBR_LEV_CD = MLMML.MBR_LEV_CD
+		WHERE  OO.MBR_ID NOT IN (SELECT distinct MCL.MBR_ID FROM ASW_M_MBR_COPN_LIST MCL
+	 WHERE MCL.COPN_ISU_DT BETWEEN CONVERT(DATETIME, CONVERT (VARCHAR(10), GETDATE(), 121)) AND CONVERT (DATETIME, DATEADD(MS, -3, CONVERT(VARCHAR, DATEADD(DAY, 1, GETDATE()), 112)))
+	  AND  MCL.COPN_CD IN ('ECN00105','ECN00106','ECN00107'))
+	</select>
+</sqlMap>

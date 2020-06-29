@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AmM703DAO">
+
+	<typeAlias  alias="map" type="java.util.Map"/>
+	<typeAlias  alias="camelMap" type="egovframework.rte.psl.dataaccess.util.CamelMap"/>
+
+	<!-- 1차/2차/3차 메뉴 조회 -->
+	<select id="AmM703DAO.amM703L" parameterClass="map" resultClass="camelMap">
+		SELECT FRONT_MENU_CD ,
+			   FRONT_MENU_GROUP ,
+			   FRONT_MENU_NM ,
+			   FRONT_PAGE_CD ,
+			   BOARD_MST_CD ,
+			   isnull((SELECT b.BOARD_MST_NM FROM ASW_BOARD_MST b WITH(NOLOCK) where b.BOARD_MST_CD = a.BOARD_MST_CD),'N/A') as BOARD_MST_NM,
+			   FRONT_SV_TP,
+			   FRONT_SORT
+		FROM ASW_S_FRONT_MENU a WITH(NOLOCK)
+		WHERE FRONT_USE_YN = 'Y'
+		AND FRONT_MENU_GROUP = #FRONT_MENU_GROUP#
+		<isNotEmpty property="FRONT_MENU_TP">
+			AND FRONT_MENU_TP = #FRONT_MENU_TP#
+		</isNotEmpty>
+		ORDER BY FRONT_SORT
+	</select>
+	<!-- sort 조회 -->
+	<select id="AmM703DAO.amM703Count"  parameterClass="map" resultClass="int">
+		SELECT ISNULL(MAX(FRONT_SORT),0)+1
+		FROM ASW_S_FRONT_MENU WITH(NOLOCK)
+		WHERE FRONT_MENU_GROUP = #FRONT_MENU_GROUP#
+		AND FRONT_USE_YN = 'Y'
+	</select>
+
+	<!-- 삭제 후 수정목록 조회 -->
+	<select id="AmM703DAO.amM703SList" parameterClass="map" resultClass="camelMap">
+		SELECT FRONT_MENU_CD ,
+			   FRONT_MENU_GROUP ,
+			   FRONT_MENU_NM ,
+			   FRONT_PAGE_CD ,
+			   BOARD_MST_CD  ,
+			   FRONT_SV_TP,
+			   FRONT_SORT
+		FROM ASW_S_FRONT_MENU WITH(NOLOCK)
+		WHERE FRONT_USE_YN = 'Y'
+		AND FRONT_MENU_GROUP = #FRONT_MENU_GROUP#
+		AND FRONT_SORT > #FRONT_SORT#
+	</select>
+
+	<!-- 순서이동 1 -->
+	<update id="AmM703DAO.sortMod_1step" parameterClass="map" >
+		UPDATE ASW_S_FRONT_MENU
+		       SET FRONT_SORT= FRONT_SORT
+		       <isEqual  property="SORT_TYPE" compareValue="sortUp">
+		       		+1
+		       </isEqual>
+		       <isEqual  property="SORT_TYPE" compareValue="sortDown">
+		       		-1
+		       </isEqual>
+		 WHERE FRONT_MENU_CD = (SELECT SFM.FRONT_MENU_CD
+		         FROM ASW_S_FRONT_MENU SFM
+		        WHERE SFM.FRONT_MENU_GROUP =
+		              (SELECT FRONT_MENU_GROUP
+		                FROM ASW_S_FRONT_MENU
+		               WHERE FRONT_MENU_CD = #FRONT_MENU_CD#
+		              )
+		              AND SFM.FRONT_SORT =
+		              (SELECT FRONT_SORT
+		              <isEqual  property="SORT_TYPE" compareValue="sortUp">
+		       				-1
+				       </isEqual>
+				       <isEqual  property="SORT_TYPE" compareValue="sortDown">
+				       		+1
+				       </isEqual>
+		                FROM ASW_S_FRONT_MENU
+		               WHERE FRONT_MENU_CD = #FRONT_MENU_CD#
+		              )
+		              AND FRONT_USE_YN = 'Y'
+		       )
+	</update>
+
+	<!-- 순서이동 2 -->
+	<update id="AmM703DAO.sortMod_2step" parameterClass="map" >
+		UPDATE ASW_S_FRONT_MENU
+		       SET FRONT_SORT= FRONT_SORT
+		       <isEqual  property="SORT_TYPE" compareValue="sortUp">
+		       		-1
+		       </isEqual>
+		       <isEqual  property="SORT_TYPE" compareValue="sortDown">
+		       		+1
+		       </isEqual>
+		 WHERE FRONT_MENU_CD =  #FRONT_MENU_CD#
+		 AND FRONT_USE_YN = 'Y'
+	</update>
+
+	<!-- 삭제 후 조회목록 순서수정 -->
+	<update id="AmM703DAO.amM703SU" parameterClass="map" >
+		UPDATE ASW_S_FRONT_MENU
+		       SET FRONT_SORT= #FRONT_SORT#-1
+		 WHERE FRONT_MENU_CD =  #FRONT_MENU_CD#
+	</update>
+	
+	
+	<!-- 게시판 프로그램 리스트 조회 -->
+	<select id="AmM703DAO.bbsProgList" resultClass="camelMap">
+		SELECT BOARD_MST_CD as value
+        	 , BOARD_MST_NM as label
+		FROM ASW_BOARD_MST a WITH(NOLOCK) LEFT JOIN ASW_BOARD_TP b  WITH(NOLOCK) ON b.BOARD_TP_CD = a.BOARD_TP_CD
+		WHERE BOARD_STATUS_YN = 'Y'
+	     and b.BOARD_TP_STYLE = #FRONT_PAGE_CD#
+	</select>
+	
+	<!-- 게시판 프로그램 리스트 조회 -->
+	<select id="AmM703DAO.frontAllList" resultClass="camelMap">
+	<![CDATA[
+			SELECT BOARD_MST_CD as value
+				 , BOARD_MST_NM as label
+			FROM ASW_BOARD_MST a WITH(NOLOCK)
+			WHERE BOARD_STATUS_YN = 'Y'
+		UNION ALL 
+		SELECT DISTINCT BOARD_MST_CD  as value
+			 , BOARD_MST_CD as label FROM ASW_S_FRONT_MENU SFM WHERE SFM.FRONT_PAGE_CD <> 'bbs' and SFM.FRONT_USE_YN = 'Y'
+	 ]]>
+	</select>
+	
+</sqlMap>

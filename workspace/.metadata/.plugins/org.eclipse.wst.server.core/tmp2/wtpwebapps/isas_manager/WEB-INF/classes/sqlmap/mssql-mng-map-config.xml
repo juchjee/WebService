@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+
+	<settings useStatementNamespaces="true" lazyLoadingEnabled="false"/>
+	<typeHandler javaType="java.util.Calendar" jdbcType="TIMESTAMP" callback="egovframework.rte.psl.dataaccess.typehandler.CalendarTypeHandler" />
+
+	<sqlMap resource="sqlmap/mssql/site/comm/Comm_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/Sa_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/amM1/AmM102_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM1/AmM103_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM1/AmM104_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM1/AmM105_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/amM4/AmM403_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM4/AmM404_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM4/AmM405_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM4/AmM406_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/amM5/AmM501_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM701_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM702_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM703_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM704_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM705_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/amM7/AmM706_SQL.xml"/>
+
+	<sqlMap resource="sqlmap/mssql/site/mng/bbt/Bbt_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/cs/Cs_SQL.xml"/>
+	
+	<sqlMap resource="sqlmap/mssql/site/mng/popup/Popup_SQL.xml"/>
+	<sqlMap resource="sqlmap/mssql/site/mng/storeMap/Map_SQL.xml"/>
+
+</sqlMapConfig>

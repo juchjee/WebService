@@ -1,0 +1,127 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="java.util.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript">
+var layout, toolbar, subLayout
+var gridMain, gridSub, combo01;
+var calMain, rowSelVal;
+var PscrnParm = parent.scrnParm;
+var mainTabbar = parent.mainTabbar;
+var ActTabId = parent.ActTabId;   
+var qtyFlag = true;
+var rowSelVal = null;
+$(document).ready(function(){
+	Ubi.setContainer(0,[1],"3T");
+	
+	layout = Ubi.getLayout();
+    toolbar = Ubi.getToolbar();
+    subLayout = Ubi.getSubLayout(); 
+	
+	subLayout.cells("c").attachObject("bootContainer2");
+	
+	subLayout.cells("a").setHeight(300);
+
+    gridMain = new dxGrid(subLayout.cells("a"),false);
+    gridMain.addHeader({name:"No",	     colId:"no",			width:"50",	 align:"center", type:"cntr"});
+    gridMain.addHeader({name:"최종판정",    colId:"inspYnName",	width:"60",	 align:"center", type:"ro"});
+    gridMain.addHeader({name:"처리결과",    colId:"resultRmk",	    width:"100", align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"공정",       colId:"procCodeName", width:"70",  align:"center",	 type:"ro"});
+    gridMain.addHeader({name:"작업지시번호", colId:"workKey",       width:"100", align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"고객",	     colId:"custName",      width:"120", align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"품명",      colId:"itemName",		width:"120", align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"사출도번",   colId:"baseCode",	    width:"90",	 align:"left",   type:"ro"});
+    gridMain.addHeader({name:"제품도번",   colId:"itemCode",		width:"90",	 align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"설비",	    colId:"machName",	    width:"100", align:"left",	 type:"ro"});
+    gridMain.addHeader({name:"지시수량",	colId:"indiQty",		width:"80",	 align:"right",  type:"ron"});
+    gridMain.dxObj.setUserData("","@deliDate","format_date");
+    gridMain.setUserData("","pk","");
+    gridMain.init();
+    gridMain.cs_setColumnHidden(["procCode","custCode","machCode","procSeq","inspYn","ordrKey","deliDate"]);
+    gridMain.cs_setNumberFormat(['indiQty']);
+    gridMain.attachEvent("onRowSelect",doOnRowSelect);
+
+    subLayout.cells("b").setWidth(905);
+    
+    gridSub = new dxGrid(subLayout.cells("b"),false);
+    gridSub.addHeader({name:"No",		colId:"no",			   width:"50",	align:"center",	type:"cntr"});
+    gridSub.addHeader({name:"검사시점",   colId:"inspDivName",    width:"60",	align:"center",	type:"ro"});
+    gridSub.addHeader({name:"입력시간",   colId:"insptTime",	   width:"130",	align:"left",	type:"ro"});
+    gridSub.addHeader({name:"검사항목",   colId:"insptItemName",  width:"70",	align:"left",	type:"ro"});
+    gridSub.addHeader({name:"규격",	    colId:"insptItemSpec", width:"70",	align:"right",	type:"ro"});
+    gridSub.addHeader({name:"허용오차",   colId:"tolrMax",	       width:"50",	align:"right",	type:"ro"});
+    gridSub.addHeader({name:"#cspan",	colId:"tolrMin",	   width:"50",	align:"right",	type:"ro"});
+    gridSub.addHeader({name:"Cavity",	colId:"cavitySeq",	   width:"50",	align:"center",	type:"ro"});
+    gridSub.addHeader({name:"검사값",	   colId:"x1",             width:"60",	align:"right",	type:"ron"});
+    gridSub.addHeader({name:"판정",	   colId:"okYnName",	   width:"60",	align:"center",	type:"ro"});
+    gridSub.addHeader({name:"검사자",	   colId:"empName",	        width:"60",	align:"left",	type:"ro"});
+    gridSub.addHeader({name:"비고",     colId:"rmk",	           width:"180",	align:"left",	type:"ron"});
+    gridSub.setUserData("","pk","");
+    gridSub.attachHeader('#rspan,#rspan,#rspan,#rspan,#rspan,MAX,MIN,#rspan,#rspan,#rspan,#rspan,#rspan');
+    gridSub.init();   
+    gridSub.cs_setColumnHidden(["reqDiv","reqKey","setDate","setNo","inspKey","inspDiv","empNo","itemCode","lotNo","insptItemCode",
+                                 "x4","x5","tolrPlus","tolrMinus","compId","okYn","x2","x3"]);
+    gridSub.cs_setNumberFormat(['tolrMax',"tolrMin","x1"],"0,000.00");
+    gridSub.attachEvent("onRowSelect",doOnSubRowSelect);
+    
+    fn_imageZoom("target");
+    fn_search();
+   
+});
+function doOnRowSelect(id,ind){
+	var obj = {};
+	obj.procCode = gridMain.setCells(id,gridMain.getColIndexById("procCode")).getValue();
+	obj.workKey = gridMain.setCells(id,gridMain.getColIndexById("workKey")).getValue();
+	gfn_callAjaxForGrid(gridSub, obj, "/erp/prod/prod/prodDirtS/gridSubSearch",subLayout.cells("b"));
+};
+
+function doOnSubRowSelect(id,ind){
+	var obj = {};
+	obj.itemCode = gridSub.setCells(id,gridSub.getColIndexById("itemCode")).getValue();
+	obj.insptItemCode = gridSub.setCells(id,gridSub.getColIndexById("insptItemCode")).getValue();
+	obj.insptItemSpec = gridSub.setCells(id,gridSub.getColIndexById("insptItemSpec")).getValue();
+	gfn_callAjaxComm(obj, "selInspFileName", fn_fileChkCB, '');
+};
+
+function fn_fileChkCB(data){
+	if(data != ''){
+		if(data[0].realFileName != null){
+			$("#target").attr("src", "/erp/prod/prod/prodDirtS/getInspImg?fileName=" + data[0].realFileName);
+		}
+	}
+};
+
+function fn_search(){
+	var obj = {};
+	obj.inspChk = '1';
+	gfn_callAjaxForGrid(gridMain, obj, "gridMainSearch",subLayout.cells("a"),fn_searchCB);
+};
+
+function fn_searchCB(data){
+	if(data != ''){
+		for(var i=0;i<gridMain.getRowsNum();i++){
+			var inspYn = gridMain.setCells2(i,gridMain.getColIndexById("okResult")).getValue();
+			if(inspYn =='Y'){
+				gridMain.setCells2(i,gridMain.getColIndexById("inspYnName")).setValue("합격");
+			}else{
+				gridMain.setCells2(i,gridMain.getColIndexById("inspYnName")).setValue("불합격");
+			}
+		}
+		gridMain.selectRow(0,true,true,true);
+	}
+};
+
+function fn_exit(){
+	mainTabbar.tabs(ActTabId).close();
+};
+</script>
+<div id="bootContainer2">
+	<form id="frmMain2" name="frmMain2" method="post">
+		<div class="listHeader">
+			<div class="left">
+				<div class="mlZero">
+					<img style="height:auto; max-width:550px; border:2px solid silver;" id="target" name="target" src="/images/common/pic_no_img.gif">
+				</div>
+			</div>
+		</div>	
+	</form>
+</div>
+<div id="container"></div>
